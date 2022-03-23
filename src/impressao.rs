@@ -10,8 +10,7 @@ use std::dbg;
 use std::string::String;
 
 // biblioteca externa:
-extern crate terminal_size;
-use terminal_size::{terminal_size, Height, Width};
+use crate::terminal_dimensao::*;
 
 
 /* reescrevendo o método do len da string para 
@@ -55,9 +54,12 @@ impl StringExtensao for String {
 
 pub fn escadinha(entradas:Vec<&str>) -> String {
    // largura do terminal.
-   let largura_tela = match terminal_size() {
-      Some((Width(l), Height(_))) => l,
-      None => 0u16
+   let largura_tela = match terminal_largura() {
+      Ok(_enum) => match _enum {
+         TerminalDimensao::Largura(l) => l,
+         _ => u16::MAX,
+      },
+      Err(erro) => { panic!("{}", erro); }
    };
 
    let mut nova_str:String = String::new();
@@ -139,8 +141,8 @@ impl <'a>Impressao<'a> {
          .unwrap() as u8
       };
       // largura do terminal.
-      let largura:u8 = match terminal_size() {
-         Some((Width(l), Height(_))) => dbg!(l) as u8,
+      let largura:u8 = match dimensao() {
+         Some((Largura(l), Altura(_))) => dbg!(l) as u8,
          None => 0_u8
       };
       #[allow(unused_variables)]

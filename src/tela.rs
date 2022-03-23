@@ -8,9 +8,8 @@
   do desenvolvedor implementar.
  */
 
-// biblioteca externa.
-extern crate termion;
-use termion::terminal_size;
+// própria lib.:
+use crate::terminal_dimensao::{Largura, Altura, dimensao};
 
 
 /** constante com equivalente dos caractéres na tela
@@ -72,7 +71,12 @@ impl Tela {
    pub fn cria(grade:bool, borda:bool) -> Tela {
       // dimensão da tela.
       let mensagem = "não foi possível obter a dimensão da tela!";
-      let (col, lin):(u16,u16) = terminal_size().expect(mensagem);
+      let (col, lin):(u16, u16) = {
+         match dimensao() {
+            Some((Largura(l), Altura(h))) => (l, h),
+            None => { panic!("{}", mensagem); }
+         }
+      };
 
       // cria a tela.
       let mut matriz:Vec<Vec<char>> = Vec::new();

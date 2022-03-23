@@ -2,9 +2,9 @@
 // bibliotecas do Rust:
 use std::fmt::{Formatter, Display, Result as Resultado};
 use std::string::String;
-// biblioteca externa.
-extern crate terminal_size;
-use terminal_size::{Width, Height, terminal_size};
+
+// meus caixote:
+use crate::terminal_dimensao::{ Largura, Altura, dimensao };
 
 
 #[derive(Debug, Clone)]
@@ -390,8 +390,8 @@ pub fn otimiza_tela(tabela_str:String) -> Result<String, &'static str> {
    let ql:u16 = qtd_de_linhas(&tabela_str) as u16;
    // dimensão do terminal.
    let (altura, _largura):(u16, u16) = {
-      match terminal_size() {
-         Some((Width(l), Height(a))) => (a, l),
+      match dimensao() {
+         Some((Largura(l), Altura(a))) => (a, l),
          None => (0, 0)
       }
    };

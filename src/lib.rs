@@ -43,3 +43,9 @@ pub mod impressao;
  de forma dinâmica como a computabilidade de tais 
  dados abordados está indo. */
 pub mod barra_de_progresso;
+
+/** obtem a dimensão do terminal que roda tal lib. 
+ Portanto agora, podemos excluir a biblioteca externa
+ utilizada para fazer tal, substituindo por esta.
+*/
+pub mod terminal_dimensao;
