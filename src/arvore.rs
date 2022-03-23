@@ -4,10 +4,6 @@
  * arquivos e sub-diretórios.
  */
 
-// biblioteca externas:
-extern crate termion;
-use termion::terminal_size;
-//use termion::color;
 
 // biblioteca padrão do Rust.
 use std::fs::read_dir;
@@ -16,6 +12,7 @@ use std::path::Path;
 // meus módulos:
 mod constroi_simbolos;
 use constroi_simbolos::{matriciar_string, matriz_para_string};
+use crate::terminal_dimensao::{dimensao, Largura};
 
 
 // tipos de galhos:
@@ -46,14 +43,20 @@ fn desenha_trilha(esboco:&mut String, caminho:&Path , pfd:&mut u8) {
       // possível link-símbolico.
       match item.path().as_path().read_link() {
           //se for link-simbólico, passar ele...
-          Ok(sl) => {println!("é link-simbólico, burlando...{:#?}",sl); 
-                    continue;},
-          Err(_) => {} //apenas ignorando...
+          Ok(sl) => {
+            println!("é link-simbólico, burlando...{:#?}",sl); 
+           continue;
+          },
+          Err(_) => (), //apenas ignorando...
       };
 
       // string do caminho.
-      let pth_str = item.path().into_os_string().into_string()
-                    .expect("falha ao obter caminho no formato de string!");
+      let pth_str = {
+         item.path()
+         .into_os_string()
+         .into_string()
+         .expect("falha ao obter caminho no formato de string!")
+      };
       // nome do arquivo/diretório do caminho.
       let nome_pth = item.file_name().into_string().unwrap();
 
@@ -69,16 +72,20 @@ fn desenha_trilha(esboco:&mut String, caminho:&Path , pfd:&mut u8) {
           ajusta_string(&mut str_aux, true);
           esboco.push_str(str_aux.as_str());
           let novo_path = Path::new(pth_str.as_str());
-          (*pfd) += 3; // cada chamada recursiva, aumenta a profundidade.
+          // cada chamada recursiva, aumenta a profundidade.
+          (*pfd) += 3; 
           desenha_trilha(esboco, novo_path, pfd);
-          (*pfd) -= 3; // "volta" um diretório...
+          // "volta" um diretório...
+          (*pfd) -= 3; 
       }
       // se for apenas um arquivo, só registra.
       else {
          // molde diferente para arquivos:
-         let mut straux = format!("{1}{2}{3}{4} \"{0}\"\n",
-                                 nome_pth, espacamento,
-                                 GALHO_VH,GALHO_H,GALHO_H);
+         let mut straux = format!(
+            "{1}{2}{3}{4} \"{0}\"\n",
+            nome_pth, espacamento,
+            GALHO_VH,GALHO_H,GALHO_H
+         );
          // ajusta a string na tela.
          ajusta_string(&mut straux, false);     
          esboco.push_str(straux.as_str());
@@ -89,20 +96,41 @@ fn desenha_trilha(esboco:&mut String, caminho:&Path , pfd:&mut u8) {
 /* caso uma string exceda a tela do terminal
  * a função vai reduzi-lá e implicitar que
  * tal string é mais extensa, continua... */
+static mut JA_COMPUTADO:bool = false;
+static mut LARGURA:usize = u16::MAX as usize;
+
 fn ajusta_string(s:&mut String, e_diretorio:bool) {
-   let largura = match terminal_size() {
-                 Ok(pair) => pair.0 as usize,
-                 Err(_) => panic!("erro ao obter LARGURA do terminal"),
-                 };
+   // obter a largura.
+   let largura:usize;
+   unsafe {
+      if !JA_COMPUTADO {
+         /*
+         largura = match terminal_size() {
+            Some((Width(l), _)) => l as usize,
+            None => panic!("erro ao obter LARGURA do terminal"),
+         };
+         */
+         largura = match dimensao() {
+            Some((Largura(l), _)) => l as usize,
+            None => panic!("erro ao obter LARGURA do terminal"),
+         };
+         // obtendo largura de vez.
+         LARGURA = largura;
+         // dá como já calculado tal valor.
+         JA_COMPUTADO = true;
+      } 
+      // apenas atribuir valor JÁ calculado.
+      else { largura = LARGURA; }
+   }
 
    // comprimento da string.
    let str_largura = s.len();
    if str_largura > largura {
       //let intervalo = (largura-4)..;
-      if e_diretorio {
-         s.replace_range((largura-8)..,"(...):\n");
-      }
-      else {s.replace_range((largura-2)..,"...\n");}
+      if e_diretorio 
+         { s.replace_range((largura-8)..,"(...):\n"); }
+      else 
+         {s.replace_range((largura-2)..,"...\n");}
    }
 }
    
@@ -178,7 +206,6 @@ fn acha_galho_dobrado(linha:&Vec<char>) -> Option<usize> {
 fn preenchendo_galhos(arvore:&mut Vec<Vec<char>>) {
    // dimensão da matriz:
    let max_y = arvore.len();
-   //let max_x = arvore[0].len();
    // variável mutável para posição móvel da última linha.
    let mut l1;
    
@@ -196,9 +223,11 @@ fn preenchendo_galhos(arvore:&mut Vec<Vec<char>>) {
        * proposições:   */
       let mut p1 = arvore[l1-1][c] != GALHO_VH; 
       let mut p2 = arvore[l1-1][c].is_whitespace();
-      let mut p3 = !(arvore[l1-1][c+1].is_ascii_alphanumeric()
-                     || arvore[l1-1][c+1] == '.' 
-                     || arvore[l1-1][c+1] == '_');
+      let mut p3 = !(
+         arvore[l1-1][c+1].is_ascii_alphanumeric()
+         || arvore[l1-1][c+1] == '.' 
+         || arvore[l1-1][c+1] == '_'
+      );
 
       while p1 && p2 && p3 {
          // troca vácuo por galho vertical.
@@ -287,19 +316,16 @@ pub fn arvore(caminho:&str, mostra_arquivos:bool) -> String {
    // raiz, de onde parte a trilhagem...
    let raiz = Path::new(caminho);
    // se estiver configurado para mostrar arquivos...
-   if mostra_arquivos {
-      desenha_trilha(&mut trilha, raiz, &mut profundidade);
-   }
-   else {
-      desenha_trilha_dirs(&mut trilha, raiz, &mut profundidade);
-   }
+   if mostra_arquivos 
+      { desenha_trilha(&mut trilha, raiz, &mut profundidade); }
+   else 
+      { desenha_trilha_dirs(&mut trilha, raiz, &mut profundidade); }
 
    // fazendo ajustes...
    let mut matriz_arv = matriciar_string(trilha.clone());
    preenchendo_galhos(&mut matriz_arv); 
    troca_galhos_adequadamente(&mut matriz_arv);
    preenche_primeira_coluna(&mut matriz_arv);
-   //imprime(matriz_arv);
 
    // retorna string representando trilha.
    return matriz_para_string(&matriz_arv);
@@ -375,9 +401,9 @@ mod tests {
          Err(_) => { panic!("não existe tal variável!"); },
       };
       let caminho = nucleo.clone() + "/Videos";
-      let arv1 = super::arvore(caminho.as_str(), true);
+      let arv1 = arvore(caminho.as_str(), true);
       let caminho = nucleo.clone() + "/Documents/códigos";
-      let arv2 = super::arvore(caminho.as_str(),true);
+      let arv2 = arvore(caminho.as_str(),true);
 
       println!("{}\n\n{}\n",arv1, arv2);
 
