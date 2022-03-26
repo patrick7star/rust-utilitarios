@@ -17,7 +17,6 @@
 // biblioteca Rust:
 use std::time::SystemTime;
 use std::str::FromStr;
-//use std::char::from_digit;
 use std::ops::RangeInclusive;
 
 
@@ -55,7 +54,7 @@ pub fn algarismo_aleatorio() -> u8{
    return (ch as u8) - 48_u8;
 }
 
-pub fn valor_logico_aleatorio() -> bool {
+fn valor_logico_aleatorio() -> bool {
    // se for maior que cinco retorna verdadeiro.
    if algarismo_aleatorio() >= 5 { true }
    // caso contrário falso.
@@ -96,7 +95,7 @@ fn numero_0_a_9_faixa(intervalo:RangeInclusive<u8>) -> u8 {
    return inicial;
 }
 
-pub fn numero_i8() -> i8 {
+fn numero_i8() -> i8 {
    /* no geral, tal valor tem como máximo
     * 127 e mínimo -128. Vamos aplicar o
     * método apenas para à parte positiva, já
@@ -151,7 +150,7 @@ fn um_a_noventa_e_nove() -> u8 {
    return tens*10 + ones;
 }
 
-pub fn numero_u8() -> u8 {
+fn numero_u8() -> u8 {
    /* distribuição de ciência:
     * => 10 números com 1 algarismo,
     * portando 4% da amostra:
@@ -192,6 +191,98 @@ pub fn numero_u8() -> u8 {
    return a1*100 + a2*10 + a3;
 }
 
+/** 
+ compila todas funções em uma só, que poder emitir
+ quaisquer tipos num só módulo, onde têm funções com
+ nomes parecidos dos tipos, assim invokar tal função 
+ parece o tipo acompanhado de "()". As funções no
+ só chamam as funções acimas que já trabalham na parte
+ de gerar tais coisas aleatórias, e algumas também
+ implemenetam 'Range' que as funções acimas foram deixas
+ de fora nisso. 
+*/
+pub mod sortear {
+   /* importando biblioteca importada no módulo
+   * externo a este. */
+   use super::RangeInclusive;
+
+   /* implementação para valor booleano. Só chama
+   * função antigo que faz, isso, por motivos de
+   * compatibilidade com códigos que contam 
+   * com as funções antigas, e preguiça de remexer
+   * em tudo para qualquer coisa não quebrar. */
+   pub fn bool() -> bool
+      { super::valor_logico_aleatorio() }
+
+   /* O mesmo com inteiros positivos de 8-bits.
+   * Apenas chama a função que já fazia, ao invés
+   * de mexer na original(retro-compatibilidade).
+   * Como a antiga não tive tempo de implemenetar,
+   * mas agora tenho... vamos usar intervalos para
+   * selecionar uma faixa onde o valor tem que 
+   * ser selecionado. */
+   pub fn u8(intervalo:RangeInclusive<i16>) -> u8 {
+      // apelidos para melhor legibilidade.
+      let i = intervalo;
+      let a = *i.start();
+      let b = *i.end();
+
+      // se não estiver no devido intervalo, dá erro!
+      if !(a >= 0 && b <= 255)  
+         { panic!("fora do intervalo permitido para o tipo: 0..255"); }
+
+      /* se não estiver dentro do limite, sortear 
+      * até que esteja. */
+      let mut x:u8 = super::numero_u8();
+      while !(x >= (a as u8) && x <= (b as u8)) 
+         { x = super::numero_u8(); }
+
+      // retorna número sorteado.
+      return x;
+   }
+
+   /* Agora para inteiros de 8-bits que permitem
+   * números negativos. Mesmo esquema(retrocompatibilidade)
+   * e implementação do 'Range' para delimitar
+   * o sorteio. */
+   pub fn i8(intervalo:RangeInclusive<i16>) -> i8 {
+      // alias do interválo para propósito de codificação.
+      let i = intervalo;
+      let a = *i.start(); 
+      let b = *i.end();
+      if a >= -128  && b <= 127 {
+         let mut x:i8 = super::numero_i8();
+         /* se não estiver dentro do limite, sortear 
+         * até que esteja. */
+         while !(x >= (a as i8) && x <= (b as i8)) 
+            { x = super::numero_i8(); }
+         return x;
+      }
+      else 
+         { panic!("fora do intervalo para o tipo: -128..127"); }
+   }
+
+   // Será futuramente implementado.
+   fn _numero_u16() -> u16 { 
+      /* Mesmo acima, a distribuição é a
+       * seguinte:
+       * -- 55,536 números são de 5 algarismos.
+       *    ou seja, estamos falando de 84,7% de
+       *    de todos números.
+       * -- 9,000 números contém 4 algarismos,
+       *    que representa aproximadamente 13,7%
+       *    de todos os ~65mil números.
+       * -- 900 números são de 3 algarismos, que
+       *    totaliza percentualmente em 1,37%(
+       *    arredondando para 1,4%) na distribuição 
+       *    de números.
+       * -- 90 contendo apenas 2 algarismos, este
+       *    está entre 0,14% dos números.
+       * -- 10 contendo apenas 1 algarismos. Quase
+       *    nada, só 0,015% dos números. */
+       0_u16
+   }
+}
 
 // TESTES:
 #[cfg(test)]
@@ -316,4 +407,13 @@ mod tests {
       );
    }
 
+   #[test]
+   fn testa_sortear() {
+      let booleano:bool = dbg!(sortear::bool());
+      assert!(booleano || !booleano);
+      let z_menos= dbg!(sortear::i8(-10..=10));
+      assert!(z_menos >= -10 && z_menos <= 10);
+      let z_mais= dbg!(sortear::u8(27..=189));
+      assert!(z_mais >= 27 && z_mais <= 189);
+   }
 }
