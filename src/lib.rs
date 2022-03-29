@@ -49,3 +49,6 @@ pub mod barra_de_progresso;
  utilizada para fazer tal, substituindo por esta.
 */
 pub mod terminal_dimensao;
+
+/// escreve um número dado por extenso.
+pub mod por_extenso;

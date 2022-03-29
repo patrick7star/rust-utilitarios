@@ -6,19 +6,22 @@ a ser atingida.
 */
 
 
-// módulo externo:
-//mod legivel;
-//use self::legivel::tamanho;
+// biblioteca do Rust:
 use super::legivel::tamanho;
 use std::time::{Duration, Instant};
 use std::fmt::{Display, Formatter, Result as Result_fmt};
 use std::ops::{Add, AddAssign, Range};
+
+// própria biblioteca:
+use crate::legivel;
+use super::terminal_dimensao::{TD, terminal_largura};
 
 
 // símbolo que representa frações das barras e espaços vázios.
 const COMPONENTE:&'static str ="#";
 const VAZIO:&'static str=".";
 const CAPACIDADE:u8 = 50;
+const TEXTO_MAX:usize = 30;
 
 /* cria uma proporção de progresso baseado 
  * na porcentagem dada. Então 0% é nada de
@@ -444,15 +447,98 @@ impl Display for ProgressoTemporal {
    }
 }
 
+/* cria uma proporção de progresso baseado 
+ * na porcentagem dada. Então 0% é nada de
+ * barra, e, 100% é a barra totalmente preenchida. */
+fn cria_barra_i(percentagem:f32, capacidade:u8) -> String {
+   let mut barra = String::new();
+   let conta = (capacidade as f32 * percentagem) as usize;
+   // falta de espaços-vázios.
+   let diferenca:usize = (capacidade as usize) - conta;
+   // concantena partes da barra.
+   barra.push_str(&COMPONENTE.repeat(conta));
+   barra.push_str(&VAZIO.repeat(diferenca));
+   // retorna a barra formada com sua parte "consumida"
+   // e uma parte "vázia", ou algum destes predominante.
+   return barra;
+}
+
+/** Cria uma barra tempora, que mostra o progresso
+ regressivo, também mostra uma contagem legível.
+ O nome, dependendo da dimensão da tela, pode ser 
+ contraído para se ajustar, ou virar um "slogan"
+ dinâmico que mostra toda legenda, mas para isso 
+ move-se.
+*/
+pub fn temporizador_progresso(rotulo:&str, 
+tempo_atual:Duration, tempo_total:Duration) -> String {
+   // total baseado na validade dada.
+   let total = tempo_total.as_secs();
+   // quantia restanteste.
+   let qtd:u64 = {
+      let ta = tempo_atual .as_secs();
+      if ta > total { 0 }
+      else { total - ta }
+   };
+   let percentual:f32 = (qtd as f32)/(total as f32);
+   let p100:f32 = percentual * 100.0;
+
+   // caso de erro.
+   if percentual > 1.0_f32 {
+      panic!("os valores de atual supera o total!");
+   }
+   else {
+      // reduzindo nome se necessário.
+      /* molde da string retornada representando por 
+       * inteiro a barra de progresso. */
+      let string:String = {
+         if rotulo.len() > TEXTO_MAX { 
+            rotulo
+            .get(0..TEXTO_MAX)
+            .unwrap()
+            .to_string() + "..." 
+         }
+         else 
+            { rotulo.to_string() }
+      };
+      let largura:usize = match terminal_largura() {
+         Ok(_enum) => match _enum {
+            TD::Largura(l) => l as usize,
+            _ => TEXTO_MAX - 1,
+         },
+         Err(_) => TEXTO_MAX - 1,
+      };
+      let recuo:usize = largura - TEXTO_MAX - 3;
+      let restante:String = {
+         if qtd == 0
+            { "imediatamente".to_string() }
+         else 
+            { legivel::tempo(qtd, false) }
+      };
+
+      // criando string formatada para retorno ...
+      format!(
+         "{0:<espaco$} {3} [{1}]{2:>5.1}%",
+         string, 
+         cria_barra_i(percentual, 20), 
+         p100, restante,
+         espaco = recuo - restante.len()
+      )
+   }
+}
+
 
 #[cfg(test)]
 mod tests {
+   use super::*;
+   use std::thread::sleep;
+
    #[test]
    fn teste_progresso_com_rotulo() {
       let rotulo:&str = "isso e um teste basico, sem panico";
-      let mut logo:super::Logo = super::Logo::novo(rotulo).unwrap();
+      let mut logo:Logo = Logo::novo(rotulo).unwrap();
       for k in 1..(600_000+1) { 
-         let bp = super::progresso_data_rotulo(
+         let bp = progresso_data_rotulo(
             logo.para_string(), 
             k, 600_000
          );
@@ -466,28 +552,27 @@ mod tests {
    fn letreiro_dinamico() {
       // instanciando logo dinâmico...
       let texto = "isso e apenas um texto de teste, entao nao entre em panico";
-      let mut logo = super::Logo::novo(texto).unwrap();
+      let mut logo = Logo::novo(texto).unwrap();
       // marcador de tempo.
-      let t:super::Instant = super::Instant::now();
-      while t.elapsed() < super::Duration::from_secs(15) {
+      let t:Instant = Instant::now();
+      while t.elapsed() < Duration::from_secs(15) {
          print!("\r{}", logo.para_string());
          logo.movimenta_letreiro();
       }
       assert!(true);
    }
 
-   use std::thread::sleep;
    #[test]
    fn testando_funcao_que_gira() {
       let texto = "eu adoro suco de caju";
-      let mut logo = super::Logo::novo(texto).unwrap();
+      let mut logo = Logo::novo(texto).unwrap();
       // movimento o texto, dormindo de acordo com
       // o tempo de translação dele(simulando tempo).
-      sleep(super::Duration::from_secs_f32(0.5));
+      sleep(Duration::from_secs_f32(0.5));
       logo.movimenta_letreiro();
-      sleep(super::Duration::from_secs_f32(0.5));
+      sleep(Duration::from_secs_f32(0.5));
       logo.movimenta_letreiro();
-      sleep(super::Duration::from_secs_f32(0.5));
+      sleep(Duration::from_secs_f32(0.5));
       logo.movimenta_letreiro();
       // tirando trecho translado.
       let parte_i = logo.para_string();
