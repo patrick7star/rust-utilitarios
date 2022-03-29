@@ -76,7 +76,7 @@ pub fn tempo(segundos:u64, contracao:bool) -> String {
       sigla = if contracao{"seg"} else{"segundos"};
       calculo = t;
    }
-   format!("{:0.2} {}", calculo, sigla)
+   format!("{:0.1} {}", calculo, sigla)
 } 
 
 /** retorna uma string contendo o tamanho 
