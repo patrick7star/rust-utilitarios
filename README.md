@@ -1,4 +1,4 @@
-# utilitarios_em_rust
+# Utilitarios
 Quase todas mesmas funções dos `utilitarios_em_python` porém para o Rust. 
 
 módulos:
