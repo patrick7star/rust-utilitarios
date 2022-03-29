@@ -4,6 +4,8 @@
  */
 extern crate utilitarios;
 use utilitarios::barra_de_progresso::*;
+use std::time::{Duration, Instant};
+use std::thread::sleep;
 
 /* o primeiro tipo criado, e consequente,
  * o mais simples. */
@@ -111,5 +113,41 @@ fn testa_progresso_temporal() {
       if let Some(string) = pd.imprime() 
          { print!("{}\n", string); } 
    }
+   assert!(true);
+}
+
+#[test]
+fn testa_temporizador_progresso() {
+   let cronometro = Instant::now();
+   let tf = Duration::from_secs(30);
+   let mut ti = cronometro.elapsed();
+   type Anotacao = fn(&str, Duration, Duration) -> String;
+   let funcao:Anotacao = temporizador_progresso;
+   while ti < tf { 
+      let resultado = funcao("isso é um pequeno teste", ti, tf);
+      println!("{}", resultado);
+      // registrando nova decorrência ...
+      ti = cronometro.elapsed();
+      sleep(Duration::from_secs_f32(3.5));
+   }
+   let resultado = funcao("isso é um pequeno teste", ti, tf);
+   println!("{}", resultado);
+   // avaliação manual do teste.
+   assert!(true);
+}
+
+#[test]
+fn testa_temporizador_progresso_i() {
+   let tf = Duration::from_secs(30);
+   let ti = Duration::from_secs(19);
+   type Anotacao = fn(&str, Duration, Duration) -> String;
+   let funcao:Anotacao = temporizador_progresso;
+   let ri = funcao("Quando um estranho chama", ti, tf);
+   let rii = funcao("Era Uma Vez uma Chapéuzinho Vermelha",ti, tf);
+   let riii = funcao("Roda Mortal, o Terror está de Volta",ti, tf);
+   println!("{}", ri);
+   println!("{}", rii);
+   println!("{}", riii);
+   // avaliação manual do teste.
    assert!(true);
 }
