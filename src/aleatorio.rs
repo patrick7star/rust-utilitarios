@@ -263,7 +263,7 @@ pub mod sortear {
    }
 
    // Será futuramente implementado.
-   fn _numero_u16() -> u16 { 
+   fn u16() -> u16 { 
       /* Mesmo acima, a distribuição é a
        * seguinte:
        * -- 55,536 números são de 5 algarismos.
@@ -280,7 +280,7 @@ pub mod sortear {
        *    está entre 0,14% dos números.
        * -- 10 contendo apenas 1 algarismos. Quase
        *    nada, só 0,015% dos números. */
-       0_u16
+       u16::from_to_be_bytes([u8(0..=255), u8(0..=255)])
    }
 }
 
