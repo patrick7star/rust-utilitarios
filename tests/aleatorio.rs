@@ -108,3 +108,64 @@ fn distribuicoes_iguais_do_i8() {
       assert!(margem.abs() <= erro);
    }
 }
+
+#[test]
+fn distribuicao_inteiro_16bits() {
+   let mut cinco_algs = 0;
+   let mut quatro_algs = 0;
+   let mut tres_algs = 0;
+   let mut dois_algs = 0;
+   let mut um_alg = 0;
+
+   // três milhões de sorteio:
+   let total = 1_000_000;
+   for _ in 1..=total {
+      let randomico = aleatorio::sortear::u16();
+      if randomico <= 9
+         { um_alg += 1; }
+      else if randomico >= 10 && randomico <= 99
+         { dois_algs += 1; }
+      else if randomico >= 100 && randomico <= 999
+         { tres_algs += 1; }
+      else if randomico >= 1000 && randomico <= 9_999
+         { quatro_algs += 1; }
+      else 
+         { cinco_algs += 1; }
+   }
+
+   let p:f32 = (cinco_algs as f32) / (total as f32);
+   println!("5 algs.: {:0.2}%", p*100.0);
+   let p:f32 = (quatro_algs as f32) / (total as f32);
+   println!("4 algs.: {:0.2}%", p*100.0);
+   let p:f32 = (tres_algs as f32) / (total as f32);
+   println!("3 algs.: {:0.2}%", p*100.0);
+   let p:f32 = (dois_algs as f32) / (total as f32);
+   println!("2 algs.: {:0.2}%", p*100.0);
+   let p:f32 = (um_alg as f32) / (total as f32);
+   println!("1 alg.: {:0.4}%", p*100.0);
+
+
+   // margem de erro tem que ser menor que 10%.
+   for margem_erro in [0.10, 0.05, 0.01, 0.005] {
+      let p:f32 = (cinco_algs as f32) / (total as f32);
+      let erro = dbg!((p-84.7425/100.0).abs());
+      assert!(erro < dbg!(margem_erro));
+
+      let p:f32 = (quatro_algs as f32) / (total as f32);
+      let erro = dbg!((p-13.7331/100.0).abs());
+      assert!(erro < dbg!(margem_erro));
+
+      let p:f32 = (tres_algs as f32) / (total as f32);
+      let erro = dbg!((p-1.3733/100.0).abs());
+      assert!(erro < dbg!(margem_erro));
+
+      let p:f32 = (dois_algs as f32) / (total as f32);
+      let erro = dbg!((p-0.1373/100.0).abs());
+      assert!(erro < dbg!(margem_erro));
+
+      let p:f32 = (um_alg as f32) / (total as f32);
+      let erro = dbg!((p-0.0152/100.0).abs());
+      assert!(erro < dbg!(margem_erro));
+   }
+
+}
