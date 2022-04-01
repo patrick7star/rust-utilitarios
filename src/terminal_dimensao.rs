@@ -25,8 +25,8 @@
 */
 
 // biblioteca padrão do Rust.
-use std::process::Command;
 use std::str::FromStr;
+use std::process::Command;
 
 /** 
  Um enum, pois a biblioteca original tem
@@ -51,7 +51,8 @@ pub struct Altura(pub u16);
 type Tupla = (TerminalDimensao, TerminalDimensao);
 pub type TD = TerminalDimensao;
 
-
+// ---- ---- ---- compila este no Linux ---- ---- ----
+#[cfg(target_os="linux")]
 pub fn terminal_largura() -> Result<TD, &'static str> {
    // executa comando para obter largura primeiramente ...
    let mut resultado:Vec<u8> = {
@@ -78,6 +79,7 @@ pub fn terminal_largura() -> Result<TD, &'static str> {
    Ok(TerminalDimensao::Largura(largura))
 }
 
+#[cfg(target_os="linux")]
 pub fn terminal_altura() -> Result<TD, &'static str> {
    // executa comando para obter largura primeiramente ...
    let mut resultado:Vec<u8> = {
@@ -102,6 +104,72 @@ pub fn terminal_altura() -> Result<TD, &'static str> {
    let altura = u16::from_str(caracteres.as_str()).unwrap();
    // retornando encapsulado para possível erro.
    Ok(TerminalDimensao::Altura(altura))
+}
+
+// ---- ---- ---- compila na plataforma Windows ---- ---- ----
+#[cfg(target_os="windows")]
+pub fn terminal_altura() -> Result<TD, &'static str> {
+   // executa comando para obter largura primeiramente ...
+   let mut resultado:Vec<u8> = {
+      let caminho_ps:&str = "C:\\Program Files\\PowerShell\\7";
+      match Command::new("pwsh.exe")
+      .current_dir(caminho_ps)
+      .arg("-c").arg("Write-Output")
+      .arg("$Host.UI.RawUI.WindowSize.Height")
+      .output() {
+         // retorna array de bytes que é o resultado.
+         Ok(r) => dbg!(r.stdout),
+         Err(_) => 
+            { return Err("não foi possível obter 'Largura'"); }
+      }
+   };
+
+   // removendo quebra de linha.
+   resultado.pop();
+   resultado.pop();
+   // transformando em número.
+   let mut caracteres:String = String::new();
+
+   for ch in resultado.into_iter()
+      { caracteres.push(ch as char); }
+
+   /* converte para um inteiro positivo, e 
+    * e registra valor para retorno, posteriormente. */
+   let altura = u16::from_str(caracteres.as_str()).unwrap();
+   // retornando encapsulado para possível erro.
+   Ok(TerminalDimensao::Altura(altura))
+}
+
+#[cfg(target_os="windows")]
+pub fn terminal_largura() -> Result<TD, &'static str> {
+   let caminho = "C:\\Program Files\\PowerShell\\7";
+   let mut comando = Command::new("pwsh.exe"); 
+   // executa comando para obter largura primeiramente ...
+   let mut resultado:Vec<u8> = {
+      match comando.current_dir(caminho)
+      .arg("-c").arg("write-output")
+      .arg("$Host.UI.RawUI.WindowSize.Width")
+      .output() {
+         Ok(r) => dbg!(r.stdout),
+         Err(_) => { panic!("algum erro!!!"); }
+      }
+   };
+
+   // removendo quebra de linha.
+   resultado.pop();
+   resultado.pop();
+   // transformando em número.
+   let mut caracteres:String = String::new();
+
+   for ch in resultado.into_iter()
+      { caracteres.push(ch as char); }
+
+   /* converte para um inteiro positivo, e 
+    * e registra valor para retorno, posteriormente. */
+   let largura = u16::from_str(caracteres.as_str()).unwrap();
+   // retornando encapsulado para possível erro.
+   Ok(TerminalDimensao::Largura(largura))
+
 }
 
 /// função retorna tupla com enum's de "ambos eixos".
@@ -156,27 +224,46 @@ mod tests {
    fn testa_terminal_dimensao() {
       let (largura, altura):(u16, u16);
       if let Ok((TD::Largura(l), TD::Altura(h))) = terminal_dimensao()
-         { largura = l; altura = h; }
-      else { largura = u16::MIN; altura = u16::MAX; }
+         { largura = dbg!(l); altura = dbg!(h); }
+      else { 
+         largura = dbg!(u16::MIN); 
+         altura = dbg!(u16::MAX); 
+      }
       assert!(largura > altura);
    }
 
+   #[cfg(target_os="linux")]
    #[test]
    fn dimensao_especifica() {
       let (largura, altura):(u16, u16);
       if let Ok((TD::Largura(l), TD::Altura(h))) = terminal_dimensao()
-         { largura = l; altura = h; }
-      else { largura = u16::MIN; altura = u16::MAX; }
+         { largura = dbg!(l); altura = dbg!(h); }
+      else { 
+         largura = dbg!(u16::MIN); altura = dbg!(u16::MAX); 
+      }
       assert!(largura > altura);
       assert_eq!(largura, 80);
       assert_eq!(altura, 20);
+   }
+   #[cfg(target_os="windows")]
+   #[test]
+   fn dimensao_especifica() {
+      let (largura, altura):(u16, u16);
+      if let Ok((TD::Largura(l), TD::Altura(h))) = terminal_dimensao()
+         { largura = dbg!(l); altura = dbg!(h); }
+      else { 
+         largura = dbg!(u16::MIN); altura = dbg!(u16::MAX); 
+      }
+      assert!(largura > altura);
+      assert_eq!(largura, 149);
+      assert_eq!(altura, 41);
    }
 
    #[test]
    fn testa_dimensao() {
       let (largura, altura):(u16, u16);
       if let Some((Largura(l), Altura(h))) = dimensao()
-         { largura = l; altura = h; }
+         { largura = dbg!(l); altura = dbg!(h); }
       else { largura = u16::MIN; altura = u16::MAX; }
       assert!(largura > altura);
    }
