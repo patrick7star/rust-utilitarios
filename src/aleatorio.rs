@@ -96,56 +96,6 @@ fn numero_0_a_9_faixa(intervalo:RangeInclusive<u8>) -> u8 {
    return inicial;
 }
 
-/*
-fn numero_i8() -> i8 {
-   /* no geral, tal valor tem como máximo
-    * 127 e mínimo -128. Vamos aplicar o
-    * método apenas para à parte positiva, já
-    * que o negativo é a simetria, ou seja, em
-    * metade dos casos aplicamos o sinal, assim
-    * a distribuição fica igualitária.
-    * Outra coisa que temos é, vamos reutilizar
-    * a função geradora para 8-bits positivos. 
-    * Más aquele vai de 0 à 256, ultrapassa até
-    * a parte positiva? Sim, porém apenas aplicando
-    * a divisão por dois  em todos, temos o mesmo
-    * resultado, e, à parte negativa já respondemos*/
-   // se o número tem sinal ou não.
-   let sinal = valor_logico_aleatorio();
-   // determinando um valor de baseado em 
-   // função já criada: "numero_u8".
-   let aux_valor:u8 = numero_u8();
-   let valor:i8;
-   if aux_valor > 127 
-      { valor = (aux_valor % 128) as i8; }
-   else { valor = aux_valor as i8; }
-   // levando primeiro em conta o sinal selecionado randômicamente.
-   if sinal {
-      /* com o sinal sendo positivo, então vamos 
-       * deixar o valor como está. Não têm qualquer
-       * relação com o sinal do valor em sí, por 
-       * conveção escolhi deste modo. */
-      valor
-   }
-   else {
-      /* resolvendo caso de o u8 randômico não 
-       * alcançar -128. Se alcançar o 0, metade
-       * será reatribuído em -128, outra no valor
-       * original. Fazemos isso usando novamente
-       * "lançando uma moeda" sobre que tipo será
-       * metade-metade de cada lado no final. */
-       if valor == 0 { 
-         match valor_logico_aleatorio() {
-            true => i8::MIN,
-            false => 0
-         }
-      }
-      // se não for 127, apenas negativa o valor normalmente.
-      else { (-1)*valor }
-   }
-}
-*/
-
 // sortea um valor de um à noventa-e-nove.
 fn um_a_noventa_e_nove() -> u8 {
    let tens = numero_0_a_9_faixa(1..=9);
@@ -397,15 +347,7 @@ mod tests {
    }
 
    const N:usize = 4_000;
-   /*
-   fn lanca_n_i8() -> [i8; N] {
-      // 100 mil elementos.
-      let mut array:[i8; N] = [0;N];
-      // sorteando 100 mil números aleatorios.
-      for i in 0..N { array[i] = numero_i8(); }
-      return array;
-   }
-   */
+
    fn lanca_n_u8() -> [u8; N] {
       // 100 mil elementos.
       let mut array:[u8; N] = [0;N];
@@ -457,33 +399,6 @@ mod tests {
       assert!((p1+p2+p3) >= 0.96 && (p1 + p2 + p3) <= 1.04);
    }
    
-   /*
-   fn porcentagem_negativa(amostras:&[i8; N]) -> f32 {
-      let mut contador:u32 = 0;
-      for x in amostras.iter() { 
-         if *x < 0 { contador += 1; }
-      }
-      return (contador as f32) / (N as f32);
-   }
-   #[test]
-   fn teste_i8_randomico() {
-      let amostra = lanca_n_i8();
-      let p = porcentagem_negativa(&amostra);
-      let q = 1.0000-p;
-      println!(
-         "\n\rparte positiva:{:>4.2}%
-         \rparte negativa:{:>4.2}%",
-         p*100.0, q*100.0
-      );
-      /* verifica se fica metade-metade, com 
-       * precisão de 0.4 em margem de erro. */
-      assert!(
-         p >= 0.4960 && p <= 0.5040 ||
-         q >= 0.4960 && q <= 0.5040 
-      );
-   }
-   */
-
    #[test]
    fn testa_sortear() {
       let booleano:bool = dbg!(sortear::bool());
