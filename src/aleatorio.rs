@@ -35,7 +35,7 @@ pub fn algarismo_aleatorio() -> u8{
    let tempo = SystemTime::now(); 
    let mut t_nanoseg:usize = 0;
 
-   for _ in 1..100 {
+   for _ in 1..=100 {
       let tempo_agora = SystemTime::now();
       t_nanoseg += {
          tempo_agora
@@ -47,9 +47,10 @@ pub fn algarismo_aleatorio() -> u8{
 
    let s = t_nanoseg.to_string();
    let _inteiro = match u64::from_str(s.as_str()) {
-         Ok(valor) => valor,
-         Err(_) => {panic!("erro ocorreu na conversão!");}
-      };
+      Ok(valor) => valor,
+      Err(_) => 
+         {panic!("erro ocorreu na conversão!");}
+   };
    let ch = char_do_meio(s);
    return (ch as u8) - 48_u8;
 }
@@ -95,6 +96,7 @@ fn numero_0_a_9_faixa(intervalo:RangeInclusive<u8>) -> u8 {
    return inicial;
 }
 
+/*
 fn numero_i8() -> i8 {
    /* no geral, tal valor tem como máximo
     * 127 e mínimo -128. Vamos aplicar o
@@ -142,6 +144,7 @@ fn numero_i8() -> i8 {
       else { (-1)*valor }
    }
 }
+*/
 
 // sortea um valor de um à noventa-e-nove.
 fn um_a_noventa_e_nove() -> u8 {
@@ -191,7 +194,7 @@ fn numero_u8() -> u8 {
    return a1*100 + a2*10 + a3;
 }
 
-/** 
+/***
  compila todas funções em uma só, que poder emitir
  quaisquer tipos num só módulo, onde têm funções com
  nomes parecidos dos tipos, assim invokar tal função 
@@ -233,12 +236,24 @@ pub mod sortear {
 
       /* se não estiver dentro do limite, sortear 
       * até que esteja. */
-      let mut x:u8 = super::numero_u8();
-      while !(x >= (a as u8) && x <= (b as u8)) 
-         { x = super::numero_u8(); }
+      let x:u8 = super::numero_u8();
+
+      // ajusta no intervalo.
+      fn calibra(n:u8, a:u8, b:u8) -> u8 {
+         let d = b - a;
+         if n < a && (n - 0) < d 
+            { dbg!(a + n) }
+         else if n < a && (n - 0) >= d 
+            { dbg!(a + (n % d)) }
+         else if n > b && (n - b) < d 
+            { dbg!(b - (n - b)) }
+         else if n > b && (n - b) >= d 
+            { dbg!(b - ((n - b) % d)) }
+         else { dbg!(n) }
+      }
 
       // retorna número sorteado.
-      return x;
+      return calibra(x, a as u8, b as u8);
    }
 
    /* Agora para inteiros de 8-bits que permitem
@@ -250,37 +265,96 @@ pub mod sortear {
       let i = intervalo;
       let a = *i.start(); 
       let b = *i.end();
-      if a >= -128  && b <= 127 {
-         let mut x:i8 = super::numero_i8();
-         /* se não estiver dentro do limite, sortear 
-         * até que esteja. */
-         while !(x >= (a as i8) && x <= (b as i8)) 
-            { x = super::numero_i8(); }
-         return x;
+
+      // decidindo sinal, mesma função para geração ...
+      if a >= -128 && b <= 127 {
+         // se é uma faixa positiva.
+         if a >= 0 && b <= 127 
+            { u8(a..=b) as i8 }
+         // uma parte negativa, outra positiva.
+         else if a < 0 && b > 0 {
+            // módulo do ínicio.
+            let _a:i16 = a.abs() as i16;
+            // computando percentual de negativos e positivos.
+            let percentual:f32 = {
+               if _a > b 
+                  { _a as f32 / (_a.abs() + b ) as f32 }
+               else 
+                  { b as f32 / (_a.abs() + b) as f32 }
+            };
+            /* se houver mais ou menos metade negativa,
+             * e a outra metade positiva, a distribuição
+             * é 50% para cada, com margem de 10% de erro. */
+            if (percentual-0.50).abs() < 0.10 {
+               if bool() 
+                  { u8(0..=a.abs()) as i8 }
+               else 
+                  { u8(0..=b) as i8 }
+            }
+            // caso antigo supondo uma distribuição igualitária.
+            else {
+               if bool() 
+                  { u8(0..=a.abs()) as i8 }
+               else 
+                  { u8(0..=b) as i8 }
+            }
+         }
+         else 
+            { (-1)*(u8(a..=b) as i8) }
       }
       else 
          { panic!("fora do intervalo para o tipo: -128..127"); }
    }
 
-   // Será futuramente implementado.
-   pub fn u16() -> u16 { 
-      /* Mesmo acima, a distribuição é a
-       * seguinte:
-       * -- 55,536 números são de 5 algarismos.
-       *    ou seja, estamos falando de 84,7% de
-       *    de todos números.
-       * -- 9,000 números contém 4 algarismos,
-       *    que representa aproximadamente 13,7%
-       *    de todos os ~65mil números.
-       * -- 900 números são de 3 algarismos, que
-       *    totaliza percentualmente em 1,37%(
-       *    arredondando para 1,4%) na distribuição 
-       *    de números.
-       * -- 90 contendo apenas 2 algarismos, este
-       *    está entre 0,14% dos números.
-       * -- 10 contendo apenas 1 algarismos. Quase
-       *    nada, só 0,015% dos números. */
-       u16::from_be_bytes([u8(0..=255), u8(0..=255)])
+   /* O sorteio de um inteiro positivo de 16-bits. 
+    * O modo de fazer isto é bem simples: sorteia-se
+    * dois inteiros positivos de 8-bits, numa forma
+    * bem 'big-endian', e converte-lô no inteiro em
+    * si com o método própria. */
+   pub fn u16(intervalo:RangeInclusive<u16>) -> u16 { 
+      // renomeando ínicio e fim do intervalo ...
+      let a = *intervalo.start();
+      let b = *intervalo.end();
+      // array estática contendo dois únicos bytes.
+      let bytes:[u8; 2];
+
+      /* facilitando o processo de computação com
+       * números que requerem apenas um byte. */
+      if b < 256 
+         { bytes = [0, u8(0..=255)]; }
+      else 
+         { bytes = [u8(0..=255), u8(0..=255)]; }
+
+      /* convertendo do big-endian bytes para um
+       * inteiro positivo de 16-bits. */
+      let numero = dbg!(u16::from_be_bytes(bytes));
+      
+      // ajusta no intervalo.
+      fn calibra(n:u16, a:u16, b:u16) -> u16 {
+         let d = b - a;
+         if n < a && (n - 0) < d 
+            { dbg!(a + n) }
+         else if n < a && (n - 0) >= d 
+            { dbg!(a + (n % d)) }
+         else if n > b && (n - b) < d 
+            { dbg!(b - (n - b)) }
+         else if n > b && (n - b) >= d 
+            { dbg!(b - ((n - b) % d)) }
+         else { dbg!(n) }
+      }
+
+      return calibra(numero, a, b);
+   }
+
+   /* Gera um inteiro de 16-bits, onde o núcleo da função
+    * é usar a função 'u16' que já cuida de quase tudo, * tendo com tarefa apenas o sorteio do sinal, que
+    * sempre acaba numa distribuição meio-a-meio. */
+   pub fn i16(_intervalo:RangeInclusive<i16>) -> i16 {
+      let f:u16 = u16::MAX/2;
+      if bool() 
+         { u16(0..=f) as i16 }
+      else 
+         { (-1)*(u16(0..=f) as i16) - 1 }
    }
 }
 
@@ -323,7 +397,7 @@ mod tests {
    }
 
    const N:usize = 4_000;
-
+   /*
    fn lanca_n_i8() -> [i8; N] {
       // 100 mil elementos.
       let mut array:[i8; N] = [0;N];
@@ -331,6 +405,7 @@ mod tests {
       for i in 0..N { array[i] = numero_i8(); }
       return array;
    }
+   */
    fn lanca_n_u8() -> [u8; N] {
       // 100 mil elementos.
       let mut array:[u8; N] = [0;N];
@@ -382,6 +457,7 @@ mod tests {
       assert!((p1+p2+p3) >= 0.96 && (p1 + p2 + p3) <= 1.04);
    }
    
+   /*
    fn porcentagem_negativa(amostras:&[i8; N]) -> f32 {
       let mut contador:u32 = 0;
       for x in amostras.iter() { 
@@ -406,6 +482,7 @@ mod tests {
          q >= 0.4960 && q <= 0.5040 
       );
    }
+   */
 
    #[test]
    fn testa_sortear() {
