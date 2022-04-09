@@ -335,13 +335,13 @@ pub fn arvore(caminho:&str, mostra_arquivos:bool) -> String {
 // ----------- testando funções --------
 
 #[cfg(test)]
+#[cfg(target_os="linux")]
 mod tests {
    // biblioteca padrão do Rust.
    use std::path::Path;
    use std::env::var;
    //use constroi_simbolos::imprime;
    use super::*;
-   
    // para testes.
    fn imprime(matriz:Vec<Vec<char>>) {
        // pega a linha da matriz.

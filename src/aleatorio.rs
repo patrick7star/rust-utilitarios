@@ -16,43 +16,39 @@
 
 // biblioteca Rust:
 use std::time::SystemTime;
-use std::str::FromStr;
 use std::ops::RangeInclusive;
 
 
-fn char_do_meio(s:String) -> char {
-   let mut meio = s.len()/2_usize;
-   for ch in s.as_str().chars() {
-
-      if meio == 0 { return ch; }
-
-      meio -= 1;
-   }
-   return '-';
+fn unidades(s:String) -> char {
+   let iterador = s.chars().rev();
+   let ch = iterador.last().unwrap();
+   return ch;
 }
 
-pub fn algarismo_aleatorio() -> u8{
+// através do tempo do sistema, obtem um valor de 0..9.
+fn algarismo_aleatorio() -> u8{
    let tempo = SystemTime::now(); 
-   let mut t_nanoseg:usize = 0;
+   let mut t_nanoseg:u64 = 0;
 
-   for _ in 1..=100 {
+   /* a soma de vários tempos do sistemas em 
+    * seguida, para que deixa o dígito das unidades
+    * (este que é o que mais vária) ainda mais "instável"
+    * portando aproximando o valor selecionado ainda
+    * mais de um fenômeno estocástico. */
+   
+   for _ in 1..=10 {
       let tempo_agora = SystemTime::now();
       t_nanoseg += {
          tempo_agora
          .duration_since(tempo)
          .unwrap()
-         .as_nanos() as usize
+         .as_nanos() as u64
       }
    }
-
-   let s = t_nanoseg.to_string();
-   let _inteiro = match u64::from_str(s.as_str()) {
-      Ok(valor) => valor,
-      Err(_) => 
-         {panic!("erro ocorreu na conversão!");}
-   };
-   let ch = char_do_meio(s);
-   return (ch as u8) - 48_u8;
+   // caractére do último dígito.
+   let ch = unidades(t_nanoseg.to_string());
+   // convertendo para um valor ASCII ...
+   return (ch as u8) - 48_u8; 
 }
 
 fn valor_logico_aleatorio() -> bool {
@@ -382,7 +378,7 @@ mod tests {
    //#[ignore]
    fn teste_u8_randomico() {
       // 10 inteiros de 8 bits.
-      for _x in 1..10+1 
+      for _ in 1..=10 
          { println!("8 bits: {}",super::numero_u8());}
       println!("\n"); // pula duas linhas(espaçamento).
 
