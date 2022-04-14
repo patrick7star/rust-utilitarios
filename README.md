@@ -12,3 +12,6 @@ módulos:
   - `tela`: escrever strings, ou realizar vários desenhos na tela, em qualquer posição dada. 
   - `terminal_dimensao`: implementação simples para obter as dimensões do terminal usado.
   - `tabela_visualizacao`: jeito melhor de representar dados de uma tabela no terminal.
+
+### Considerações:
+O módulo `tela` só aceita no máximo uma tela de 256(caractéres) de largura/altura, pois é medida em caractéres tal dimensão. No futuro será extendido para uma medida na casa das dezena de milhar.
