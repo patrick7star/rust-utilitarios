@@ -1,8 +1,12 @@
-/*
- * fazer uma árvore para visualização
- * de forma organizada, ramificando seus 
- * arquivos e sub-diretórios.
- */
+/*! 
+ # Desenho dos diretórios em árvore
+  Fazer uma árvore para visualização
+ de forma organizada, ramificando seus 
+ arquivos e sub-diretórios. Ao acionar a
+ função pode-se escolher tanto se quer
+ apenas a visualiazão dos sub-diretórios,
+ como também dos seus arquivos.
+*/
 
 
 // biblioteca padrão do Rust.

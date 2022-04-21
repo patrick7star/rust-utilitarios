@@ -1,146 +1,78 @@
-/* neste código vamos apresentar algumas funções
- * que geram, números inteiros e flutuantes, 
- * arrays inteiras e intervalos de números
- * aleatórios.
- * O algoritmo é simples, pega o clock ou 
- * tempo no exato momento de execução, como geralmente
- * é um número na casa das dezenas de milhares, 
- * obtem seu último dígito, que vária muito, e
- * soma com outros mais cem números obtidos pelo
- * mesmo processo, e, novamente arranca-se o
- * valor unitário do número, que sempre varia
- * de zero à dez. Em cima desta função que dá
- * valores de 0 à 9 de forma randomizada, se
- * constrói todo o ferramental de aleatoriaedade.
- */
+/*!  
+ # Geração de números aleatórios
+  Neste código vamos apresentar algumas funções
+ que geram, números inteiros e flutuantes, 
+ arrays inteiras e intervalos de números
+ aleatórios.
+
+  O algoritmo é simples, pega o clock ou 
+ tempo no exato momento de execução, como geralmente
+ é um número na casa das dezenas de milhares, 
+ obtem seu último dígito, que vária muito, e
+ soma com outros mais cem números obtidos pelo
+ mesmo processo, e, novamente arranca-se o
+ valor unitário do número, que sempre varia
+ de zero à dez. Em cima desta função que dá
+ valores de 0 à 9 de forma randomizada, se
+ constrói todo o ferramental de aleatoriaedade.
+ 
+  Tais funções não foram feito para serem gerados
+ em grandes escalas randomizadas, apenas um 
+ em escalas de milisegundos a geração massissa
+ estocástica funciona bem, portanto, um algoritmo
+ extremamente lento.
+*/
 
 // biblioteca Rust:
 use std::time::SystemTime;
-use std::ops::RangeInclusive;
 
+/* função efeitua um "lançamento de moeda" levando
+ * em conta repetição de dezenas de vezes da medição
+ * do relógio do sistema, isto após ter somado a 
+ * medição várias vezes, após isso pega a unidade
+ * do número medido porque é a parte mais volátil
+ * do número, principalmente depois de somado 
+ * várias vezes. */
+fn lancamento() -> bool {
+   // contador de tempo decorrido.
+   let cronometro = SystemTime::now();
+   let mut nanoseg:u64 = 0;
 
-fn unidades(s:String) -> char {
-   let iterador = s.chars().rev();
-   let ch = iterador.last().unwrap();
-   return ch;
-}
-
-// através do tempo do sistema, obtem um valor de 0..9.
-fn algarismo_aleatorio() -> u8{
-   let tempo = SystemTime::now(); 
-   let mut t_nanoseg:u64 = 0;
-
-   /* a soma de vários tempos do sistemas em 
-    * seguida, para que deixa o dígito das unidades
-    * (este que é o que mais vária) ainda mais "instável"
-    * portando aproximando o valor selecionado ainda
-    * mais de um fenômeno estocástico. */
-   
-   for _ in 1..=10 {
-      let tempo_agora = SystemTime::now();
-      t_nanoseg += {
-         tempo_agora
-         .duration_since(tempo)
-         .unwrap()
-         .as_nanos() as u64
-      }
+   /* soma todos tempos decorridos para que
+    * unidades de tal valor, varie alucinadamente,
+    * porque é com tal elemento que decidimos 
+    * o valor estocástico gerado. */
+   for _ in 1..=50 {
+      let d = cronometro.elapsed().unwrap();
+      nanoseg += d.as_nanos() as u64; 
    }
-   // caractére do último dígito.
-   let ch = unidades(t_nanoseg.to_string());
-   // convertendo para um valor ASCII ...
-   return (ch as u8) - 48_u8; 
-}
 
-fn valor_logico_aleatorio() -> bool {
-   // se for maior que cinco retorna verdadeiro.
-   if algarismo_aleatorio() >= 5 { true }
-   // caso contrário falso.
-   else { false}
-}
-
-fn numero_0_a_9_faixa(intervalo:RangeInclusive<u8>) -> u8 {
-   // proposições:
-   let p1 = *intervalo.start() <= 9;
-   let p2 = *intervalo.end() <= 9;
-   // renomeando atributos para facilitar:
-   let (i, f):(u8, u8) = (
-      *intervalo.start(), 
-      *intervalo.end()
-   );
-
-   // caso valores estejam invertidos, apenas troque...
-   if i > f { return numero_0_a_9_faixa(f..=i) }
-   // caso não haja variação.
-   else if i == f { return i; }
-   // faixa dada tem que estar entre 0 e 9, corrigindo...
-   else if !p1 || !p2 {
-      // corrigindo ambos trazendo aos valores válidos.
-      if p1 { return numero_0_a_9_faixa(i%10..=f); }
-      if p2 { return numero_0_a_9_faixa(i..=f%10); }
+   // extraíndo unidade do número, pois é muito volátil.
+   let unidade:char = {
+      nanoseg
+      .to_string()
+      .pop()
+      .unwrap()
+   };
+   /* metade dos "números" resultam em 'verdadeiro'
+    * a outra o inverso. */
+   match unidade {
+      '0' => false,
+      '1' => true,
+      '2' => false,
+      '3' => true,
+      '4' => false,
+      '5' => true,
+      '6' => false,
+      '7' => true,
+      '8' => false,
+      '9' => true,
+      _ => 
+         { panic!("não obtido um número!"); }
    }
-   // se for a faixa inteira, apenas retorna a função especializada nisto.
-   else if i == 0 && f == 9 
-      { return algarismo_aleatorio() }
-
-   // dado um valor inicial.
-   let mut inicial = algarismo_aleatorio();
-   while !(inicial >=i && inicial <= f) {
-      inicial = algarismo_aleatorio();
-   }
-   
-   // retorna número aleatório limitado.
-   return inicial;
 }
 
-// sortea um valor de um à noventa-e-nove.
-fn um_a_noventa_e_nove() -> u8 {
-   let tens = numero_0_a_9_faixa(1..=9);
-   let ones = numero_0_a_9_faixa(0..=9);
-   return tens*10 + ones;
-}
-
-fn numero_u8() -> u8 {
-   /* distribuição de ciência:
-    * => 10 números com 1 algarismo,
-    * portando 4% da amostra:
-    *    0, 1, 2, 3, 4, ... ,9
-    * => 90 números com 2 algarismos,
-    * portando 35% da amostra:
-    *    10, 11, 12,..., 97, 98, 99
-    * => 156 números com 3 algarismos,
-    * portanto o restante 61%.
-    *    100, 101,102,..., 253, 254, 255.
-   */
-   let x = um_a_noventa_e_nove();
-   let (a1, a2, a3):(u8, u8, u8);
-   if x >= 10 && x <= 10+4 
-      { return algarismo_aleatorio(); }
-   else if x >= 15 && x <= 15+31 { 
-      a1 = numero_0_a_9_faixa(1..=9)*10;
-      a2 = numero_0_a_9_faixa(0..=9);
-      a3 = 0;
-      return a1 + a2 + a3;
-   }
-   else {
-      a1 = numero_0_a_9_faixa(1..=2);
-      if a1 == 1 {
-         a2 = numero_0_a_9_faixa(0..=9);
-         a3 = numero_0_a_9_faixa(0..=9);
-      }
-      else {
-         a2 = numero_0_a_9_faixa(0..=5);
-         if a2 == 5 {
-            a3 = numero_0_a_9_faixa(0..=5);
-         }
-         else {
-            a3 = numero_0_a_9_faixa(0..=5);
-         }
-      }
-   }
-   return a1*100 + a2*10 + a3;
-}
-
-/***
+/**
  compila todas funções em uma só, que poder emitir
  quaisquer tipos num só módulo, onde têm funções com
  nomes parecidos dos tipos, assim invokar tal função 
@@ -151,257 +83,157 @@ fn numero_u8() -> u8 {
  de fora nisso. 
 */
 pub mod sortear {
-   /* importando biblioteca importada no módulo
-   * externo a este. */
-   use super::RangeInclusive;
+   use std::ops::RangeInclusive;
 
-   /* implementação para valor booleano. Só chama
-   * função antigo que faz, isso, por motivos de
-   * compatibilidade com códigos que contam 
-   * com as funções antigas, e preguiça de remexer
-   * em tudo para qualquer coisa não quebrar. */
-   pub fn bool() -> bool
-      { super::valor_logico_aleatorio() }
+   /// gera um valor booleano randômico.
+   pub fn bool() -> bool 
+      { super::lancamento() }
 
-   /* O mesmo com inteiros positivos de 8-bits.
-   * Apenas chama a função que já fazia, ao invés
-   * de mexer na original(retro-compatibilidade).
-   * Como a antiga não tive tempo de implemenetar,
-   * mas agora tenho... vamos usar intervalos para
-   * selecionar uma faixa onde o valor tem que 
-   * ser selecionado. */
-   pub fn u8(intervalo:RangeInclusive<i16>) -> u8 {
+   /// gera valor inteiro positivo de 8-bits(0 à 255).
+   pub fn u8(intervalo:RangeInclusive<u8>) -> u8 {
       // apelidos para melhor legibilidade.
-      let i = intervalo;
-      let a = *i.start();
-      let b = *i.end();
-
-      // se não estiver no devido intervalo, dá erro!
-      if !(a >= 0 && b <= 255)  
-         { panic!("fora do intervalo permitido para o tipo: 0..255"); }
+      let a = *intervalo.start();
+      let b = *intervalo.end();
 
       /* se não estiver dentro do limite, sortear 
       * até que esteja. */
-      let x:u8 = super::numero_u8();
-
-      // ajusta no intervalo.
-      fn calibra(n:u8, a:u8, b:u8) -> u8 {
-         let d = b - a;
-         if n < a && (n - 0) < d 
-            { dbg!(a + n) }
-         else if n < a && (n - 0) >= d 
-            { dbg!(a + (n % d)) }
-         else if n > b && (n - b) < d 
-            { dbg!(b - (n - b)) }
-         else if n > b && (n - b) >= d 
-            { dbg!(b - ((n - b) % d)) }
-         else { dbg!(n) }
+      let mut x:u8 = 0;
+      // last-endian ...
+      for e in 0u32..8u32 {
+         // positivo como se fosse o um(1).
+         if bool()   
+            { x += 2u8.pow(e); }
       }
 
       // retorna número sorteado.
-      return calibra(x, a as u8, b as u8);
+      if a > 0 && b <= u8::MAX
+         { (x % ((b - a) + 1)) + a }
+      else if a == 0 && b < u8::MAX
+         { x % (b + 1) }
+      else { x }
    }
 
    /* Agora para inteiros de 8-bits que permitem
    * números negativos. Mesmo esquema(retrocompatibilidade)
    * e implementação do 'Range' para delimitar
    * o sorteio. */
-   pub fn i8(intervalo:RangeInclusive<i16>) -> i8 {
+   pub fn i8(intervalo:RangeInclusive<i8>) -> i8 {
       // alias do interválo para propósito de codificação.
-      let i = intervalo;
-      let a = *i.start(); 
-      let b = *i.end();
+      let a = intervalo.start(); 
+      let b = intervalo.end();
 
-      // decidindo sinal, mesma função para geração ...
-      if a >= -128 && b <= 127 {
-         // se é uma faixa positiva.
-         if a >= 0 && b <= 127 
-            { u8(a..=b) as i8 }
-         // uma parte negativa, outra positiva.
-         else if a < 0 && b > 0 {
-            // módulo do ínicio.
-            let _a:i16 = a.abs() as i16;
-            // computando percentual de negativos e positivos.
-            let percentual:f32 = {
-               if _a > b 
-                  { _a as f32 / (_a.abs() + b ) as f32 }
-               else 
-                  { b as f32 / (_a.abs() + b) as f32 }
-            };
-            /* se houver mais ou menos metade negativa,
-             * e a outra metade positiva, a distribuição
-             * é 50% para cada, com margem de 10% de erro. */
-            if (percentual-0.50).abs() < 0.10 {
-               if bool() 
-                  { u8(0..=a.abs()) as i8 }
-               else 
-                  { u8(0..=b) as i8 }
-            }
-            // caso antigo supondo uma distribuição igualitária.
-            else {
-               if bool() 
-                  { u8(0..=a.abs()) as i8 }
-               else 
-                  { u8(0..=b) as i8 }
-            }
-         }
-         else 
-            { (-1)*(u8(a..=b) as i8) }
+      // se é uma faixa positiva.
+      if *a >= 0 && *b > 0 { 
+         let a = *a as u8;
+         let b = *b as u8;
+         u8(a..=b) as i8 
       }
-      else 
-         { panic!("fora do intervalo para o tipo: -128..127"); }
+      // leva em conta a proporção de negativos/positivos.
+      else if *a < 0 && *b >= 0 {
+         // parte negativa.
+         let _a:i8 = {
+            if *a == -128
+               { 127_i8 }
+            else
+               { a.abs() }
+         };
+         // porcentagem dos positivos.
+         let p = (*b as f32) / (_a + *b) as f32;
+         /* divisão dos ligados aos positivos e 
+          * negativos, usando como bussola os 
+          * duzentos e cinquenta seis valores do u8. */
+         let meio:u8 = (p * 255.0) as u8;
+
+         /* Se for do 'meio' computado para cima, então 
+          * serão sorteados inteiros positivos. */
+         if dbg!(u8(0..=255)) > dbg!(meio) 
+            { i8(0..=*b) }
+         // caso contrário, negativos apenas.
+         else
+            { (-1) * i8(0..=_a) -1 }
+      } 
+      /* intervalo negativo, então só negativos. Como
+       * é basicamento o primeiro caso com valores
+       * negativos, chama a função novamente, e negativa
+       * o resultado. */
+      else {
+         (-1i8) * i8(b.abs()..=a.abs())
+      }
    }
 
-   /* O sorteio de um inteiro positivo de 16-bits. 
-    * O modo de fazer isto é bem simples: sorteia-se
-    * dois inteiros positivos de 8-bits, numa forma
-    * bem 'big-endian', e converte-lô no inteiro em
-    * si com o método própria. */
+   /// gera um inteiro positivo de 16-bits randômico.
    pub fn u16(intervalo:RangeInclusive<u16>) -> u16 { 
-      // renomeando ínicio e fim do intervalo ...
+      // acumulador de potências.
+      let mut soma:u16 = 0;
+      // quantia de bits.
+      let mut qtd:u32 = 16;
+      // apelidos:
       let a = *intervalo.start();
       let b = *intervalo.end();
-      // array estática contendo dois únicos bytes.
-      let bytes:[u8; 2];
 
-      /* facilitando o processo de computação com
-       * números que requerem apenas um byte. */
-      if b < 256 
-         { bytes = [0, u8(0..=255)]; }
-      else 
-         { bytes = [u8(0..=255), u8(0..=255)]; }
-
-      /* convertendo do big-endian bytes para um
-       * inteiro positivo de 16-bits. */
-      let numero = dbg!(u16::from_be_bytes(bytes));
-      
-      // ajusta no intervalo.
-      fn calibra(n:u16, a:u16, b:u16) -> u16 {
-         let d = b - a;
-         if n < a && (n - 0) < d 
-            { dbg!(a + n) }
-         else if n < a && (n - 0) >= d 
-            { dbg!(a + (n % d)) }
-         else if n > b && (n - b) < d 
-            { dbg!(b - (n - b)) }
-         else if n > b && (n - b) >= d 
-            { dbg!(b - ((n - b) % d)) }
-         else { dbg!(n) }
+      // supondo formatação big-endian.
+      while qtd > 0 {
+         // positivo como se fosse o um(1).
+         if bool()   
+            {soma += 2u16.pow(qtd-1); }
+         // somar zero é irrelevante, mas fica aqui
+         // para manter a lógica.
+         else {}
+         qtd -= 1;
       }
 
-      return calibra(numero, a, b);
+      // corrigindo nos intervalos.
+      if a > 0 && b <= u16::MAX
+         { (soma % ((b - a) + 1)) + a }
+      else { soma }
    }
 
-   /* Gera um inteiro de 16-bits, onde o núcleo da função
-    * é usar a função 'u16' que já cuida de quase tudo, * tendo com tarefa apenas o sorteio do sinal, que
-    * sempre acaba numa distribuição meio-a-meio. */
-   pub fn i16(_intervalo:RangeInclusive<i16>) -> i16 {
-      let f:u16 = u16::MAX/2;
-      if bool() 
-         { u16(0..=f) as i16 }
-      else 
-         { (-1)*(u16(0..=f) as i16) - 1 }
+   /// gera um inteiro positivo de 32-bits randômico.
+   pub fn u32(intervalo:RangeInclusive<u32>) -> u32 {
+      // acumulador de potências.
+      let mut soma:u32 = 0;
+      // quantia de bits.
+      let mut qtd:u32 = 32;
+      // apelidos:
+      let a = *intervalo.start();
+      let b = *intervalo.end();
+      // supondo formatação big-endian.
+      while qtd > 0 {
+         // positivo como se fosse o um(1).
+         if bool()   
+            {soma += 2_u32.pow(qtd-1); }
+         // somar zero é irrelevante, mas fica aqui
+         // para manter a lógica.
+         else {}
+         qtd -= 1;
+      }
+
+      // corrigindo nos intervalos.
+      if a > 0 && b <= u32::MAX
+         { (soma % ((b - a) + 1)) + a }
+      else { soma }
+   }
+   
+   /// gera um inteiro positivo de 64-bits randômico.
+   pub fn u64(intervalo:RangeInclusive<u64>) -> u64 {
+      // acumulador de potências.
+      let mut soma:u64 = 0;
+      // quantia de bits.
+      let mut qtd:u32 = 64;
+      // apelidos:
+      let a = *intervalo.start();
+      let b = *intervalo.end();
+      // supondo formatação big-endian.
+      while qtd > 0 {
+         // positivo como se fosse o um(1).
+         if bool()   
+            {soma += 2u64.pow(qtd-1); }
+         qtd -= 1;
+      }
+      // corrigindo nos intervalos.
+      if a > 0 && b <= u64::MAX
+         { (soma % ((b - a) + 1)) + a }
+      else { soma }
    }
 }
 
-// TESTES:
-#[cfg(test)]
-mod tests {
-   use crate::aleatorio::*; 
-
-   #[test]
-   fn um_simples_algarismo_aleatorio() { 
-      println!("==>{}",super::algarismo_aleatorio()); 
-   }
-
-   #[test]
-   //#[ignore]
-   fn mil_numeros_aleatorios() {
-      for _i in 1..=1000 { 
-         print!("{}, ", super::algarismo_aleatorio());
-      }
-   }
-
-   #[test]
-   //#[ignore]
-   fn verificando_faixas() {
-      for _i in 1..=5 {
-         println!("de 0 até 5: {}", numero_0_a_9_faixa(0..=5))
-      }
-      println!("\n");
-      for _i in 1..=5 {
-         println!("de 6 até 9: {}", numero_0_a_9_faixa(6..=9))
-      }
-      println!("\n");
-      for _i in 1..=5 {
-         println!("de 0 até 1: {}", numero_0_a_9_faixa(0..=1))
-      }
-      println!("\n");
-      for _i in 1..=5 {
-         println!("de 1 até 8: {}", numero_0_a_9_faixa(8..=1))
-      }
-   }
-
-   const N:usize = 4_000;
-
-   fn lanca_n_u8() -> [u8; N] {
-      // 100 mil elementos.
-      let mut array:[u8; N] = [0;N];
-      // sorteando 100 mil números aleatorios.
-      for i in 0..N { array[i] = numero_u8(); }
-      return array;
-   }
-   
-   fn porcentagem_um_algarismo(amostras:&[u8; N]) -> f32 {
-      let mut q:u32 = 0;
-      for x in amostras.iter() {
-         if (0..=9).contains(x) { q += 1; }
-      }
-      return (q as f32) / (N as f32);
-   }
-   fn porcentagem_dois_algarismos(amostras:&[u8; N]) -> f32 {
-      let mut q:u32 = 0;
-      for x in amostras.iter() {
-         if (10..=99).contains(x) { q += 1; }
-      }
-      return (q as f32) / (N as f32);
-   }
-   fn porcentagem_tres_algarismos(amostras:&[u8; N]) -> f32 {
-      let mut q:u32 = 0;
-      for x in amostras.iter() {
-         if (100..=255).contains(x) { q += 1; }
-      }
-      return (q as f32) / (N as f32);
-   }
-
-   #[test]
-   //#[ignore]
-   fn teste_u8_randomico() {
-      // 10 inteiros de 8 bits.
-      for _ in 1..=10 
-         { println!("8 bits: {}",super::numero_u8());}
-      println!("\n"); // pula duas linhas(espaçamento).
-
-      // array com 100 mil amostras.
-      let valores = lanca_n_u8();
-      let p1:f32 = porcentagem_um_algarismo(&valores);
-      let p2:f32 = porcentagem_dois_algarismos(&valores);
-      let p3:f32 = porcentagem_tres_algarismos(&valores);
-      println!("0 à 9: {:0.2}%", p1*100.0);
-      println!("10 à 99: {:0.2}%", p2*100.0);
-      println!("100 à 255: {:0.2}%", p3*100.0);
-      /* a composição tem que ser 100% ou perto disso,
-       * com uma margem de erro de 0.04 pts. */
-      assert!((p1+p2+p3) >= 0.96 && (p1 + p2 + p3) <= 1.04);
-   }
-   
-   #[test]
-   fn testa_sortear() {
-      let booleano:bool = dbg!(sortear::bool());
-      assert!(booleano || !booleano);
-      let z_menos= dbg!(sortear::i8(-10..=10));
-      assert!(z_menos >= -10 && z_menos <= 10);
-      let z_mais= dbg!(sortear::u8(27..=189));
-      assert!(z_mais >= 27 && z_mais <= 189);
-   }
-}

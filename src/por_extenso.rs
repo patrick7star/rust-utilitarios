@@ -1,31 +1,32 @@
 
-/**!
+/*!
+ # Escrita por Extenso
  Escreve um número inteiro positivo dado
  por extenso. Exemplos:
-    5852 ==> "cinco mil oitocentos e cinquenta
-             e dois"
-    94   ==> "noventa e quatro"
-    86914 ==> "ointenta e seis mil novecentos 
-              e quartoze"
-    320 823 119 539 ==> "trezentos e vinte bilhões 
+ * 5852: "*cinco mil oitocentos e cinquenta
+             e dois*"
+ *   94: "*noventa e quatro*"
+    86914: "*ointenta e seis mil novecentos 
+              e quartoze*"
+ *  320 823 119 539: "*trezentos e vinte bilhões 
       oitocentos e vinte e três milhões cento e 
-      dezenote mil quinhentos e trinta e nove"
+      dezenote mil quinhentos e trinta e nove*"
 
  Alguns casos para ficar de olho:
-   80000 ==> "oitenta mil"
-   5003 ==> "cinco mil e três"
-   304015044 ==> "trezentos e quatro milhões quinze mil
-      e quarenta e quatro"
-   100 ==> "cem"
-   101 ==> "cento e um"
-   138 ==> "centro e trinto e oito"
-   132921 ==> "um milhão e trezentos e vinte e nove mil
-      novecentos e vinte e um"
+ *  80000: "*oitenta mil*"
+ *  5003: "*cinco mil e três*"
+ *  304015044: "*trezentos e quatro milhões quinze mil
+      e quarenta e quatro*"
+ *  100: "*cem*"
+ *  101: "*cento e um*"
+ *  138: "*centro e trinto e oito*"
+ *  132921: "*um milhão e trezentos e vinte e nove mil
+      novecentos e vinte e um*"
 */
 
 
+// biblioteca padrão do Rust:
 use std::str::FromStr;
-
 
 // cuida primeiramente dos primeiros 1000 casos.
 fn zero_a_mil(algarismos:&[u8]) -> String {
@@ -222,6 +223,13 @@ fn centenas_valida(numero:u64) -> bool {
       { false }
 }
 
+/** Retorna uma string com o valor escrito 
+ por extenso. O maior valor permitido é um
+ inteiro de 64-bits, porém não é o limite
+ total que está implementado. 
+  Então o código retorna um `Err` com limites
+ possíveis ainda não implementados.
+*/
 pub fn escreve_por_extenso(numero:u64) -> Result<String, &'static str> {
    /* no caso de um valor de 0 à 1000, um função cuida
     * perfeitamente disso, precisando apenas que aplique

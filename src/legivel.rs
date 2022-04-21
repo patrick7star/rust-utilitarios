@@ -1,8 +1,9 @@
 
-/**! 
+/*! 
+ # Grandezas mais legíveis 
   Faz conversões de grandezas referentes a 
-  dados utilizados em computação, ou outros 
-  campos. 
+ dados utilizados em computação, ou outros 
+ campos. 
 */
 
 
@@ -259,7 +260,7 @@ mod tests {
    }
 
    #[test]
-   fn teste_de_primeira_tempo_detalhado() {
+   fn testa_tempo_detalhado() {
       assert_eq!(
          super::tempo_detalhado("3.5 horas"), 
          Some(String::from("3 horas 30 minutos"))

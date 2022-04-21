@@ -1,6 +1,7 @@
 
 /*! 
-código que dá utilitário que retorna barra
+ # Progressos para todas situações
+ Código que dá utilitário que retorna barra
 de progresso, dados uma quantia atual e total
 a ser atingida. 
 */
@@ -120,6 +121,12 @@ pub fn progresso_data(qtd_atual:u64, qtd_total:u64) -> String {
    }
 }
 
+/** É um letreiro dinâmico que dado um string
+ a cada determinado tempo, as letras se movem
+ da direita para esquerda, ou vice-versa. É 
+ um objeto muito útil se todo o nome do progresso
+ não cabe totalmente na tela.
+*/
 pub struct Logo<'a> {
    // para marcar o tempo.
    ti:Instant,
@@ -191,6 +198,10 @@ impl <'a> Logo<'a> {
          None => self.rotulo,
       }
    }
+   // nova capacidade do logo.
+   pub fn nova_capacidade(&mut self, capacidade:u8) {
+      self.capacidade = capacidade;
+   }
 }
 impl Display for Logo<'_> {
    fn fmt(&self, f:&mut Formatter<'_>) -> Result_fmt {
@@ -252,7 +263,7 @@ qtd_total:u64) -> String {
 /** Um tipo de progresso que leva em conta,
  na hora de imprimir, a quantia de progresso
  ocorrido, e não apenas dá uma impressão dados
- a 'quantia atual' e '... total'. */
+ a *quantia atual* e *total*. */
 pub struct ProgressoPercentual {
    // quantidade atual passada.
    qtd_atual:u64,

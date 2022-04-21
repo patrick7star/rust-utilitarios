@@ -18,8 +18,8 @@ const NOVECENTOS:&str = "CM";
 const MIL:&str = "M";
 
 
+// inverte um array de quatro elementos:
 fn inverte_array(array:&mut [u8; 4]) {
-   // inverte um array de quatro elementos:
    for k in 0..array.len()/2{
       // posição do seu último elemento.
       let final_posicao = (array.len()-1) - k;
@@ -30,19 +30,18 @@ fn inverte_array(array:&mut [u8; 4]) {
    }
 }
 
+/* centenas, dezenas e unidades.
+ * como só se pode representar(inicialmente)
+ * valores romanos até 3999, então o máximo
+ * de dígitos é quatro. 
+ * Os números serão representados assim como
+ * no mundo real, a maior casa(esquerda) para
+ * menor casa(direita). */
 fn decompoe_algarismos(numero:u16) -> [u8; 4] {
-   /* centenas, dezenas e unidades.
-    * como só se pode representar(inicialmente)
-    * valores romanos até 3999, então o máximo
-    * de dígitos é quatro. 
-    * Os números serão representados assim como
-    * no mundo real, a maior casa(esquerda) para
-    * menor casa(direita). */
+   // quatro algarismos, que é o máximo a representar.
    let mut algs:[u8; 4] = [0, 0, 0, 0];
-   
    // cópia do valor.
    let mut n = numero;
-
    // posição na array.
    let mut p = 0;
    
@@ -67,22 +66,21 @@ fn decompoe_algarismos(numero:u16) -> [u8; 4] {
    return algs;
 }
 
-
+/* pega uma array representando os algarismos 
+ * de determinado número na base dez, e, faz
+ * e retorna tal expansão deste número. */
 fn potencia_dez_adequada(algarismos:&[u8; 4]) -> [u16; 4] {
-   /* pega uma array representando os algarismos 
-    * de determinado número na base dez, e, faz
-    * e retorna tal expansão deste número. */
    // expansão de um número.
    let mut expansao:[u16; 4] = [0; 4];
    
-   for (i, _x) in algarismos.into_iter().enumerate() {
-      let potencia:u32 = (algarismos.len()-(1+i)) as u32;
-      expansao[i] = (algarismos[i] as u16)*10_u16.pow(potencia);
+   for (i, _) in algarismos.into_iter().enumerate() {
+      let potencia:u32 = (4 - (1 + i)) as u32;
+      let a:u16 = algarismos[i] as u16;
+      expansao[i] = a * 10_u16.pow(potencia);
    }
 
    return expansao;
 }
-
 
 /** pega número e retorna uma string com 
   sua representação em números romanos. */
@@ -90,7 +88,8 @@ pub fn decimal_para_romano(numero:u16) -> String {
    // string para concatenação...
    let mut num_str:String = String::from("");
    // transforma os algarismos em múltiplos de potências de dez.
-   let expansao = potencia_dez_adequada(&decompoe_algarismos(numero));
+   let decomposicao = decompoe_algarismos(numero);
+   let expansao = potencia_dez_adequada(&decomposicao);
 
    // percorrendo as casas na expansão...
    for a in expansao {
@@ -312,7 +311,6 @@ fn decompoe_numero_romano(numero_romano:&str) -> Vec<String> {
    return algs;
 }
 
-
 /** pega uma string representando um número 
   romano e transforma-o num decimal. */
 pub fn romano_para_decimal(numero:&str) -> u16 {
@@ -342,7 +340,6 @@ pub fn romano_para_decimal(numero:&str) -> u16 {
 // ---- ---- --- série de testes ---- ---- ----
 #[cfg(test)]
 mod tests {
-
    #[test]
    fn inversao_array() {
       let mut array = [1,2,3,4];
@@ -376,19 +373,27 @@ mod tests {
    }
 
    #[test]
-   #[ignore]
    fn expandir_numeros() {
       let valor = 1298;
       let valor_i = 99;
-      let valor_iii = 366;
+      let valor_ii = 366;
       
-      println!("expansão({0}) = {3:?}\nexpansão({1}) = {4:?}\nexpansão({2}) = {5:?}\n", 
-         valor, valor_i, valor_iii,
-         super::potencia_dez_adequada(&super::decompoe_algarismos(valor)),
-         super::potencia_dez_adequada(&super::decompoe_algarismos(valor_i)),
-         super::potencia_dez_adequada(&super::decompoe_algarismos(valor_iii))
+      let d = super::decompoe_algarismos(valor);
+      let pda = super::potencia_dez_adequada(&d);
+      assert_eq!(pda, [1000, 200, 90, 8]);
+      let d_i = super::decompoe_algarismos(valor_i);
+      let pda_i = super::potencia_dez_adequada(&d_i);
+      assert_eq!(pda_i, [0, 0, 90, 9]);
+      let d_ii = super::decompoe_algarismos(valor_ii);
+      let pda_ii = super::potencia_dez_adequada(&d_ii);
+      assert_eq!(pda_ii, [0, 300, 60, 6]);
+      println!(
+         "expansão({0}) = {3:?}
+         \rexpansão({1}) = {4:?}
+         \rexpansão({2}) = {5:?}\n", 
+         valor, valor_i, valor_ii,
+         d, d_i, d_ii
       );
-      assert!(false);
    }
 
    #[test]
@@ -442,7 +447,6 @@ mod tests {
    }
    
    #[test]
-   #[ignore]
    fn transforma_romano_em_decimal_de_volta() {
       let romano = "MMMVI";
       let romanoi = "CCXCV";

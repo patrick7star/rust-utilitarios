@@ -1,4 +1,15 @@
-
+/*!
+ # Visualiazação de tabelas
+  Um bom modo de organizar dados tabelados. O
+ módulo possuí uma estrutura onde você pega 
+ todo 'rol' de dados, cede um 'rótulo' a ele
+ e toda vez que impresso será visualizado fechado
+ por caractéres `Unicode` de uma maneira bem
+ formatada no terminal. A estrutura `Coluna`
+ que proporciona isso, também aceita a 
+ impressão de outras juntas, formando assim uma
+ bonita tabela.
+*/
 // bibliotecas do Rust:
 use std::fmt::{Formatter, Display, Result as Resultado};
 use std::string::String;
@@ -7,6 +18,12 @@ use std::string::String;
 use crate::terminal_dimensao::{ Largura, Altura, dimensao };
 
 
+/**
+ Uma estrutura que representa uma coluna
+ numa tabela de dados. Necessário um **rótulo** 
+ e uma array representando o **rol** de dados 
+ da legenda.
+*/
 #[derive(Debug, Clone)]
 pub struct Coluna <U: ToString + Clone + Copy> {
    // legenda do rol de dados.
@@ -172,10 +189,11 @@ fn entrelacando_strings(str1:&Vec<&str>, str2:&Vec<&str>) -> String {
    return tabela_str;
 }
 
-/* pega duas estruturas 'Coluna' e junta-as numa 
- * formatação string, fazendo o resultado ser uma
- * tabela com estas duas 'Coluna's e seus rol's de
- * valores. */
+/** Pega duas estruturas `Coluna` e junta-as numa 
+ formatação string, fazendo o resultado ser uma
+ tabela com estas duas `Coluna`s e seus *rol's* 
+ de valores. 
+*/
 pub fn tabelar_dados<I, C>(coluna_i:Coluna<I>, coluna_ii:Coluna<C>) 
 -> String where I: Display + Copy, C: Display + Copy {
    // vetor com as strings ordenadas com base na linhas.
@@ -331,6 +349,7 @@ fn circunscreve_borda(s:&mut String) {
    }
 }
 
+/// forma uma tabela com três colunas dadas.
 pub fn tabelar_tres_colunas <X, Y, Z>
 (colunas:(Coluna<X>, Coluna<Y>, Coluna<Z>)) -> String 
 where X: Display + Copy, Z: Display + Copy, Y: Display + Copy {
@@ -384,7 +403,7 @@ where X: Display + Copy, Z: Display + Copy, Y: Display + Copy {
    return tabela;
 }
 
-pub fn otimiza_tela(tabela_str:String) -> Result<String, &'static str> {
+fn otimiza_tela(tabela_str:String) -> Result<String, &'static str> {
    /* quantia total de linhas da 'tabela_str' e 
     * sua largura máxima. */
    let ql:u16 = qtd_de_linhas(&tabela_str) as u16;

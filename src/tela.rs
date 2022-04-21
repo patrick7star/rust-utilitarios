@@ -1,5 +1,6 @@
 
-/**!
+/*!
+  # Tela para desenho
   Criando toda uma estrutura de dados para 
   desenhar formas de texto, ou texto numa 
   tela de terminal. Ela contém tanto o modo 

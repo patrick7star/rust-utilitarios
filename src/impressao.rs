@@ -1,8 +1,9 @@
 /*!
- * imprime e cria uma string que cuida
- * de, dado uma tupla com valores imprimiveis
- * faz tal impressão na forma de escada.
- */
+ # Impressão na tela de vários tipos
+  Imprime e cria uma string que cuida
+ de, dado uma tupla com valores imprimiveis
+ faz tal impressão na forma de escada.
+*/
 
 // biblioteca do Rust:
 use std::fmt::{Formatter, Display, Result as Resultado};
@@ -52,6 +53,10 @@ impl StringExtensao for String {
       { self.as_str().len() }
 }
 
+/** "Imprime" toda a array com "slice-strings"
+ na forma de escadinha, ou seja, cada uma têm
+ um recuo até metade da string anterior.
+*/
 pub fn escadinha(entradas:Vec<&str>) -> String {
    // largura do terminal.
    let largura_tela = match terminal_largura() {
@@ -216,7 +221,7 @@ impl Display for Impressao<'_> {
    }
 }
 
-/// margem e símbolo de inscrita.
+// margem e símbolo de inscrita.
 const SIMBOLO:&str = "#";
 const MARGEM:usize = 3;
 
@@ -246,6 +251,8 @@ fn remove_espacos_brancos<'b>(texto:&'b str) -> &'b str {
    else { texto }
 }
 
+/** Pega uma *slice-string* e circunscreve ela
+ com caractéres.  */
 pub fn circunscrever(texto:&str) -> String {
    // concatenador.
    let mut nova_str:String = String::new();
