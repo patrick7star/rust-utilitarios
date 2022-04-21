@@ -8,7 +8,12 @@
 
 extern crate utilitarios;
 use utilitarios::aleatorio;
-use std::time::Instant;
+use std::time::{Duration, Instant};
+use std::collections::HashSet;
+use std::ops::RangeInclusive;
+use utilitarios::aleatorio::sortear;
+use std::thread;
+
 
 #[test]
 fn distribuicao_do_u8() {
@@ -18,7 +23,7 @@ fn distribuicao_do_u8() {
    let mut sessenta_e_sete = 0;
 
    // total de lançamentos.
-   let total = 100_000;
+   let total = 25_000;
    for _ in 1..=total {
       // sorteio de 0 à 255.
       let numero = aleatorio::sortear::u8(0..=255);
@@ -73,7 +78,7 @@ fn distribuicao_do_i8() {
    let mut menos_trinta_e_sete = 0;
 
    // total de lançamentos.
-   let total = 100_000;
+   let total = 105_000;
    for _ in 1..=total {
       // sorteio de 0 à 255.
       let numero = aleatorio::sortear::i8(-128..=127);
@@ -109,91 +114,35 @@ fn distribuicao_do_i8() {
       assert!(margem.abs() <= erro);
    }
 }
-
 #[test]
-fn distribuicao_do_u16() {
-   let mut cinco_algs = 0;
-   let mut quatro_algs = 0;
-   let mut tres_algs = 0;
-   let mut dois_algs = 0;
-   let mut um_alg = 0;
-
-   // três milhões de sorteio:
-   let total = 300_000;
-   for _ in 1..=total {
-      let randomico = aleatorio::sortear::u16(0..=u16::MAX);
-      if randomico <= 9
-         { um_alg += 1; }
-      else if randomico >= 10 && randomico <= 99
-         { dois_algs += 1; }
-      else if randomico >= 100 && randomico <= 999
-         { tres_algs += 1; }
-      else if randomico >= 1000 && randomico <= 9_999
-         { quatro_algs += 1; }
-      else 
-         { cinco_algs += 1; }
+#[ignore]
+fn distribuicao_do_i8_parte_ii() {
+   // distribuição igual.
+   let mut positivo:f32 = 0f32;
+   for _ in 1..=105_000 {
+      if sortear::i8(-50..=50) > 0
+         { positivo += 1f32/5000f32; }
    }
-
-   let p:f32 = (cinco_algs as f32) / (total as f32);
-   println!("5 algs.: {:0.2}%", p*100.0);
-   let p:f32 = (quatro_algs as f32) / (total as f32);
-   println!("4 algs.: {:0.2}%", p*100.0);
-   let p:f32 = (tres_algs as f32) / (total as f32);
-   println!("3 algs.: {:0.2}%", p*100.0);
-   let p:f32 = (dois_algs as f32) / (total as f32);
-   println!("2 algs.: {:0.2}%", p*100.0);
-   let p:f32 = (um_alg as f32) / (total as f32);
-   println!("1 alg.: {:0.4}%", p*100.0);
-
-   // margem de erro tem que ser menor que 10%.
-   for margem_erro in [0.10, 0.05] {
-      let p:f32 = (cinco_algs as f32) / (total as f32);
-      let erro = dbg!((p-84.7425/100.0).abs());
-      assert!(erro < dbg!(margem_erro));
-
-      let p:f32 = (quatro_algs as f32) / (total as f32);
-      let erro = dbg!((p-13.7331/100.0).abs());
-      assert!(erro < dbg!(margem_erro));
-
-      let p:f32 = (tres_algs as f32) / (total as f32);
-      let erro = dbg!((p-1.3733/100.0).abs());
-      assert!(erro < dbg!(margem_erro));
-
-      let p:f32 = (dois_algs as f32) / (total as f32);
-      let erro = dbg!((p-0.1373/100.0).abs());
-      assert!(erro < dbg!(margem_erro));
-
-      let p:f32 = (um_alg as f32) / (total as f32);
-      let erro = dbg!((p-0.0152/100.0).abs());
-      assert!(erro < dbg!(margem_erro));
-   }
+   for erro in [0.10, 0.05, 0.01, 0.005]
+      { assert!(dbg!((positivo- 0.50).abs()) < dbg!(erro)); }
 }
 
 #[test]
-fn u16_respeitando_faixas() {
-   // faixa simples codificada!
-   for _ in 1..=500 {
-      let s = aleatorio::sortear::u16(0..=255);
-      assert!(s <=255);
+fn distribuicao_bool() {
+   let mut p:f32 = 0f32; 
+   let total = 100_000;
+   for _ in 1..=total {
+      if sortear::bool() 
+         { p += 1.0 / (total as f32); }
    }
-   for _ in 1..=5_000 {
-      let s = aleatorio::sortear::u16(1031..=38_529);
-      assert!(s >= 1031 && s <=38_529);
-   }
-   for _ in 1..=3_000 {
-      let s = aleatorio::sortear::u16(1563..=1692);
-      assert!(s >= 1563 && s <=1692);
-   }
-   for _ in 1..=7_000 {
-      let s = aleatorio::sortear::u16(32_003..=32_050);
-      assert!(s >= 32_003 && s <=32_050);
+   let verdadeiro = dbg!(p * 100.0);
+   for erro in [10.0, 5.0, 1.0, 0.5] {
+      let e = (verdadeiro-50.0).abs();
+      assert!(e < dbg!(erro));
    }
 }
 
 // teste de desempenho de trechos de códigos diferentes.
-use std::ops::RangeInclusive;
-use utilitarios::aleatorio::sortear;
-
 fn u16_recursao(intervalo:RangeInclusive<u16>) -> u16 { 
    // renomeando ínicio e fim do intervalo ...
    let a = *intervalo.start();
@@ -326,8 +275,6 @@ fn testando_abordagens_diferentes() {
    assert!(tempo_ii < tempo_i);
 }
 
-use std::collections::HashSet;
-
 #[test]
 #[ignore]
 fn sorteando_todos_valores_de_u8() {
@@ -357,4 +304,123 @@ fn sorteando_todos_valores_de_u8() {
          cronometro = Instant::now();
       }
    }
+}
+
+#[test]
+fn testa_sortear() {
+   dbg!(sortear::u8(0..=u8::MAX)); 
+   dbg!(sortear::u64(0..=u64::MAX));   
+   dbg!(sortear::u32(0..=u32::MAX));   
+   dbg!(sortear::u16(0..=u16::MAX));   
+   dbg!(sortear::bool());
+   // verificação manual.
+   assert!(true);
+}
+
+#[test]
+fn u32_dentro_da_faixa() {
+   for _ in 1..=5_000 {
+      let s = aleatorio::sortear::u32(0..=255);
+      assert!(s <= 255);
+      let s = aleatorio::sortear::u32(1_031..=38_529);
+      assert!(s >= 1_031 && s <= 38_529);
+      let s = aleatorio::sortear::u32(71_563..=71_692);
+      assert!(s >= 71_563 && s <=71_692);
+      let s = aleatorio::sortear::u32(2_032_003..=2_032_050);
+      assert!(s >= 2_032_003 && s <=2_032_050);
+   }
+}
+
+#[test]
+fn u64_dentro_da_faixa() {
+   for _ in 1..=5_000 {
+      let s = aleatorio::sortear::u32(20..=145);
+      assert!(s >= 20 && s <= 145);
+      let i = (u64::MAX - 100)..=u64::MAX;
+      let s = aleatorio::sortear::u64(i.clone());
+      assert!(s >= *i.start() && s <= *i.end());
+      let i:RangeInclusive<u64> = 30_392_109..=93_891_552;
+      let s = aleatorio::sortear::u64(i.clone());
+      assert!(s >= *i.start() && s <= *i.end());
+   }
+}
+#[test]
+fn u16_dentro_da_faixa() {
+   // faixa simples codificada!
+   for _ in 1..=5_000 {
+      let s = aleatorio::sortear::u16(0..=255);
+      assert!(s <= 255);
+      let s = aleatorio::sortear::u16(1031..=38_529);
+      assert!(s >= 1031 && s <= 38_529);
+      let s = aleatorio::sortear::u16(1563..=1692);
+      assert!(s >= 1563 && s <=1692);
+      let s = aleatorio::sortear::u16(32_003..=32_050);
+      assert!(s >= 32_003 && s <=32_050);
+   }
+}
+
+#[test]
+fn u8_dentro_da_faixa() {
+   // faixa simples codificada!
+   for _ in 1..=15_000 {
+      let s = aleatorio::sortear::u8(0..=1);
+      assert!(s == 0 || s == 1);
+      let s = aleatorio::sortear::u8(10..=89);
+      assert!(s >= 10 && s <= 89);
+      let s = aleatorio::sortear::u8(153..=169);
+      assert!(s >= 153 && s <=169);
+      let s = aleatorio::sortear::u8(250..=255);
+      assert!(s >= 250);
+   }
+}
+
+#[test]
+fn u8_selecao_variada() {
+   let mut outro_tempo = false;
+   for _ in 1..=100 { 
+      let x = dbg!(sortear::u8(0..=10));
+      assert!(x <= 10);  
+      if outro_tempo { 
+         thread::sleep(Duration::from_millis(300)); 
+         outro_tempo = false;
+      }
+      else { 
+         thread::sleep(Duration::from_millis(500)); 
+         outro_tempo = true;
+      }
+   }
+   // testado e comprovado.
+   assert!(true);
+   
+   // diminuindo o intervalo do sorteio.
+   for _ in 1..=100 { 
+      let x = dbg!(sortear::u8(187..=203));
+      assert!(x >= 187 && x <= 203);  
+      if outro_tempo { 
+         thread::sleep(Duration::from_micros(300)); 
+         outro_tempo = false;
+      }
+      else { 
+         thread::sleep(Duration::from_micros(500)); 
+         outro_tempo = true;
+      }
+   }
+   // testado e comprovado.
+   assert!(true);
+
+   // diminuindo o intervalo do sorteio.
+   for _ in 1..=100 { 
+      let x = dbg!(sortear::u8(4..=12));
+      assert!(x >= 4 && x <= 12);  
+      if outro_tempo { 
+         thread::sleep(Duration::from_nanos(300)); 
+         outro_tempo = false;
+      }
+      else { 
+         thread::sleep(Duration::from_nanos(500)); 
+         outro_tempo = true;
+      }
+   }
+   // testado e comprovado.
+   assert!(true);
 }
