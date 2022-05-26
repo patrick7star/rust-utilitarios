@@ -41,4 +41,7 @@ let z = sortear::i32(1_000..=34_329);
 assert_eq!(x, 7);
 assert_eq!(y, -3);
 assert_eq!(z, 25_312);
+
+// 50% chance de passar!
+assert!(sortear::bool());
 ```
