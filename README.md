@@ -1,5 +1,5 @@
 # Utilitarios
-Quase todas mesmas funções dos `utilitarios_em_python` porém para o Rust. 
+Quase todas mesmas funções dos `utilitarios_em_python` porém para o Rust🦀. 
 
 módulos:
   - `por_extenso`: pega qualquer número inteiro positivo de 64-bits, e escreve ele em texto.
@@ -15,3 +15,30 @@ módulos:
 
 ### Considerações:
 O módulo `tela` só aceita no máximo uma tela de 256(caractéres) de largura/altura, pois é medida em caractéres tal dimensão. No futuro será extendido para uma medida na casa das dezena de milhar.
+
+## Exemplos:
+primeiro do módulo `tela`
+```rust
+let mut t = Tela::cria(false, true);
+let p1 = Ponto{linha:5, coluna:20};
+let p2 = Ponto{linha:3, coluna:40};
+
+let tipo = TipoD::Principal;
+let outro_tipo = TipoD::Secundaria;
+let direcao = Direcao::Diagonal(tipo);
+let outra_direcao = super::Direcao::Diagonal(outro_tipo);
+
+t.risca(p1, 13, '@', direcao);
+t.risca(p2, 14, 'X', outra_direcao);
+```
+
+do módulo `aleatorio`
+```rust
+let x = sortear::u8(0..=15);
+let y = sortear::i8(-25..=4);
+let z = sortear::i32(1_000..=34_329);
+
+assert_eq!(x, 7);
+assert_eq!(y, -3);
+assert_eq!(z, 25_312);
+```
