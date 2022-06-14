@@ -403,7 +403,9 @@ where X: Display + Copy, Z: Display + Copy, Y: Display + Copy {
    return tabela;
 }
 
-fn otimiza_tela(tabela_str:String) -> Result<String, &'static str> {
+#[allow(dead_code)]
+fn otimiza_tela(tabela_str:String) -> 
+Result<String, &'static str> {
    /* quantia total de linhas da 'tabela_str' e 
     * sua largura máxima. */
    let ql:u16 = qtd_de_linhas(&tabela_str) as u16;
