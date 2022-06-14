@@ -1,8 +1,4 @@
 [package]
-name = "cobrinha_classica"
-version = "0.3.3"
+name = "utilitarios"
+version = "1.1.0"
 edition = "2018"
-
-[dependencies]
-ncurses = "5.101.0"
-rand = "0.8.4"
