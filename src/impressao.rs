@@ -60,11 +60,9 @@ impl StringExtensao for String {
 pub fn escadinha(entradas:Vec<&str>) -> String {
    // largura do terminal.
    let largura_tela = match terminal_largura() {
-      Ok(_enum) => match _enum {
-         TerminalDimensao::Largura(l) => l,
-         _ => u16::MAX,
-      },
-      Err(erro) => { panic!("{}", erro); }
+      Ok(Largura(lg)) => lg,
+      Err(erro) => 
+         { panic!("{}", erro); }
    };
 
    let mut nova_str:String = String::new();

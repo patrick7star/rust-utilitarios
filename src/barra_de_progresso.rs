@@ -15,14 +15,14 @@ use std::ops::{Add, AddAssign, Range};
 
 // própria biblioteca:
 use crate::legivel;
-use super::terminal_dimensao::{TD, terminal_largura};
-
+use super::terminal_dimensao::{Largura, terminal_largura};
 
 // símbolo que representa frações das barras e espaços vázios.
 const COMPONENTE:&'static str ="#";
 const VAZIO:&'static str=".";
 const CAPACIDADE:u8 = 50;
 const TEXTO_MAX:usize = 30;
+
 
 /* cria uma proporção de progresso baseado 
  * na porcentagem dada. Então 0% é nada de
@@ -513,11 +513,8 @@ tempo_atual:Duration, tempo_total:Duration) -> String {
             { rotulo.to_string() }
       };
       let largura:usize = match terminal_largura() {
-         Ok(_enum) => match _enum {
-            TD::Largura(l) => l as usize,
-            _ => TEXTO_MAX - 1,
-         },
-         Err(_) => TEXTO_MAX - 1,
+         Ok(Largura(l)) => l as usize,
+         Err(_) => TEXTO_MAX - 1
       };
       let recuo:usize = largura - TEXTO_MAX - 3;
       let restante:String = {

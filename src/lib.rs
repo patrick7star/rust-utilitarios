@@ -61,3 +61,52 @@ pub mod terminal_dimensao;
 
 /// escreve um número dado por extenso.
 pub mod por_extenso;
+
+
+use std::io::{Write, stdin, stdout};
+/* Como sem um nome de módulo no momento, vamos 
+ * colocar aqui a implementação de um prompt 
+ * genérico. */
+pub fn lanca_prompt(dica:&str) -> String {
+   // formantando dica.
+   let dica = format!("{}: ", dica);
+   let mut saida = stdout();
+   let entrada = stdin();
+   // buffer.
+   let mut conteudo = String::new();
+
+   // escreve o prompt.
+   saida.write(dica.as_bytes()).unwrap();
+   // sem guardar no buffer para ir antes do 'stdin'.
+   saida.flush().unwrap();
+
+   // retornando conteudo digitado.
+   entrada.read_line(&mut conteudo).unwrap();
+   // removendo quebra-de-linha.
+   drop(conteudo.pop().unwrap());
+   return conteudo;
+}
+
+#[cfg(test)]
+mod tests {
+   use std::str::FromStr;
+   #[test]
+   fn testa_lanca_prompt() {
+      let msg:&str = "digite mensagem-chave('chocolate')";
+      let conteudo = super::lanca_prompt(msg);
+      assert_eq!(conteudo, "chocolate");
+   }
+
+   #[test]
+   fn converte_romano() {
+      // número romano digitado.
+      let nr = super::lanca_prompt("digite um número romano");
+      // conversão para decimal.
+      let nd = super::romanos::romano_para_decimal(nr.as_str());
+      // decimal esperado.
+      let de = super::lanca_prompt("qual o decimal esperado");
+      let de = u16::from_str(de.as_str()).unwrap();
+      println!("{} ==> {}", nr, nd);
+      assert_eq!(de, nd);
+   }
+}
