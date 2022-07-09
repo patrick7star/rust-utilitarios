@@ -50,16 +50,39 @@ type TermAltura = Result<Altura, &'static str>;
 pub fn terminal_largura() -> TermLargura {
    // executa comando para obter largura primeiramente ...
    let mut resultado:Vec<u8> = {
-      match Command::new("tput").arg("cols").output() {
-         // retorna array de bytes que é o resultado.
-         Ok(r) => r.stdout,
-         Err(_) => 
-            { return Err("não foi possível obter 'Largura'"); }
-      }
+      if cfg!(linux) {
+          match Command::new("tput").arg("cols").output() {
+             // retorna array de bytes que é o resultado.
+             Ok(r) => r.stdout,
+             Err(_) => 
+                { return Err("não foi possível obter 'Largura'"); }
+          }
+      } else if cfg!(windows) {
+          let mut comando = Command::new("powershell");
+          comando.arg("-Command");
+          comando.arg("Write-Host");
+          comando.arg("$Host.UI.RawUI.WindowSize.Width");
+          comando.arg("|");
+          comando.arg("Out-String");
+          match comando.output() {
+             // retorna array de bytes que é o resultado.
+             Ok(r) => r.stdout,
+             Err(_) => 
+                { return Err("não foi possível obter 'Largura'"); }
+          }
+      } else 
+         { panic!("ainda não implementado para tal sistema."); }
    };
 
    // removendo quebra de linha.
-   resultado.pop();
+   if cfg!(windows) {
+      // removendo espaço em branco e recuo '\n\r'.
+      resultado.pop();
+      resultado.pop();
+      resultado.pop();
+   } else if cfg!(linux) 
+       { resultado.pop(); }
+
    // transformando em número.
    let mut caracteres:String = String::new();
 
@@ -79,16 +102,39 @@ pub fn terminal_largura() -> TermLargura {
 pub fn terminal_altura() -> TermAltura {
    // executa comando para obter largura primeiramente ...
    let mut resultado:Vec<u8> = {
-      match Command::new("tput").arg("lines").output() {
-         // retorna array de bytes que é o resultado.
-         Ok(r) => r.stdout,
-         Err(_) => 
-            { return Err("não foi possível obter 'Largura'"); }
-      }
+      if cfg!(linux) {
+          match Command::new("tput").arg("lines").output() {
+             // retorna array de bytes que é o resultado.
+             Ok(r) => r.stdout,
+             Err(_) => 
+                { return Err("não foi possível obter 'Largura'"); }
+          }
+      } else if cfg!(windows) {
+          let mut comando = Command::new("powershell");
+          comando.arg("-Command");
+          comando.arg("Write-Host");
+          comando.arg("$Host.UI.RawUI.WindowSize.Height");
+          comando.arg("|");
+          comando.arg("Out-String");
+          match comando.output() {
+             // retorna array de bytes que é o resultado.
+             Ok(r) => dbg!(r.stdout),
+             Err(_) => 
+                { return Err("não foi possível obter 'Altura'"); }
+          }
+      } else 
+         { panic!("ainda não implementado para tal sistema."); }
    };
 
    // removendo quebra de linha.
-   resultado.pop();
+   if cfg!(windows) {
+      // removendo espaço em branco e recuo '\n\r'.
+      resultado.pop();
+      resultado.pop();
+      resultado.pop();
+   } else if cfg!(linux) 
+       { resultado.pop(); }
+
    // transformando em número.
    let mut caracteres:String = String::new();
 
@@ -134,6 +180,29 @@ mod tests {
          { largura = l; altura = h; }
       else 
          { largura = u16::MIN; altura = u16::MAX; }
-      assert!(largura > altura);
+      assert!(dbg!(largura) > dbg!(altura));
+   }
+
+   #[test]
+   fn testa_funcao_tl() {
+      match terminal_largura() {
+         Ok(Largura(l)) => 
+            { assert_eq!(l, 85); }
+         Err(erro) => { 
+            println!("{}", erro); 
+            assert!(false);
+         }
+      };
+   }
+   #[test]
+   fn testa_funcao_ta() {
+      match terminal_altura() {
+         Ok(Altura(h)) => 
+            { assert_eq!(h, 28); }
+         Err(erro) => { 
+            println!("{}", erro); 
+            assert!(false);
+         }
+      };
    }
 }
