@@ -94,7 +94,13 @@ mod tests {
    fn testa_lanca_prompt() {
       let msg:&str = "digite mensagem-chave('chocolate')";
       let conteudo = super::lanca_prompt(msg);
-      assert_eq!(conteudo, "chocolate");
+      if cfg!(windows) { 
+         // desconsiderando o recuo.
+         let fim = conteudo.len() - 1;
+         let chocolate = conteudo.get(0..fim).unwrap();
+         assert_eq!(chocolate, "chocolate");
+      } else 
+        { assert_eq!(conteudo, "chocolate"); }
    }
 
    #[test]
