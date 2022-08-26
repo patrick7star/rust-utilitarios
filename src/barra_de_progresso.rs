@@ -273,18 +273,21 @@ pub struct ProgressoPercentual {
    percentual:f32,
    // antigo percentual para comparação.
    antigo_percentual:f32,
+   // status da barra:
+   pub esgotado: bool
 }
 
 // implementação do método.
 impl ProgressoPercentual {
    // criando uma instância...
-   pub fn cria(qtd_total:u64) -> Self {
+   pub fn cria(total:u64) -> Self {
       // criando dado agora...
       ProgressoPercentual {
          qtd_atual: 0,  
-         qtd_total: qtd_total,
+         qtd_total: total,
          percentual: 0.0f32,
-         antigo_percentual: 0.0f32
+         antigo_percentual: 0.0f32,
+         esgotado: false
       }
    }
 
@@ -295,6 +298,7 @@ impl ProgressoPercentual {
    pub fn imprime(&mut self) -> Option<String> {
       // diferença de percentuais.
       let diferenca = self.percentual - self.antigo_percentual;
+
       // verifica se há uma variação de 
       // no mínimo 0,5%.
       if diferenca >= 0.005 {
@@ -304,16 +308,13 @@ impl ProgressoPercentual {
          let bp = progresso(self.qtd_atual, self.qtd_total);
          // retornando barra, porém embrulhado.
          return Some(bp);
-      }
-      // já está terminado, ou acabou de começar.
-      else if self.qtd_total == self.qtd_atual
-      || self.qtd_atual == 0 {
-         // criando barra...
+      } else if self.qtd_atual == 0 {
+         // não chamada nenhuma vez?
          let bp = progresso(self.qtd_atual, self.qtd_total);
-         // retornando barra, porém embrulhado.
          return Some(bp);
-      }
-      else { None }
+      } else if self.esgotado {
+         Some(progresso(self.qtd_atual, self.qtd_total))
+      } else { None }
    }
 }
 
@@ -347,12 +348,17 @@ impl AddAssign<u64> for ProgressoPercentual {
    // implementação da atualização de dados.
    fn add_assign(&mut self, valor:u64) { 
       // atualizando valores...
-      self.qtd_atual = valor; 
+      if valor >= self.qtd_total { 
+         self.esgotado = true; 
+         self.qtd_atual = self.qtd_total; 
+      } else 
+         { self.qtd_atual = valor; }
       // computando novo percentual.
       self.percentual = {
          let x:f32 = self.qtd_atual as f32;
          let y:f32 = self.qtd_total as f32;
-         x / y
+         if x > y { 1.0f32 }
+         else { x / y }
       };
    }
 }
