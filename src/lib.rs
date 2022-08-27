@@ -20,6 +20,7 @@ pub mod arvore;
  para manipular de forma maleável a impressão de
  texto e desenhos simples no terminal.
 */
+mod tela_auxiliar;
 pub mod tela;
 
 /** converte valores inteiros e fluantes, que representam

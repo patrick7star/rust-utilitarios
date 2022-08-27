@@ -13,6 +13,7 @@
 use crate::terminal_dimensao::{Largura, Altura, dimensao};
 // bibloteca padrão do Rust:
 use std::string::ToString;
+use super::tela_auxiliar::{Mudanca, Pilha};
 
 /** constante com equivalente dos caractéres 
  na tela dado uma "polegada"; neste caso a 
@@ -66,7 +67,7 @@ pub struct Tela {
      * na tela, baseado nas escritas pelos métodos
      * abaixo, assim também terar um método de 
      * desfazer e refazer últimas mudanças. */
-    pilha_alteracoes: Vec<Mudanca>
+    pilha_alteracoes: Pilha<Mudanca>
 }
 
 // implementando seus métodos:
@@ -101,7 +102,7 @@ impl Tela {
          linhas: lin as u8,
          colunas: col as u8,
          tela: matriz,
-         pilha_alteracoes: Vec::with_capacity(20),
+         pilha_alteracoes: Pilha::nova()
       };
 
       // se for exigido, desenhar uma borda na tela. 
@@ -128,7 +129,7 @@ impl Tela {
          self.tela[l][c + i] = caracter;
       }
       // salva alteração feita.
-      self.pilha_alteracoes.push(alteracao);
+      self.pilha_alteracoes.empilha(alteracao).unwrap();
    }
 
    /** Escreve múltiplas strings(múltiplas quer dizer cinco)
@@ -146,13 +147,17 @@ impl Tela {
       }
       /* mesclando todas as 'alterações' das palavras
        * que foram registradas em uma só. */
-      let mut alteracao = self.pilha_alteracoes.pop().unwrap();
+      let mut alteracao = {
+         self.pilha_alteracoes
+         .desempilha()
+         .unwrap()
+      };
       for _ in 1..=4 {
-         let mut a = self.pilha_alteracoes.pop().unwrap();
+         let mut a = self.pilha_alteracoes.desempilha().unwrap();
          for pixel in a.pontilhados_escritos.drain(..) 
             { alteracao.incrementa(pixel); }
       }
-      self.pilha_alteracoes.push(alteracao);
+      self.pilha_alteracoes.empilha(alteracao).unwrap();
    }
 
    /** Faz um risco na tela de um certo `Ponto`, e 
@@ -229,7 +234,7 @@ impl Tela {
             self.tela[l][c] = simbolo;
          }
          // salva mudança, empilhando-a.
-         self.pilha_alteracoes.push(alteracao);
+         self.pilha_alteracoes.empilha(alteracao).unwrap();
       }
    }
 
@@ -311,7 +316,7 @@ impl Tela {
          self.tela[by][c] = BH;
       }
       // salva toda alteração, empilhando-a.
-      self.pilha_alteracoes.push(alteracao);
+      self.pilha_alteracoes.empilha(alteracao).unwrap();
    }
 
    /// moldura um retângulo dado o ponto e as dimensões.
@@ -336,7 +341,7 @@ impl Tela {
    /// desfaz últimos riscos/escritas e mais coisas realizadas.
    pub fn desfazer(&mut self) {
       // tira do topo da pilha, que é ponto alterado ...
-      if let Some(md) = self.pilha_alteracoes.pop() {
+      if let Some(md) = self.pilha_alteracoes.desempilha() {
          // trabalhando com cada ponto individual.
          let lista = md.pontilhados_escritos.iter();
          for (Ponto{linha:l, coluna:c}, pixel) in lista {
@@ -374,33 +379,6 @@ fn circunscreve_borda(estrutura:&mut Tela) {
       estrutura.tela[y][0] = '\u{2502}';
       estrutura.tela[y][qtd_c-1]= '\u{2502}';
    }
-}
-
-/* Registra uma "mudança" feita na tela,
- * tendo os últimos `Ponto`s que foram 
- * escrito nela. Então é isso que significa
- * uma mudança ocorrida, um aglomerado de 
- * pontos recentementes "printados" na tela.
- */
-struct Mudanca {
-   /* pilha contendo pontos que foram, 
-    * ultimamente, marcados. Também o símbolo
-    * que estava alí.*/
-   pontilhados_escritos: Vec<(Ponto, char)>,
-}
-
-// apelido para melhor legibilidade.
-impl Mudanca {
-   /* funciona junto com o método abaixo, que permite
-    * dimensionar a lista de mudanças a desfazer/ou
-    * refazer futuramente. */
-   pub fn cria_vazio() -> Self 
-      { Self { pontilhados_escritos: Vec::new() } }
-
-   /* às vezes têm que adicionar algum que não 
-    * foi inicialmente pensado. */
-   pub fn incrementa(&mut self, pixel:(Ponto, char)) 
-      { self.pontilhados_escritos.push(pixel); }
 }
 
 impl ToString for Tela {
