@@ -13,10 +13,16 @@
 use std::fs::read_dir;
 use std::path::Path;
 
-// meus módulos:
+// do próprio caixote:
+use constroi_simbolos::{
+   matriciar_string, 
+   matriz_para_string
+};
+// partes "externas" deste módulo:
 mod constroi_simbolos;
-use constroi_simbolos::{matriciar_string, matriz_para_string};
+mod utilidades;
 use crate::terminal_dimensao::{dimensao, Largura};
+pub use utilidades::{listagem, ramifica_caminho};
 
 
 // tipos de galhos:
