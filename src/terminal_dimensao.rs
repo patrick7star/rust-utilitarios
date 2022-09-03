@@ -50,7 +50,7 @@ type TermAltura = Result<Altura, &'static str>;
 pub fn terminal_largura() -> TermLargura {
    // executa comando para obter largura primeiramente ...
    let mut resultado:Vec<u8> = {
-      if cfg!(linux) {
+      if cfg!(linux) || cfg!(unix) {
           match Command::new("tput").arg("cols").output() {
              // retorna array de bytes que é o resultado.
              Ok(r) => r.stdout,
@@ -70,8 +70,16 @@ pub fn terminal_largura() -> TermLargura {
              Err(_) => 
                 { return Err("não foi possível obter 'Largura'"); }
           }
-      } else 
-         { panic!("ainda não implementado para tal sistema."); }
+      } else {
+         println!(
+            "o que está considerando:
+            \r\tlinux: {}
+            \r\twindows: {}
+            \r\tunix: {}",
+            cfg!(linux), cfg!(windows), cfg!(unix)
+         );
+         panic!("ainda não implementado para tal sistema."); 
+      }
    };
 
    // removendo quebra de linha.
@@ -80,7 +88,7 @@ pub fn terminal_largura() -> TermLargura {
       resultado.pop();
       resultado.pop();
       resultado.pop();
-   } else if cfg!(linux) 
+   } else if cfg!(linux) || cfg!(linux) 
        { resultado.pop(); }
 
    // transformando em número.
@@ -91,6 +99,7 @@ pub fn terminal_largura() -> TermLargura {
 
    /* converte para um inteiro positivo, e 
     * e registra valor para retorno, posteriormente. */
+    caracteres.pop();
    let largura = u16::from_str(caracteres.as_str()).unwrap();
    // retornando encapsulado para possível erro.
    Ok(Largura(largura))
@@ -102,7 +111,7 @@ pub fn terminal_largura() -> TermLargura {
 pub fn terminal_altura() -> TermAltura {
    // executa comando para obter largura primeiramente ...
    let mut resultado:Vec<u8> = {
-      if cfg!(linux) {
+      if cfg!(unix) || cfg!(linux) {
           match Command::new("tput").arg("lines").output() {
              // retorna array de bytes que é o resultado.
              Ok(r) => r.stdout,
@@ -122,8 +131,15 @@ pub fn terminal_altura() -> TermAltura {
              Err(_) => 
                 { return Err("não foi possível obter 'Altura'"); }
           }
-      } else 
-         { panic!("ainda não implementado para tal sistema."); }
+      } else { 
+         println!(
+            "o que está considerando:
+            \r\tlinux: {}
+            \r\twindows: {}
+            \r\tunix: {}",
+            cfg!(linux), cfg!(windows), cfg!(unix)
+         );
+         panic!("ainda não implementado para tal sistema."); }
    };
 
    // removendo quebra de linha.
@@ -132,7 +148,7 @@ pub fn terminal_altura() -> TermAltura {
       resultado.pop();
       resultado.pop();
       resultado.pop();
-   } else if cfg!(linux) 
+   } else if cfg!(linux) || cfg!(unix) 
        { resultado.pop(); }
 
    // transformando em número.
