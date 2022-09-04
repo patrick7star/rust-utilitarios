@@ -17,6 +17,7 @@ use std::string::String;
 // extensão deste código:
 mod string_complemento;
 mod objeto;
+mod tabelacao;
 use string_complemento::StringExtensao;
 use objeto::Coluna;
 
