@@ -24,14 +24,14 @@ type Str = &'static str;
 pub struct Coluna <U: ToString + Clone + Copy> {
    // legenda do rol de dados.
    rotulo:&'static str,
-
    // rol de dados.
    rol:Vec<U>,
    // largura máxima da coluna.
    largura: usize
 }
 
-impl <U: ToString + Copy + Clone>Coluna<U> {
+impl <U>Coluna<U> 
+where U: ToString + Clone + Copy {
    pub fn nova(rotulo: Str, rol: Vec<U>) -> Self {
       let maior_do_rol: usize = {
          rol.iter()
@@ -48,6 +48,10 @@ impl <U: ToString + Copy + Clone>Coluna<U> {
 
       Self { rotulo, rol, largura }
    }
+   pub fn linhas(&self) -> usize
+      { self.rol.len() + 1 }
+   pub fn largura(&self) -> usize
+      { return self.largura; }
 }
 
 impl<U:Display + Copy> Display for Coluna <U> {
