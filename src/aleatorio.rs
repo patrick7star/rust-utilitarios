@@ -412,30 +412,40 @@ pub mod sortear {
       }
    }
 
-   /// embaralha a array referênciada.
-   pub fn embaralha<B>(array: &mut Vec<B>) {
-      let mut tamanho = array.len();
-      let ultimo: u64 = (tamanho - 1) as u64;
+   /// gera um intero de(quantia variada) bytes, randomicamente.
+   pub fn usize(intervalo:RangeInclusive<usize>) -> usize {
+      let (a, b) = (
+         *intervalo.start() as u64,
+         *intervalo.end() as u64
+      );
+      return u64(a..=b) as usize;
+   }
+}
 
-      // se houver apenas dois elementos, pode trocar ou não.
-      if tamanho == 2 {
-         if bool() 
-            { super::swap(array, 0, 1); }
-      } else if tamanho <= 1 {
-         // apenas abandona o programa; nada a fazer.
-         return ();
-      } else {
-         // faz o embaralho o "tamanho da lista" vezes.
-         while tamanho > 0 {
-            let i = u64(0..=ultimo) as usize;
-            let j = u64(0..=ultimo) as usize;
-            if j != i 
-               { super::swap(array, i, j); }
-            tamanho -= 1;
-         }
+/// embaralha a array referênciada.
+pub fn embaralha<B>(array: &mut Vec<B>) {
+   let mut tamanho = array.len();
+   let ultimo: u64 = (tamanho - 1) as u64;
+
+   // se houver apenas dois elementos, pode trocar ou não.
+   if tamanho == 2 {
+      if sortear::bool() 
+         { swap(array, 0, 1); }
+   } else if tamanho <= 1 {
+      // apenas abandona o programa; nada a fazer.
+      return ();
+   } else {
+      // faz o embaralho o "tamanho da lista" vezes.
+      while tamanho > 0 {
+         let i = sortear::u64(0..=ultimo) as usize;
+         let j = sortear::u64(0..=ultimo) as usize;
+         if j != i 
+            { swap(array, i, j); }
+         tamanho -= 1;
       }
    }
 }
+
 
 #[cfg(test)]
 mod tests {
@@ -455,7 +465,7 @@ mod tests {
       let copia = array.clone();
       let mut p = 0.0;
       for _ in 1..=100 {
-         super::sortear::embaralha(&mut array);
+         super::embaralha(&mut array);
          println!("{:?}", array);
          if array != copia
             { p += 1.0/100.0; }
