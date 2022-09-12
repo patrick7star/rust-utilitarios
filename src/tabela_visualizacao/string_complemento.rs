@@ -5,6 +5,9 @@
  * aqui.
  */
 
+pub type Str = &'static str;
+
+
 pub trait StringExtensao<S> {
    /* maior entre duas strings. */
    fn max(&self, string: &S) -> usize; 
@@ -12,6 +15,10 @@ pub trait StringExtensao<S> {
    /* computa o tamanho de bytes entre strings
     * levando em conta caractéres de 2 bytes. */
    fn len(&self) -> usize;
+
+   /* converte uma string de um caractére
+    * num char. */
+   fn to_char(&self) -> Result<char, Str>;
 }
 
 impl StringExtensao<&str> for str {
@@ -44,7 +51,19 @@ impl StringExtensao<&str> for str {
       let tamanho:usize = self.len();
       return tamanho - qtd;
    }
-
+   fn to_char(&self) -> Result<char, Str> {
+      let tamanho = self.len();
+      if tamanho >= 1 && tamanho <= 4 { 
+         let mut caracteres = self.chars();
+         let char = caracteres.next().unwrap();
+         Ok(char)
+      } else {
+         if tamanho == 0
+            { Err("uma string vázia") }
+         else 
+            { panic!("erro provavelmente desconhecido"); }
+      }
+   }
 }
 
 impl StringExtensao<String> for String {
@@ -74,5 +93,35 @@ impl StringExtensao<String> for String {
       }
       let tamanho:usize = self.len();
       return tamanho - qtd;
+   }
+
+   fn to_char(&self) -> Result<char, Str> {
+      let tamanho = self.len();
+      if tamanho >= 1 && tamanho <= 4 { 
+         let mut caracteres = self.chars();
+         let char = caracteres.next().unwrap();
+         Ok(char)
+      } else {
+         if tamanho == 0
+            { Err("uma string vázia") }
+         else 
+            { panic!("erro provavelmente desconhecido"); }
+      }
+   }
+}
+
+#[cfg(test)]
+#[allow(non_snake_case)]
+mod tests {
+   use super::*;
+
+   #[test]
+   fn TesteCasting_to_char() {
+      let mut s = String::new();
+      for i in 9472..(9472 + 15*7)
+         { s.push(char::from_u32(i as u32).unwrap()) }
+      println!("{}", s);
+      let s1 = String::from("\u{2500}");
+      println!("{} ==> {}", s1, s1.to_char().unwrap());
    }
 }

@@ -317,18 +317,21 @@ impl Tabela {
     * do terminal. */
    fn ql_otimizada(&self) -> usize {
       let ql = self.maior_ql.unwrap();
-      // largura do terminal.
-      let lt = {
+      // largura da tabela. Somatório de todas colunas.
+      let b: usize = {
          self.lista.iter()
          .map(|item| item.largura)
-         .max().unwrap()
+         .sum()
       };
+      // largura do terminal.
       let a: usize;
       match terminal_largura() {
          Ok(Largura(l)) => { a = l as usize; }
          Err(_) => { a = 0; }
       };
-      let n = a / (lt + RECUO + 1);
+      let n = dbg!(a) / (dbg!(b) + RECUO + 1);
+      /* quantia de linhas divida para
+       * 'n' frações da tabela original. */
       return ql / n;
    }
    /* tarefa de revestimento. */
@@ -346,10 +349,10 @@ impl Tabela {
                LATERAL.to_string().as_str()
             );
          } else {
-            let comprimento = linha.len();
+            let comprimento = StrExt::len(linha);
             nova_linha = TRACO.repeat(comprimento-2);
-            nova_linha.insert(0, LATERAL.chars().next().unwrap());
-            nova_linha.push(LATERAL.chars().next().unwrap());
+            nova_linha.insert(0, LATERAL.to_char().unwrap());
+            nova_linha.push(LATERAL.to_char().unwrap());
          }
          println!("{}", nova_linha);
          // entre linhas.
