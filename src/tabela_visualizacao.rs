@@ -18,7 +18,7 @@ use std::string::String;
 mod string_complemento;
 mod objeto;
 mod tabelacao;
-use string_complemento::StringExtensao;
+use string_complemento::StringExtensao as StrExt;
 use objeto::Coluna;
 
 
@@ -57,7 +57,8 @@ fn entrelacando_strings(str1:&Vec<&str>, str2:&Vec<&str>) -> String {
          tabela_str += str1[p1];
       }
       else {
-         let compr = str1[0].len_2_bytes() as usize;
+         //let compr = str1[0].len_2_bytes() as usize;
+         let compr = StrExt::len(str1[0]);
          tabela_str += &"*".repeat(compr).to_string();
       }
       // delimitador do meio.
@@ -67,7 +68,8 @@ fn entrelacando_strings(str1:&Vec<&str>, str2:&Vec<&str>) -> String {
          tabela_str += str2[p2];
       }
       else {
-         let compr = str2[0].len_2_bytes() as usize;
+         //let compr = str2[0].len_2_bytes() as usize;
+         let compr = StrExt::len(str2[0]);
          tabela_str += &"-".repeat(compr).to_string();
       }
       // delimitador do fim e quebra-de-linha.
