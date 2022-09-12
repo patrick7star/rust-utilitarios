@@ -13,11 +13,17 @@ use std::fmt::{
    Result as Resultado
 };
 use std::marker::Copy;
+use std::collections::VecDeque;
 // extensão do módulo:
-use super::objeto::Coluna;
+use super::{objeto::Coluna, StrExt, TRACO, LATERAL};
+// do próprio caixote.
+use crate::terminal_dimensao::{Largura, terminal_largura};
 
 // componente que lacra a tabela.
 const BARRA: char = '#';
+const ESPACO: &'static str = ">";
+const RECUO:usize  = 5;
+type Fila = VecDeque<String>;
 
 struct ColunaStr {
    forma_padrao: String,
@@ -43,7 +49,9 @@ fn abs(x: usize, y:usize) -> usize {
 impl ColunaStr {
    // método construtor:
    pub fn nova<X>(coluna: Coluna<X>, aumento: Option<usize>) 
-   -> Self where X: Display + Copy + Clone {
+   -> Self 
+      where X: Display + Copy + Clone 
+   {
       let mut iterador: Vec<String> = Vec::new();
       let forma_padrao = format!("{}", coluna);
 
@@ -73,7 +81,10 @@ impl ColunaStr {
       match aumento {
          Some(valor) => {
             let l = self.largura;
-            let ql = self.altura.unwrap();
+            let ql = match self.altura {
+               Some(valor) => valor,
+               None => 0
+            };
             let cv = campo_vago(l);
             let diferenca = valor-ql;
             // adicionando a 'diferença' ...
@@ -143,7 +154,8 @@ impl Tabela {
    }
    // adiciona nova Coluna passada.
    pub fn adiciona<Y>(&mut self, coluna: Coluna<Y>) 
-   where Y: Display + Clone + Copy {
+      where Y: Display + Clone + Copy 
+   {
       // atualizando primeiramente altura da tabela.
       match self.maior_ql {
          Some(h) => {
@@ -186,8 +198,162 @@ impl Tabela {
          // quebra de linha.
          if !self.primeira
             { self.tabela_str.push(BARRA); }
+         // fecha tabela lateralmente e adiciona
+         // quebra-de-linha.
+         self.tabela_str.push(BARRA);
          self.tabela_str.push('\n');
          mql -= 1;
+      }
+      
+      // dive a tabela em frações, talvez,... iguais!
+      if self.preenche_tela { 
+         let ql = self.ql_otimizada();
+         self.fraciona(dbg!(ql)); 
+      }
+      // fecha a tabela completamente.
+      self.tampa();
+      // aplica revestimento.
+      self.revestimento();
+   }
+   // fraciona tabela em 'n' partes.
+   fn fraciona(&mut self, mut qtd: usize) { 
+      let mut linhas = self.tabela_str.lines();
+      /* não faz nada se a quantia for igual
+       * ao 'total atual' de linhas. */
+      if linhas.clone().count() == qtd 
+         { return (); }
+      /* números inssuficiente de linhas
+       * também não é aceitável. */
+      if qtd < 3 { return  (); }
+
+      type Fatias = VecDeque<String>;
+      let mut fila: Fatias = Fatias::new();
+      let mut contador = 0;
+
+      for _ in 1..=qtd { 
+         let linha = linhas.next().unwrap();
+         fila.push_back(linha.to_string()); 
+      }
+
+      while let Some(linha) = linhas.next() {
+         // tira o primeiro elemento.
+         let mut primeira = fila.pop_front().unwrap();
+         // concatena com o que veio.
+         primeira += &ESPACO.repeat(RECUO);
+         primeira.push_str(linha);
+         // põe novamente no fim da fila.
+         fila.push_back(primeira);
+         /* contando a quantia de vezes que isso foi
+          * realizado, para uma sicronização. */
+         contador += 1;
+      }
+      /* Em caso de uma divisão não completa,
+       * o cabeçalho e algums linhas terminal
+       * no final, ao invés do começo. Para 
+       * desfazer tal é preciso faz operação
+       * inversa na "deck". Quantas vezes? Bem
+       * a quantia restante para que o 'contador'
+       * fique divisível pela quantia de linhas
+       * demandas. */
+       while contador % qtd != 0 {
+         // remove do fim ...
+         let x = fila.pop_back().unwrap();
+         // coloca na frente.
+         fila.push_front(x);
+         contador -= 1;
+       }
+       // concatenando tudo no fim.
+       // limpa, primeiramente, a anterior.
+       self.tabela_str.clear();
+       while let Some(linha) = fila.pop_front() { 
+         self.tabela_str += linha.as_str();  
+         self.tabela_str.push('\n')
+      }
+   }
+   /* tampa a tabela, tanto às partes superiores
+    * e inferiores, quanto entre as linhas. */
+   fn tampa(&mut self) {
+      let mut linhas = self.tabela_str.lines();
+      let mut fila: Fila = Fila::new();
+
+      // tampas superiores e inferiores especiais:
+      let mut superior: Option<String> = None;
+      let mut inferior: Option<String> = None;
+
+      while let Some(linha) = linhas.next() {
+         let comprimento = StrExt::len(linha);
+         //let barra = &"#".repeat(comprimento);
+         let barra = cria_barra(linha);
+
+         /* se for o primeira caso, então
+          * pega está barra, e sempre a 
+          * retorna. */
+         superior = match superior {
+            Some(bar) => Some(bar),
+            None => Some(barra.to_string())
+         };
+
+         fila.push_back(linha.to_string());
+         fila.push_back(barra.to_string());
+      }
+      /* trocando visualização por 
+       * ação concreta: 
+      // concatenação é só esvaziar fila.
+      println!("{}", superior.unwrap());
+      while fila.len() > 0 {
+         println!("{}", fila.pop_front().unwrap());
+      } */
+      self.tabela_str.clear();
+      self.tabela_str = superior.unwrap();
+      self.tabela_str.push('\n');
+      while fila.len() > 0 { 
+         let remocao = fila.pop_front().unwrap();
+         self.tabela_str.push_str(remocao.as_str());
+         self.tabela_str.push('\n');
+      }
+   }
+   /* computa a quantia de linhas que reparti
+    * a tabela, para que se caiba na tela
+    * do terminal. */
+   fn ql_otimizada(&self) -> usize {
+      let ql = self.maior_ql.unwrap();
+      // largura do terminal.
+      let lt = {
+         self.lista.iter()
+         .map(|item| item.largura)
+         .max().unwrap()
+      };
+      let a: usize;
+      match terminal_largura() {
+         Ok(Largura(l)) => { a = l as usize; }
+         Err(_) => { a = 0; }
+      };
+      let n = a / (lt + RECUO + 1);
+      return ql / n;
+   }
+   /* tarefa de revestimento. */
+   fn revestimento(&self) {
+      let mut alternador: bool = true;
+      let mut nova_linha: String = String::new();
+
+      for linha in self.tabela_str.lines() {
+         if !alternador {
+            let margem = &ESPACO.repeat(RECUO);
+            let espaco = &" ".repeat(RECUO);
+            nova_linha = linha.replace(margem, espaco);
+            nova_linha = nova_linha.replace(
+               BARRA.to_string().as_str(),
+               LATERAL.to_string().as_str()
+            );
+         } else {
+            let comprimento = linha.len();
+            nova_linha = TRACO.repeat(comprimento-2);
+            nova_linha.insert(0, LATERAL.chars().next().unwrap());
+            nova_linha.push(LATERAL.chars().next().unwrap());
+         }
+         println!("{}", nova_linha);
+         // entre linhas.
+         alternador = !alternador;
       }
    }
 }
@@ -197,10 +363,15 @@ impl Display for Tabela {
       { write!(molde, "{}", self.tabela_str) }
 }
       
+fn cria_barra(string:&str) -> String {
+   let comprimento = StrExt::len(string);
+   return BARRA.to_string().repeat(comprimento).to_string();
+}
 
 #[cfg(test)]
 #[allow(non_snake_case)]
 mod tests {
+   use crate::aleatorio::sortear;
    use super::*;
 
    #[test]
@@ -237,7 +408,7 @@ mod tests {
       }
 
       // avaliação manual.
-      assert!(false);
+      assert!(true);
    }
 
    #[test]
@@ -273,5 +444,46 @@ mod tests {
       println!("\t\tterceiro resultado:\n{}", t);
       t.adiciona(nomes);
       println!("\n{}", t);
+   }
+
+   #[test]
+   fn testa_struct_Tabela_parteI() {
+      let quantias = |n| { 
+         let mut array: Vec<u16> = Vec::new();
+         for _ in 1..=n
+            { array.push(sortear::u16(0..=35_000)); }
+         array
+      };
+      let moedas_magicas = Coluna::nova(
+         "moedas mágicas(qtd.)",
+         quantias(128)
+      );
+
+      let salarios = Coluna::nova(
+         "salário(R$)",
+         quantias(151)
+      );
+
+      let quantias = |n, opI, opII| {
+         let mut array: Vec<char> = Vec::new();
+         for _ in 1..=n { 
+            if sortear::bool() 
+               { array.push(opI); }
+            else
+               { array.push(opII); }
+         }
+         array
+      };
+         
+      let generos = Coluna::nova(
+         "gênero(macho/fêmea)", 
+         quantias(134, 'F', 'M')
+      );
+
+      let mut t = Tabela::nova(true);
+      t.adiciona(moedas_magicas);
+      t.adiciona(generos);
+      t.adiciona(salarios);
+      println!("\n\t\tverificando dobradura ...\n{}", t);
    }
 }

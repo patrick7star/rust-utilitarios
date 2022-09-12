@@ -6,10 +6,6 @@
  */
 
 pub trait StringExtensao<S> {
-   /* computa o tamanho de bytes entre strings
-    * levando em conta caractéres de 2 bytes. */
-   fn len_2_bytes(&self) -> u8;
-
    /* maior entre duas strings. */
    fn max(&self, string: &S) -> usize; 
 
@@ -19,26 +15,6 @@ pub trait StringExtensao<S> {
 }
 
 impl StringExtensao<&str> for str {
-   fn len_2_bytes(&self) -> u8 {
-      // conta a quantia de acentuações comuns.
-      let mut qtd:u8 = 0;
-      for ch in self.chars() {
-         if ch == 'á' { qtd += 1; }
-         if ch == 'à' { qtd += 1; }
-         if ch == 'â' { qtd += 1; }
-         if ch == 'ã' { qtd += 1; }
-         if ch == 'é' { qtd += 1; }
-         if ch == 'ê' { qtd += 1; }
-         if ch == 'í' { qtd += 1; }
-         if ch == 'ô' { qtd += 1; }
-         if ch == 'õ' { qtd += 1; }
-         if ch == 'ó' { qtd += 1; }
-         if ch == 'ú' { qtd += 1; }
-         if ch == 'ç' { qtd += 1; }
-      }
-      let tamanho:u8 = self.len() as u8;
-      return tamanho - qtd;
-   }
    fn max(&self, string: &&str) -> usize {
       let a = StringExtensao::len(*string);
       let b = self.len();
@@ -70,10 +46,8 @@ impl StringExtensao<&str> for str {
    }
 
 }
-impl StringExtensao<String> for String {
-   fn len_2_bytes(&self) -> u8 
-      { self.as_str().len_2_bytes() }
 
+impl StringExtensao<String> for String {
    fn max(&self, string: &String) -> usize {
       let c_i = StringExtensao::len(string);
       let c_ii = self.len();

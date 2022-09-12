@@ -9,7 +9,7 @@ codificado.
 // biblioteca do Rust:
 use std::marker::Copy;
 use std::fmt::{Formatter, Display, Result as Resultado};
-use super::string_complemento::StringExtensao;
+use super::StrExt;
 
 // Abreviação por motivo de legibilidade.
 type Str = &'static str;
@@ -36,7 +36,7 @@ where U: ToString + Clone + Copy {
       let maior_do_rol: usize = {
          rol.iter()
          .map(
-            |s| StringExtensao::len(&s.to_string())
+            |s| StrExt::len(&s.to_string())
          ).max().unwrap()
       };
       let largura = {
@@ -85,8 +85,8 @@ impl<U:Display + Copy> Display for Coluna <U> {
  * ela deve estar envolvida. */
 fn calibra_str(s:&str, limite:u8) -> String {
    // diferença entre a slice-string e o máximo aceitável.
-   let d:u8 = limite - s.len_2_bytes();
-   //let d:u8 = limite-(s.len() as u8);
+   //let d:u8 = limite - s.len_2_bytes();
+   let d: u8 = limite - (StrExt::len(s) as u8);
    // verifica se é ímpa?
    let e_impa = d % 2 != 0;
    // string para concatenação.
