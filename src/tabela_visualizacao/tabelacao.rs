@@ -15,18 +15,21 @@ use std::fmt::{
 use std::marker::Copy;
 use std::collections::VecDeque;
 // extensão do módulo:
-use super::{objeto::Coluna, StrExt, TRACO, LATERAL};
+use super::{
+   objeto::Coluna, StrExt,
+   revestimento::reveste
+};
 // do próprio caixote.
 use crate::terminal_dimensao::{Largura, terminal_largura};
 
 // componente que lacra a tabela.
-const BARRA: char = '#';
-const ESPACO: &'static str = ">";
-const RECUO:usize  = 5;
+pub const BARRA: char = '#';
+pub const ESPACO: &'static str = ">";
+pub const RECUO:usize  = 5;
 type Fila = VecDeque<String>;
 
 struct ColunaStr {
-   forma_padrao: String,
+   //forma_padrao: String,
    /* quantia padrão de linhas da Coluna,
     * ou uma nova preenchido com campos
     * em branco. */
@@ -53,9 +56,9 @@ impl ColunaStr {
       where X: Display + Copy + Clone 
    {
       let mut iterador: Vec<String> = Vec::new();
-      let forma_padrao = format!("{}", coluna);
+      //let forma_padrao = format!("{}", coluna);
 
-      for linha in forma_padrao.lines() 
+      for linha in coluna.to_string().lines() 
          { iterador.push(linha.to_string()); }
 
       match aumento {
@@ -71,7 +74,8 @@ impl ColunaStr {
       };
 
       Self {
-         forma_padrao, altura: aumento, 
+         //forma_padrao, 
+         altura: aumento, 
          iterador, posicao: 0, 
          largura: coluna.largura()
       }
@@ -122,7 +126,7 @@ fn campo_vago(comprimento: usize) -> String {
    return vago;
 }
 
-struct Tabela {
+pub struct Tabela {
    // lista das strings já consertadas das Colunas.
    lista: Vec<ColunaStr>,
    /* diz se quer que use o máximo da 
@@ -207,8 +211,8 @@ impl Tabela {
       
       // dive a tabela em frações, talvez,... iguais!
       if self.preenche_tela { 
-         let ql = self.ql_otimizada();
-         self.fraciona(dbg!(ql)); 
+         let ql = dbg!(self.ql_otimizada());
+         self.fraciona(ql); 
       }
       // fecha a tabela completamente.
       self.tampa();
@@ -216,7 +220,7 @@ impl Tabela {
       self.revestimento();
    }
    // fraciona tabela em 'n' partes.
-   fn fraciona(&mut self, mut qtd: usize) { 
+   fn fraciona(&mut self, qtd: usize) { 
       let mut linhas = self.tabela_str.lines();
       /* não faz nada se a quantia for igual
        * ao 'total atual' de linhas. */
@@ -278,11 +282,9 @@ impl Tabela {
 
       // tampas superiores e inferiores especiais:
       let mut superior: Option<String> = None;
-      let mut inferior: Option<String> = None;
+      //let mut inferior: Option<String> = None;
 
       while let Some(linha) = linhas.next() {
-         let comprimento = StrExt::len(linha);
-         //let barra = &"#".repeat(comprimento);
          let barra = cria_barra(linha);
 
          /* se for o primeira caso, então
@@ -298,11 +300,7 @@ impl Tabela {
       }
       /* trocando visualização por 
        * ação concreta: 
-      // concatenação é só esvaziar fila.
-      println!("{}", superior.unwrap());
-      while fila.len() > 0 {
-         println!("{}", fila.pop_front().unwrap());
-      } */
+       */
       self.tabela_str.clear();
       self.tabela_str = superior.unwrap();
       self.tabela_str.push('\n');
@@ -324,41 +322,24 @@ impl Tabela {
          .sum()
       };
       // largura do terminal.
+      
       let a: usize;
       match terminal_largura() {
-         Ok(Largura(l)) => { a = l as usize; }
-         Err(_) => { a = 0; }
+         Ok(Largura(l)) => 
+            { a = l as usize; }
+         Err(_) => 
+            { a = 0; }
       };
-      let n = dbg!(a) / (dbg!(b) + RECUO + 1);
+      //let a = largura_term().0 as usize;
+      let n = dbg!(a) / (dbg!(b) + RECUO);
       /* quantia de linhas divida para
        * 'n' frações da tabela original. */
-      return ql / n;
+      if n > 3 { return ql / (n-1); }
+      else { return ql / n; }
    }
    /* tarefa de revestimento. */
-   fn revestimento(&self) {
-      let mut alternador: bool = true;
-      let mut nova_linha: String = String::new();
-
-      for linha in self.tabela_str.lines() {
-         if !alternador {
-            let margem = &ESPACO.repeat(RECUO);
-            let espaco = &" ".repeat(RECUO);
-            nova_linha = linha.replace(margem, espaco);
-            nova_linha = nova_linha.replace(
-               BARRA.to_string().as_str(),
-               LATERAL.to_string().as_str()
-            );
-         } else {
-            let comprimento = StrExt::len(linha);
-            nova_linha = TRACO.repeat(comprimento-2);
-            nova_linha.insert(0, LATERAL.to_char().unwrap());
-            nova_linha.push(LATERAL.to_char().unwrap());
-         }
-         println!("{}", nova_linha);
-         // entre linhas.
-         alternador = !alternador;
-      }
-   }
+   fn revestimento(&mut self) 
+      { self.tabela_str = reveste(self.tabela_str.clone());}
 }
 
 impl Display for Tabela {
@@ -378,7 +359,7 @@ mod tests {
    use super::*;
 
    #[test]
-   fn testa_struct_ColunaStr() {
+   fn struct_ColunaStr() {
       let moedas_magicas = Coluna::nova(
          "moedas mágicas(qtd.)",
          vec![198, 1923, 038, 932, 38_839,
@@ -415,7 +396,7 @@ mod tests {
    }
 
    #[test]
-   fn testa_struct_Tabela() {
+   fn struct_Tabela() {
       let moedas_magicas = Coluna::nova(
          "moedas mágicas(qtd.)",
          vec![198, 1923, 038, 932, 38_839,
@@ -450,7 +431,7 @@ mod tests {
    }
 
    #[test]
-   fn testa_struct_Tabela_parteI() {
+   fn struct_Tabela_parteI() {
       let quantias = |n| { 
          let mut array: Vec<u16> = Vec::new();
          for _ in 1..=n
