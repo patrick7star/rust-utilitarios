@@ -18,8 +18,12 @@ use std::string::String;
 mod string_complemento;
 mod objeto;
 mod tabelacao;
+mod matriz_texto;
+mod revestimento;
 use string_complemento::StringExtensao as StrExt;
-use objeto::Coluna;
+// re-exportando ...
+pub use objeto::Coluna;
+pub use tabelacao::Tabela;
 
 
 // caractéres especiais:

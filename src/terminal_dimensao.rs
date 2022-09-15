@@ -45,8 +45,8 @@ type TermLargura = Result<Largura, &'static str>;
 type TermAltura = Result<Altura, &'static str>;
 
 
-/// de forma direta retorna o Enum contendo
-/// apenas a largura do terminal.
+/** de forma direta retorna o Enum contendo
+ apenas a largura do terminal. */
 pub fn terminal_largura() -> TermLargura {
    // executa comando para obter largura primeiramente ...
    let mut resultado:Vec<u8> = {
@@ -88,19 +88,15 @@ pub fn terminal_largura() -> TermLargura {
       resultado.pop();
       resultado.pop();
       resultado.pop();
-   } else if cfg!(linux) || cfg!(linux) 
+   } else if cfg!(linux) || cfg!(unix) 
        { resultado.pop(); }
 
    // transformando em número.
-   let mut caracteres:String = String::new();
-
-   for ch in resultado.into_iter()
-      { caracteres.push(ch as char); }
-
+   let num_str = String::from_utf8_lossy(&resultado[..]);
    /* converte para um inteiro positivo, e 
     * e registra valor para retorno, posteriormente. */
-    caracteres.pop();
-   let largura = u16::from_str(caracteres.as_str()).unwrap();
+   let largura = u16::from_str(&num_str).unwrap();
+
    // retornando encapsulado para possível erro.
    Ok(Largura(largura))
 }
@@ -108,13 +104,14 @@ pub fn terminal_largura() -> TermLargura {
 /** diretamente retorna o Enum apenas com um
  inteiro de 16-bits *encapsulado* como dado
  dentro dele. */
+type Bytes = Vec<u8>;
 pub fn terminal_altura() -> TermAltura {
    // executa comando para obter largura primeiramente ...
-   let mut resultado:Vec<u8> = {
+   let mut resultado: Bytes = {
       if cfg!(unix) || cfg!(linux) {
           match Command::new("tput").arg("lines").output() {
              // retorna array de bytes que é o resultado.
-             Ok(r) => r.stdout,
+             Ok(r) => dbg!(r.stdout),
              Err(_) => 
                 { return Err("não foi possível obter 'Largura'"); }
           }
@@ -152,14 +149,11 @@ pub fn terminal_altura() -> TermAltura {
        { resultado.pop(); }
 
    // transformando em número.
-   let mut caracteres:String = String::new();
-
-   for ch in resultado.into_iter()
-      { caracteres.push(ch as char); }
-
+   let num_str = String::from_utf8_lossy(&resultado);
    /* converte para um inteiro positivo, e 
     * e registra valor para retorno, posteriormente. */
-   let altura = u16::from_str(caracteres.as_str()).unwrap();
+   let altura = u16::from_str(&num_str).unwrap();
+
    // retornando encapsulado para possível erro.
    Ok(Altura(altura))
 }
@@ -184,8 +178,8 @@ pub fn dimensao() -> TerminalDimensao {
    Some((Largura(largura), Altura(altura)))
 }
 
-
 #[cfg(test)]
+#[allow(non_snake_case)]
 mod tests {
    use super::*;
 
@@ -200,7 +194,7 @@ mod tests {
    }
 
    #[test]
-   fn testa_funcao_tl() {
+   fn funcaoTL() {
       match terminal_largura() {
          Ok(Largura(l)) => 
             { assert_eq!(l, 85); }
@@ -211,7 +205,7 @@ mod tests {
       };
    }
    #[test]
-   fn testa_funcao_ta() {
+   fn funcaoTA() {
       match terminal_altura() {
          Ok(Altura(h)) => 
             { assert_eq!(h, 28); }
