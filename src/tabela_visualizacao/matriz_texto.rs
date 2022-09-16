@@ -11,8 +11,8 @@
  * do laptop, que foi primeiramente 
  * codificado. Resolução da tela dele é
  * 1366x768 pixels. */
-const MAX_LARGURA: usize = 42;
-const MAX_ALTURA: usize = 151;
+const MAX_LARGURA: usize = 250;
+const MAX_ALTURA: usize = 1000;
 const FUNDO: char = ' ';
 
 // para codificação.
@@ -32,11 +32,11 @@ impl MatrizTexto {
    // método construtor:
    pub fn cria(altura: u16, largura: u16) -> Self {
       let mut matriz: MultiArray;
-      matriz = Vec::with_capacity(MAX_LARGURA);
+      matriz = Vec::with_capacity(MAX_ALTURA);
       
       for _ in 0..altura {
          let mut linha: Vec<char>;
-         linha = Vec::with_capacity(MAX_ALTURA);
+         linha = Vec::with_capacity(MAX_LARGURA);
          for _ in 0..largura
             { linha.push(FUNDO); }
          matriz.push(linha);

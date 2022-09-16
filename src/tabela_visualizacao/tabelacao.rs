@@ -25,7 +25,7 @@ use crate::terminal_dimensao::{Largura, terminal_largura};
 // componente que lacra a tabela.
 pub const BARRA: char = '#';
 pub const ESPACO: &'static str = ">";
-pub const RECUO:usize  = 5;
+pub const RECUO:usize  = 4;
 type Fila = VecDeque<String>;
 
 struct ColunaStr {
@@ -56,15 +56,13 @@ impl ColunaStr {
       where X: Display + Copy + Clone 
    {
       let mut iterador: Vec<String> = Vec::new();
-      //let forma_padrao = format!("{}", coluna);
-
+      // decompondo sua forma de string em linhas...
       for linha in coluna.to_string().lines() 
          { iterador.push(linha.to_string()); }
 
       match aumento {
          Some(valor) => {
             let lrg = coluna.largura();
-            //let cv = &"-".repeat(lrg);
             let cv = campo_vago(lrg);
             let diferenca = abs(valor, coluna.linhas());
 
@@ -209,6 +207,8 @@ impl Tabela {
          mql -= 1;
       }
       
+      // corrigo erro de dupla barra ...
+      self.conserta_barra_dupla();
       // dive a tabela em frações, talvez,... iguais!
       if self.preenche_tela { 
          let ql = dbg!(self.ql_otimizada());
@@ -279,10 +279,8 @@ impl Tabela {
    fn tampa(&mut self) {
       let mut linhas = self.tabela_str.lines();
       let mut fila: Fila = Fila::new();
-
       // tampas superiores e inferiores especiais:
       let mut superior: Option<String> = None;
-      //let mut inferior: Option<String> = None;
 
       while let Some(linha) = linhas.next() {
          let barra = cria_barra(linha);
@@ -299,8 +297,7 @@ impl Tabela {
          fila.push_back(barra.to_string());
       }
       /* trocando visualização por 
-       * ação concreta: 
-       */
+       * ação concreta: */
       self.tabela_str.clear();
       self.tabela_str = superior.unwrap();
       self.tabela_str.push('\n');
@@ -319,7 +316,7 @@ impl Tabela {
       let b: usize = {
          self.lista.iter()
          .map(|item| item.largura)
-         .sum()
+         .sum() 
       };
       // largura do terminal.
       
@@ -330,16 +327,41 @@ impl Tabela {
          Err(_) => 
             { a = 0; }
       };
-      //let a = largura_term().0 as usize;
       let n = dbg!(a) / (dbg!(b) + RECUO);
       /* quantia de linhas divida para
        * 'n' frações da tabela original. */
-      if n > 3 { return ql / (n-1); }
-      else { return ql / n; }
+      return ql / n;
    }
    /* tarefa de revestimento. */
    fn revestimento(&mut self) 
       { self.tabela_str = reveste(self.tabela_str.clone());}
+   // leve correção para dupla barra.
+   fn ha_barra_dupla(&mut self) -> bool {
+      let mut contador = 1;
+      let mut resposta = true;
+      let dupla_barra = BARRA.to_string().as_str().repeat(2);
+      for linha in self.tabela_str.lines() {
+         if contador == 4
+            { break; }
+         let fim = linha.len()-1;
+         let slice = linha.get(fim-1..=fim).unwrap();
+         resposta = resposta && slice == dupla_barra;
+         contador += 1;
+      }
+      return resposta;
+   }
+   fn conserta_barra_dupla(&mut self) {
+      if self.ha_barra_dupla() {
+         let c = self.tabela_str.len();
+         let mut auxiliar = String::with_capacity(c);
+         for linha in self.tabela_str.lines() { 
+            auxiliar += linha; 
+            auxiliar.pop();
+            auxiliar.push('\n');
+         }
+         self.tabela_str = auxiliar;
+      }
+   }
 }
 
 impl Display for Tabela {
@@ -380,15 +402,27 @@ mod tests {
       let altura = Some(generos.linhas());
 
       let mut strI = ColunaStr::nova(moedas_magicas, altura);
+      println!(
+         "largura={}\tqtd. de linhas={}",
+         strI.largura, strI.altura.unwrap()
+      );
       let mut strII = ColunaStr::nova(salarios, altura);
+      println!(
+         "largura={}\tqtd. de linhas={}",
+         strII.largura, strII.altura.unwrap()
+      );
       let mut strIII = ColunaStr::nova(generos, altura);
+      println!(
+         "largura={}\tqtd. de linhas={}",
+         strIII.largura, strIII.altura.unwrap()
+      );
 
 
       for _ in 1..=altura.unwrap() {
          let c1 = strI.next().unwrap();
          let c2 = strII.next().unwrap();
          let c3 = strIII.next().unwrap();
-         println!("{}#{}#{}#", c1, c2, c3);
+         println!("#{}#{}#{}#", c1, c2, c3);
       }
 
       // avaliação manual.
@@ -469,5 +503,24 @@ mod tests {
       t.adiciona(generos);
       t.adiciona(salarios);
       println!("\n\t\tverificando dobradura ...\n{}", t);
+   }
+
+   #[test]
+   fn struct_Tabela_parteII() {
+      let quantias = |n| { 
+         let mut array: Vec<u16> = Vec::new();
+         for _ in 1..=n
+            { array.push(sortear::u16(0..=35_000)); }
+         array
+      };
+      let salarios = Coluna::nova(
+         "salário(R$)",
+         quantias(333)
+      );
+
+      let mut t = Tabela::nova(true);
+      t.adiciona(salarios);
+
+      println!("{}", t);
    }
 }
