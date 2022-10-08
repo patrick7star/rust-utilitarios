@@ -211,7 +211,7 @@ impl Tabela {
       self.conserta_barra_dupla();
       // dive a tabela em frações, talvez,... iguais!
       if self.preenche_tela { 
-         let ql = dbg!(self.ql_otimizada());
+         let ql = self.ql_otimizada();
          self.fraciona(ql); 
       }
       // fecha a tabela completamente.
@@ -235,8 +235,12 @@ impl Tabela {
       let mut contador = 0;
 
       for _ in 1..=qtd { 
-         let linha = linhas.next().unwrap();
-         fila.push_back(linha.to_string()); 
+         //let linha = linhas.next().unwrap();
+         match linhas.next() {
+            Some(linha) =>
+               { fila.push_back(linha.to_string()); }
+            None => { continue; }
+         };
       }
 
       while let Some(linha) = linhas.next() {
@@ -327,10 +331,14 @@ impl Tabela {
          Err(_) => 
             { a = 0; }
       };
-      let n = dbg!(a) / (dbg!(b) + RECUO);
-      /* quantia de linhas divida para
-       * 'n' frações da tabela original. */
-      return ql / n;
+      let n = a / (b + RECUO);
+      // resto de linhas da "divisão otimizada".
+      let resto = ql % n;
+      // é adicionada em cada fração ...
+      if n >= 3
+         { return (ql / (n - 1)) + resto; }
+      else
+         { return ql / n + resto; }
    }
    /* tarefa de revestimento. */
    fn revestimento(&mut self) 
