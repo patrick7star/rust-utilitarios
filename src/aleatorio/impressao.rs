@@ -3,12 +3,12 @@
 /* cria um print com impressão
  * programada(em segundos). */
 
+use std::time::{Instant, Duration};
 
 pub struct PrintProgramatico {
    cronometro: Instant,
    periodo: Duration,
    contador: usize,
-   ja_feito: bool
 }
 
 impl PrintProgramatico {
@@ -18,24 +18,41 @@ impl PrintProgramatico {
          cronometro: Instant::now(),
          periodo,
          contador: 0,
-         ja_feito: false
       };
    }
    // mostra mensagem:
    pub fn dispara(&mut self, mensagem: &str) {
       let decorrido = self.cronometro.elapsed();
-      if decorrido.as_secs() % periodo.as_secs() == 0 {
-         if self.ja_feito 
-            { continue; }
+      let pausa = self.periodo.as_secs();
+      if decorrido.as_secs() > pausa {
          println!("\n{}\n", mensagem); 
+         // zera contagem.
          self.cronometro = Instant::now();
          self.contador += 1;
-         self.ja_feito = true;
       }
-      if decorrido.as_secs() % (periodo.as_secs() + 1) == 0 
-         { self.ja_feito = false; }
    }
    // obtém total de disparo realizados.
-   pub fn total_de_disparos() -> usize
+   pub fn total_de_disparos(&self) -> usize
       { self.contador }
+}
+
+// abreviação:
+pub type PP = PrintProgramatico;
+
+#[cfg(test)]
+#[allow(non_snake_case)]
+mod tests {
+   use super::*;
+   use std::thread::sleep;
+
+   #[test]
+   fn metodoDispara() {
+      let mut instancia = PP::novo(Duration::from_secs(5));
+      for k in 1..=100 {
+         let mensagem = format!("contagem em {}", k);
+         instancia.dispara(mensagem.as_str());
+         sleep(Duration::from_millis(300));
+      }
+      assert!(instancia.total_de_disparos() > 0);
+   }
 }
