@@ -26,6 +26,8 @@
 // complementar:
 mod metodo_i;
 mod metodo_ii;
+// complementar, porém é uma gama de testes:
+mod testes_unitarios;
 // re-exportando ...
 pub use metodo_ii::sortear;
 #[cfg(target_os="linux")]
