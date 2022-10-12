@@ -26,6 +26,7 @@
 // complementar:
 mod metodo_i;
 mod metodo_ii;
+mod impressao;
 // complementar, porém é uma gama de testes:
 mod testes_unitarios;
 // re-exportando ...

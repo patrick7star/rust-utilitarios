@@ -33,7 +33,7 @@ pub mod legivel;
   Pega lista e arrays de dados e faz uma tabela
  delas para simples impressões.
 */
-pub mod tabela_visualizacao;
+pub mod tabelas;
 
 /// Simulação de valores aleatórios.
 pub mod aleatorio;

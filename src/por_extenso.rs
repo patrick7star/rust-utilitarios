@@ -238,9 +238,6 @@ pub fn escreve_por_extenso(numero:u64) -> Result<String, &'static str> {
       let numero_str = zero_a_mil(&decompoe(numero));
       let pos_conserto = consertando_casa_dos_dez(numero_str);
       return Ok(pos_conserto);
-   } else if numero == 1_000 {
-      // tratando de caso muito específico ...
-      Ok("mil".to_string())
    } else { 
       let mut escrita:String = String::new();
       let algarismos = decompoe(numero);
@@ -315,6 +312,7 @@ pub fn escreve_por_extenso(numero:u64) -> Result<String, &'static str> {
        *    'trezentos e dez e um' ao invés de 'trezentos
        *    e onze' */
       escrita = consertando_casa_dos_dez(escrita);
+      escrita = conserta_unidade_de_milhar(numero, escrita);
       fn termina_com_espaco_em_branco(s:&str) -> bool {
          let caracteres:Vec<_> = s.chars().collect();
          let indice = caracteres.len() - 1;
@@ -328,6 +326,19 @@ pub fn escreve_por_extenso(numero:u64) -> Result<String, &'static str> {
          { escrita = escrita.trim_end().to_string(); }
       Ok(escrita)
    }
+}
+
+/* consertado unidade de milhar, onde está-se
+ * escrevendo, por exemplo: 1850, 1003 respectivamente
+ * como "um mil oitocentos e cinquenta" e "um
+ * mil e três". Fica este "um mil", ao invés de só
+ * "mil", aqui isto será consertado. Se o valor
+ * não está neste intervalo, apenas retorna a string
+ * original passada.*/
+fn conserta_unidade_de_milhar(valor: u64, escrita: String) -> String {
+   if valor >= 1_000 && valor <= 1_999 
+      { return escrita.replace("um mil", "mil"); }
+   return escrita;
 }
 
 #[cfg(test)]
