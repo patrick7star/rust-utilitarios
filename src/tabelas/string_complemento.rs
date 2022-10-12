@@ -7,7 +7,6 @@
 
 pub type Str = &'static str;
 
-
 pub trait StringExtensao<S> {
    /* maior entre duas strings. */
    fn max(&self, string: &S) -> usize; 
