@@ -25,8 +25,12 @@
 // biblioteca padrão do Rust:
 use std::fs::OpenOptions;
 use std::io::Read;
+use std::ops::RangeInclusive;
 
 type Bytes = Vec<u8>;
+//type IntervaloZ = RangeInclusive<isize>;
+type Zplus= RangeInclusive<usize>;
+type Zminus= RangeInclusive<isize>;
 
 fn pega_n_bytes(n: usize) -> Bytes {
    // tal gera bytes aleatórios a todo instante.
@@ -53,7 +57,15 @@ fn pega_n_bytes(n: usize) -> Bytes {
    return bytes[0..n].to_vec();
 }
 
+/** O mesmo que o módulo `sortear`, no entanto foi
+ feito para ser mais veloz, e ter um código 
+ mais limpo.  Na verdade, ele será o sucessor do
+ módulo citado, claro quando estiver mais maduro.
+ O outro será descontinuado quando sanado todas 
+ compatibilidades que ele oferece. */
 pub mod randomico {
+   use super::*;
+
    /// sorteio booleano básico.
    pub fn bool() -> bool {
       let byte = super::pega_n_bytes(1).remove(0);
@@ -64,7 +76,7 @@ pub mod randomico {
    }
    /// sorteio de um byte(u8).
    pub fn u8() -> u8 
-      { return super::pega_n_bytes(1).remove(0); }
+      { return pega_n_bytes(1).remove(0); }
    /// sorteia um i8.
    pub fn i8() -> i8 {
       let sorteio = u8() % 128;
@@ -117,7 +129,7 @@ pub mod randomico {
       let mut quatro_bytes= super::pega_n_bytes(4);
       let array = quatro_bytes.drain(0..);
       let mut bytes: [u8; 4] = [0; 4];
-      for (i, b) in array.enumerate() 
+      for (i, b) in array.rev().enumerate() 
          { bytes[i] = b; }
       i32::from_be_bytes(bytes)
    }
@@ -138,6 +150,29 @@ pub mod randomico {
       for (i, b) in array.enumerate() 
          { bytes[i] = b; }
       u64::from_be_bytes(bytes)
+   }
+   /// sorteia um 'usize' e 'isize'.
+   pub fn usize(intervalo: Zplus) -> usize {
+      let a = *intervalo.start() as u64;
+      let b = *intervalo.end() as u64;
+      if a > b
+         { return usize((b as usize)..=(a as usize)); }
+      (a + u64() % ((b + 1) - a)) as usize
+   }
+   /* inteiros positivos e negativos. */
+   pub fn isize(intervalo: Zminus) -> isize {
+      let a = *intervalo.start();
+      let b = *intervalo.end();
+      let c: isize = {
+         if a >= 0 && b >= 0
+            { b - a }
+         else if a < 0 && b >= 0
+            { b + a.abs() }
+         else 
+            { b.abs() + a.abs() }
+      };
+      let x = i64().abs() as isize;
+      a + x % (c + 1)
    }
 }
 

@@ -5,12 +5,14 @@
 
 use std::time::{Instant, Duration};
 
+#[allow(dead_code)]
 pub struct PrintProgramatico {
    cronometro: Instant,
    periodo: Duration,
    contador: usize,
 }
 
+#[allow(dead_code)]
 impl PrintProgramatico {
    // cria scheduler ...
    pub fn novo(periodo: Duration) -> Self {
@@ -37,6 +39,7 @@ impl PrintProgramatico {
 }
 
 // abreviação:
+#[allow(dead_code)]
 pub type PP = PrintProgramatico;
 
 #[cfg(test)]
