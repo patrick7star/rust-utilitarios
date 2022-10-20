@@ -10,6 +10,10 @@
 // biblioteca padrão do Rust.
 use std::str::FromStr;
 
+// extensão do módulo:
+mod fracao_seg;
+pub use fracao_seg::*;
+
 
 // múltiplos de tempo(equivalente em seg).
 const MINUTO:f32 = 60.0;           // segundos por minuto.
@@ -28,10 +32,6 @@ const GIGA:u64 = 2_u64.pow(30);  // bytes por GB.
 const TERA:u64 = 2_u64.pow(40);  // bytes por TB.
 const PETA:u64 = 2_u64.pow(50);  // bytes por PB.
 
-// submúltiplos de tempo conhecidos(fraçoes de segundos).
-//const MILI_SEG:f64 = 1.0/1000.0;
-//const MICRO_SEG:f64 = 1.0/1_000_000_f64;
-//const NANO_SEG:f64 = 1.0/1_000_000_000f64;
 
 
 /** retorna uma string contendo o valor legendado
@@ -186,13 +186,16 @@ pub fn tempo_detalhado<'a>(tempo_str:&'a str) -> Option<String> {
    else 
       // sem peso, o argumento fica inválido.
       { return None; }
+   /*
    println!("calc = {}", calc);
    // faz a conversão com a quantia de segundos correta.
-   let _nao_contraido:bool = {
-      vec!["dias", "horas", "minutos", "séculos",
-          "milênios", "segundos", "meses", "anos",
-          "semanas", "décadas"].contains(&peso)
-   };
+   let _nao_contraido: bool = {
+      vec![
+         "dias", "horas", "minutos", "séculos",
+         "milênios", "segundos", "meses", "anos",
+         "semanas", "décadas"
+      ].contains(&peso)
+   }; */
    // converte fração.
    let conversao = tempo(calc, false);
    /* arredonda se está quebrada, pois a recursão 
@@ -200,7 +203,7 @@ pub fn tempo_detalhado<'a>(tempo_str:&'a str) -> Option<String> {
    let conversao = arredondando_str(conversao.as_str());
 
    // concatenando as partes:
-   let mut s:String = String::new();
+   let mut s = String::new();
    s += parte_inteira;
    s += " ";
    s += peso;
