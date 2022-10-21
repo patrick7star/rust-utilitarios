@@ -41,6 +41,23 @@ pub fn tempo_fracao(t: f64, contracao:bool) -> Option<String> {
    Some(format!("{:0.1} {}", calculo, sigla))
 } 
 
+use std::time::Duration;
+/** Dado um struct 'Duration' ele retorna uma
+ string com seu tempo em representação legível.
+ Este é uma função bem genérica, pois utiliza
+ um tipo de dado que é muito usado, e também
+ "cúspido" da maioria das funções do sistema e
+ externas também. */
+pub fn tempo_generico(t: Duration, curto: bool) -> Option<String> {
+   let segundo = Duration::from_secs(1);
+
+   // tratando de frações de segundos.
+   if t < segundo
+      { tempo_fracao(t.as_secs_f64(), curto) }
+   else 
+      { Some(super::tempo(t.as_secs(), curto)) }
+}
+
 
 #[cfg(test)]
 mod tests {
@@ -63,5 +80,16 @@ mod tests {
                { println!("não é possível valores como {}", *a); }
          };
       }
+   }
+
+   #[test]
+   fn teste_simples() {
+      let inteiro = Duration::from_secs(942_392);
+      let fracao = Duration::from_secs_f32(0.0000012);
+      println!(
+         "\t{}\t{}",
+         tempo_generico(inteiro, true).unwrap(),
+         tempo_generico(fracao, true).unwrap()
+      );
    }
 }
