@@ -24,23 +24,7 @@ const CAPACIDADE:u8 = 50;
 const TEXTO_MAX:usize = 30;
 
 
-/* cria uma proporção de progresso baseado 
- * na porcentagem dada. Então 0% é nada de
- * barra, e, 100% é a barra totalmente preenchida. */
-fn cria_barra(percentagem:f32) -> String {
-   let mut barra = String::new();
-   let conta = (CAPACIDADE as f32 * percentagem) as usize;
-   // falta de espaços-vázios.
-   let diferenca:usize = 50 - conta;
-   // concantena partes da barra.
-   barra.push_str(&COMPONENTE.repeat(conta));
-   barra.push_str(&VAZIO.repeat(diferenca));
-   // retorna a barra formada com sua parte "consumida"
-   // e uma parte "vázia", ou algum destes predominante.
-   return barra;
-}
-
-
+// cálcula número de algarismos de dado número.
 fn conta_algs(valor:usize) -> u8 {
    let mut d:f32 = valor as f32;  // cópia valor real ...
    let mut contador:u8 = 0; // contador de divisões
@@ -54,8 +38,12 @@ fn conta_algs(valor:usize) -> u8 {
 }
 
 
-/** cálculos percentuais e, suas representação
- numérica. */
+/** Cálculos percentuais e, suas representação
+ numérica. Deve ser mais usado para simples
+ visualização do progresso, nada dinâmico, pois
+ dependendo de como foi escrito pode usar muita
+ memória, e o consumo desnecesário de  `CPU` é 
+ certo.*/
 pub fn progresso(qtd_atual:u64, qtd_total:u64) -> String {
    let percentagem:f32 = (qtd_atual as f32)/(qtd_total as f32);
    let percent_100:f32 = percentagem*100.0;
@@ -70,7 +58,7 @@ pub fn progresso(qtd_atual:u64, qtd_total:u64) -> String {
       return format!(
          "{0:>espaco$} de {1} [{2}]{3:>5.1}%",
          qtd_atual, qtd_total, 
-         cria_barra(1.0), 
+         cria_barra(1.0, CAPACIDADE), 
          percent_100,espaco=qtd_algs
       );
    }
@@ -80,15 +68,17 @@ pub fn progresso(qtd_atual:u64, qtd_total:u64) -> String {
    let molde:String = format!(
       "{0:>espaco$} de {1} [{2}]{3:>5.1}%",
       qtd_atual, qtd_total, 
-      cria_barra(percentagem), 
+      cria_barra(percentagem, CAPACIDADE), 
       percent_100,espaco=qtd_algs
    );
    return molde;
 }
 
 
-/** cálculos percentuais e, suas representação
- numérica. */
+/** Cálculos percentuais e, suas representação
+ numérica. Mesmo que o acima, o consumo de 
+ `CPU` é dispedício, não use em **loops**.
+ */
 pub fn progresso_data(qtd_atual:u64, qtd_total:u64) -> String {
    let percentagem:f32 = (qtd_atual as f32)/(qtd_total as f32);
    let percent_100:f32 = percentagem*100.0;
@@ -103,7 +93,7 @@ pub fn progresso_data(qtd_atual:u64, qtd_total:u64) -> String {
          "{}/{} [{}] {}%\n",
          total_bytes,
          total_bytes,
-         cria_barra(1.0),
+         cria_barra(1.0, CAPACIDADE),
          100.0
       );
    }
@@ -114,7 +104,7 @@ pub fn progresso_data(qtd_atual:u64, qtd_total:u64) -> String {
       let qtd_algs = qt.len() as usize;
       let molde:String = format!(
          "{0:>espaco$}/{1} [{2}]{3:>5.1}%",
-         qa, qt, cria_barra(percentagem), 
+         qa, qt, cria_barra(percentagem, CAPACIDADE), 
          percent_100,espaco=qtd_algs
       );
       return molde;
@@ -240,7 +230,7 @@ qtd_total:u64) -> String {
          rotulo,
          total_bytes,
          total_bytes,
-         cria_barra(1.0),
+         cria_barra(1.0, CAPACIDADE),
          100.0
       );
    }
@@ -251,7 +241,7 @@ qtd_total:u64) -> String {
       let qtd_algs = qt.len() as usize;
       let molde:String = format!(
          "[{4}] {0:>espaco$}/{1} [{2}]{3:>5.1}%",
-         qa, qt, cria_barra(percentagem), 
+         qa, qt, cria_barra(percentagem, CAPACIDADE), 
          percentagem*100.0,
          rotulo,
          espaco=qtd_algs,
@@ -263,7 +253,8 @@ qtd_total:u64) -> String {
 /** Um tipo de progresso que leva em conta,
  na hora de imprimir, a quantia de progresso
  ocorrido, e não apenas dá uma impressão dados
- a *quantia atual* e *total*. */
+ a *quantia atual* e *total*. Tal estrutura é
+ perfeita para uma grande entrada de dados.*/
 pub struct ProgressoPercentual {
    // quantidade atual passada.
    qtd_atual:u64,
@@ -381,27 +372,39 @@ impl Display for ProgressoPercentual {
    }
 }
 
+/**
+ Uma estrutura que mostra uma barra de progresso,
+  configurado os milisegundos de disparo. Portanto,
+  ele só forma a barra passado total de **ms**, se for 
+  configurado com um valor maior ou igual à *1seg*, ou
+  na faixas dos micro segundos, tal estrutura não
+  se forma, para o programa. Tal restrição é necessária.
+  Tal estrututa, assim com a percentual, são perfeitos
+  para entrada de dados, assim não desaceleram o 
+  programa, por ficar gerando a todo *ciclo* uma
+  nova string formantando a barra.
+*/
 pub struct ProgressoTemporal {
    // quantidade atual passada.
-   qtd_atual:u64,
+   qtd_atual: u64,
    // o total inicialmente marcado.
-   qtd_total:u64,
+   qtd_total: u64,
    // cronômetro para registra período de tempo.
    cronometro:Instant,
    // tempo delimitado para impressão em mili-seg.
-   tempo:u16
+   tempo: Duration
 }
 
 // implementação do método.
 impl ProgressoTemporal {
    // criando uma instância...
-   pub fn cria(qtd_total:u64, tempo_em_miliseg:u16) -> Self {
+   pub fn cria(qtd_total:u64, milisegs: Duration) -> Self {
       // criando dado agora...
       ProgressoTemporal {
          qtd_atual: 0,  
          qtd_total,
          cronometro: Instant::now(),
-         tempo: tempo_em_miliseg
+         tempo: milisegs
       }
    }
 
@@ -414,7 +417,7 @@ impl ProgressoTemporal {
       let tp = self.cronometro.elapsed();
       /* no mínimo, um terço de segundo deve-se 
        * passar para liberar uma nova impressão. */
-      if  tp >= Duration::from_millis(self.tempo as u64) {
+      if  tp >= self.tempo {
          // obtendo a barra de progresso simples.
          let bp = progresso(self.qtd_atual, self.qtd_total);
          // reiniciando o crônometro para recontagem de tempo.
@@ -467,7 +470,7 @@ impl Display for ProgressoTemporal {
 /* cria uma proporção de progresso baseado 
  * na porcentagem dada. Então 0% é nada de
  * barra, e, 100% é a barra totalmente preenchida. */
-fn cria_barra_i(percentagem:f32, capacidade:u8) -> String {
+fn cria_barra(percentagem:f32, capacidade:u8) -> String {
    let mut barra = String::new();
    let conta = (capacidade as f32 * percentagem) as usize;
    // falta de espaços-vázios.
@@ -534,7 +537,7 @@ tempo_atual:Duration, tempo_total:Duration) -> String {
       format!(
          "{0:<espaco$} {3} [{1}]{2:>5.1}%",
          string, 
-         cria_barra_i(percentual, 20), 
+         cria_barra(percentual, 20), 
          p100, restante,
          espaco = recuo - restante.len()
       )
