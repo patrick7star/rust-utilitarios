@@ -102,7 +102,8 @@ fn testa_progresso_percentual() {
 fn testa_progresso_temporal() {
    let total:u64 = 21_500_000;
    // instânciando...
-   let mut pd = ProgressoTemporal::cria(total, 300);
+   let t = Duration::from_millis(300);
+   let mut pd = ProgressoTemporal::cria(total, t);
 
    println!("visualizando inicial:");
    println!("{}", pd);
