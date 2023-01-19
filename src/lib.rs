@@ -65,9 +65,10 @@ pub mod por_extenso;
 
 
 use std::io::{Write, stdin, stdout};
-/* Como sem um nome de módulo no momento, vamos 
- * colocar aqui a implementação de um prompt 
- * genérico. */
+/** Como sem um nome de módulo no momento, vamos 
+  colocar aqui a implementação de um prompt 
+  genérico. 
+ */
 pub fn lanca_prompt(dica:&str) -> String {
    // formantando dica.
    let dica = format!("{}: ", dica);
