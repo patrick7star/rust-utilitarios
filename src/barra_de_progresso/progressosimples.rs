@@ -10,14 +10,18 @@
  */
 
 use super::{
-   progresso, progresso_data, 
-   ProgressoPercentual, Logo
+   CAPACIDADE, conta_algs, 
+   cria_barra, Logo,
+   ProgressoPercentual,
+   Impressao
 };
 use std::fmt::{
    Display, Formatter, 
    Result as Result_fmt
 };
 use std::ops::AddAssign;
+// resto da biblioteca.
+use crate::legivel::tamanho;
 
 // da estrura codificada aqui:
 /// Atalho para `ProgressoSimples`.
@@ -73,7 +77,7 @@ impl <'b>ProgressoSimples<'b> {
 
    /* método que dá impressão da string se
     * for necessário. */
-   pub fn imprime(&mut self) -> Option<String> {
+   pub fn imprime(&mut self) -> Impressao {
       /* segue a frequência da barra de progresso
        * interna a estrutura. */
       match self.progresso_auxiliar.imprime() {
@@ -123,7 +127,8 @@ impl AddAssign<u64> for PS<'_> {
 impl Display for PS<'_> {
    // implementando visualização em sí.
    fn fmt(&self, formatador:&mut Formatter<'_>) 
-   -> Result_fmt {
+     -> Result_fmt 
+   {
       // nomeando por legibilidade.
       let qa = self.atual;
       let qt = self.total;
@@ -150,6 +155,64 @@ impl Display for PS<'_> {
          None =>
             write!(formatador, "{}", barra_de_progresso)
       }
+   }
+}
+
+/* reescrevendo as funções aqui, para ainda deixar
+ * as originais, por motivo de compatibilidade, porém
+ * todas chamadas que as usam, seja que módulo for,
+ * chamarão estas aqui. */
+pub fn progresso(atual:u64, total:u64) -> String {
+   let percentagem = (atual as f32) / (total as f32);
+   // qtd. de algarismos que será alcançado o valor atual.
+   let qtd_algs = (conta_algs(total as usize)) as usize;
+
+   // caso de erro.
+   if percentagem > 1.0 {
+      panic!("os valores de atual supera o total!");
+   } else if percentagem == 1_f32 {
+      return format!(
+         "{0:>espaco$} de {1} [{2}] 100%",
+         atual, total, 
+         cria_barra(1.0, CAPACIDADE), 
+         espaco=qtd_algs
+      );
+   } else {
+      /* molde da string retornada representando por 
+       * inteiro a barra de progresso. */
+      return format!(
+         "{0:>espaco$} de {1} [{2}]{3:>5.1}%",
+         atual, total, 
+         cria_barra(percentagem, CAPACIDADE), 
+         percentagem * 100.0,
+         espaco = qtd_algs
+      );
+   }
+}
+
+fn progresso_data(atual: u64, total: u64) -> String {
+   let percentual = (atual as f32) / (total as f32);
+
+   // caso de erro.
+   if percentual > 1.0 
+      { panic!("os valores de atual supera o total!"); }
+   else if percentual == 1.00 {
+      return format!(
+         "{maximo}/{maximo} [{}] {}%\n",
+         cria_barra(1.0, CAPACIDADE), 100.0,
+         maximo = tamanho(total, true)
+      );
+   } else {
+      // strings dos valores.
+      let atual_str = tamanho(atual, true);
+      let total_str = tamanho(total, true);
+      return format!(
+         "{0:>espaco$}/{1} [{2}]{3:>5.1}%",
+         atual_str, total_str,
+         cria_barra(percentual, CAPACIDADE), 
+         percentual * 100.0, 
+         espaco = total_str.len()
+      );
    }
 }
 
