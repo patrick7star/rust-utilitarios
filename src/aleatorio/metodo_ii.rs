@@ -66,7 +66,6 @@ fn lancamento() -> bool {
  implemenetam 'Range' que as funções acimas foram deixas
  de fora nisso. 
 */
-#[deprecated(since="1.0.0", note="ainda necessário para o Windows")]
 pub mod sortear {
    // importando do módulo "pai".
    use super::{RangeInclusive};
