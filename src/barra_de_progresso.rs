@@ -32,21 +32,24 @@ const TEXTO_MAX:usize = 30;
 
 /// Atalho para `ProgressoTemporal`.
 pub type PT = ProgressoTemporal;
+type Impressao = Option<String>;
 
 
 // cálcula número de algarismos de dado número.
 fn conta_algs(valor:usize) -> u8 {
-   let mut d:f32 = valor as f32;  // cópia valor real ...
-   let mut contador:u8 = 0; // contador de divisões
+   let mut d = valor as f32; 
+   // contador de divisões.
+   let mut contador: u8 = 0; 
+
    while d > 1.0 {
       // cada divisão por dez, conta um.
       d = d / 10.0;
       contador += 1;
    }
-   // retorno a contagem contabilizando um ...
-   return contador+1;
-}
 
+   // retorno a contagem contabilizando um ...
+   return contador + 1;
+}
 
 /** Cálculos percentuais e, suas representação
  numérica. Deve ser mais usado para simples
@@ -132,11 +135,12 @@ pub fn progresso_data(qtd_atual:u64, qtd_total:u64) -> String {
  resto do seu núcleo.
 */
 #[deprecated(
-   since="1.3.5", 
-   note="confuso, e raramente utilizado"
+  since="1.3.5", 
+  note="confuso, e raramente utilizado"
 )]
-pub fn progresso_data_rotulo<'a>(rotulo:&'a str, qtd_atual:u64, 
-qtd_total:u64) -> String {
+pub fn progresso_data_rotulo<'a>(rotulo:&'a str, 
+  qtd_atual:u64, qtd_total:u64) -> String 
+{
    // cálculando a porcetagem.
    let percentagem:f32 = (qtd_atual as f32)/(qtd_total as f32);
    // caso de erro.
@@ -206,7 +210,7 @@ impl ProgressoPercentual {
     * aumento significativo, então dá o 
     * resultado, caso contrário, retorna
     * nenhum dado. */
-   pub fn imprime(&mut self) -> Option<String> {
+   pub fn imprime(&mut self) -> Impressao {
       // diferença de percentuais.
       let diferenca = self.percentual - self.antigo_percentual;
 
@@ -216,15 +220,15 @@ impl ProgressoPercentual {
          // atualiza o 'antigo percentual' com o valor do "atual".
          self.antigo_percentual = self.percentual;
          // criando barra...
-         let bp = progresso(self.qtd_atual, self.qtd_total);
+         let bp = progresso_i(self.qtd_atual, self.qtd_total);
          // retornando barra, porém embrulhado.
          return Some(bp);
       } else if self.qtd_atual == 0 {
          // não chamada nenhuma vez?
-         let bp = progresso(self.qtd_atual, self.qtd_total);
+         let bp = progresso_i(self.qtd_atual, self.qtd_total);
          return Some(bp);
       } else if self.esgotado {
-         Some(progresso(self.qtd_atual, self.qtd_total))
+         Some(progresso_i(self.qtd_atual, self.qtd_total))
       } else { None }
    }
 }
@@ -281,12 +285,14 @@ impl AddAssign<u64> for ProgressoPercentual {
  * que a chama. */
 impl Display for ProgressoPercentual {
    // implementando visualização em sí.
-   fn fmt(&self, formatador:&mut Formatter<'_>) -> Result_fmt {
+   fn fmt(&self, formatador:&mut Formatter<'_>) 
+     -> Result_fmt 
+   {
       // nomeando por legibilidade.
       let qa = self.qtd_atual;
       let qt = self.qtd_total;
       // obtendo 'String' baseado no atual/total.
-      let barra_de_progresso = progresso(qa, qt);
+      let barra_de_progresso = progresso_i(qa, qt);
       // "imprimindo" visualização da atual barra.
       write!(formatador, "{}", barra_de_progresso)
    }
@@ -315,6 +321,7 @@ pub struct ProgressoTemporal {
    tempo: Duration
 }
 
+use progressosimples::progresso as progresso_i;
 // implementação do método.
 impl ProgressoTemporal {
    // criando uma instância...
@@ -332,14 +339,14 @@ impl ProgressoTemporal {
     * um tempo considerável desde a última
     * impressão, se sim, então imprime
     * novamente, se assim for requisitado. */
-   pub fn imprime(&mut self) -> Option<String> {
+   pub fn imprime(&mut self) -> Impressao {
       // tempo passado desde o último registro.
       let tp = self.cronometro.elapsed();
       /* no mínimo, um terço de segundo deve-se 
        * passar para liberar uma nova impressão. */
       if  tp >= self.tempo {
          // obtendo a barra de progresso simples.
-         let bp = progresso(self.qtd_atual, self.qtd_total);
+         let bp = progresso_i(self.qtd_atual, self.qtd_total);
          // reiniciando o crônometro para recontagem de tempo.
          self.cronometro = Instant::now();
          // impressão em sí agora...
@@ -348,7 +355,7 @@ impl ProgressoTemporal {
       // se houver atingindo o máximo possível também.
       else if self.qtd_atual == self.qtd_total {
          // obtendo a barra de progresso simples.
-         let bp = progresso(self.qtd_atual, self.qtd_total);
+         let bp = progresso_i(self.qtd_atual, self.qtd_total);
          // reiniciando o crônometro para recontagem de tempo.
          self.cronometro = Instant::now();
          // impressão em sí agora...
@@ -381,7 +388,7 @@ impl Display for ProgressoTemporal {
       let qa = self.qtd_atual;
       let qt = self.qtd_total;
       // obtendo 'String' baseado no atual/total.
-      let barra_de_progresso = progresso(qa, qt);
+      let barra_de_progresso = progresso_i(qa, qt);
       // "imprimindo" visualização da atual barra.
       write!(formatador, "{}", barra_de_progresso)
    }

@@ -27,18 +27,20 @@
 mod metodo_i;
 mod metodo_ii;
 mod impressao;
+
 // complementar, porém é uma gama de testes:
 mod testes_unitarios;
+
 // re-exportando ...
 pub use metodo_ii::sortear;
 #[cfg(target_os="linux")]
 pub use metodo_i::randomico;
 
-
-fn swap<A>(lista: &mut Vec<A>, p1: usize, p2:usize) {
+// troca valores dentro de uma array genérica.
+fn troca<A>(lista: &mut Vec<A>, p1: usize, p2:usize) {
    let remocao = lista.remove(p1);
    lista.insert(p2, remocao);
-}
+} 
 
 /// embaralha a array referênciada.
 pub fn embaralha<B>(array: &mut Vec<B>) {
@@ -48,7 +50,7 @@ pub fn embaralha<B>(array: &mut Vec<B>) {
    // se houver apenas dois elementos, pode trocar ou não.
    if tamanho == 2 {
       if sortear::bool() 
-         { swap(array, 0, 1); }
+         { troca(array, 0, 1); }
    } else if tamanho <= 1 {
       // apenas abandona o programa; nada a fazer.
       return ();
@@ -58,7 +60,7 @@ pub fn embaralha<B>(array: &mut Vec<B>) {
          let i = sortear::u64(0..=ultimo) as usize;
          let j = sortear::u64(0..=ultimo) as usize;
          if j != i 
-            { swap(array, i, j); }
+            { troca(array, i, j); }
          tamanho -= 1;
       }
    }
