@@ -55,9 +55,10 @@ impl StringExtensao for String {
 
 /** "Imprime" toda a array com "slice-strings"
  na forma de escadinha, ou seja, cada uma têm
- um recuo até metade da string anterior.
-*/
-pub fn escadinha(entradas:Vec<&str>) -> String {
+ um recuo até metade da string anterior.  */
+pub fn escadinha<S>(entradas:Vec<S>) -> String
+  where S: AsRef<str> 
+{
    // largura do terminal.
    let largura_tela = match terminal_largura() {
       Ok(Largura(lg)) => lg,
@@ -65,25 +66,27 @@ pub fn escadinha(entradas:Vec<&str>) -> String {
          { panic!("{}", erro); }
    };
 
-   let mut nova_str:String = String::new();
-   let mut acumulado:u16 = 0;
-   let mut colidiu_na_parede:bool = false;
-   let mut pilha_de_recuos:Vec<u16> = Vec::with_capacity(100);
+   let mut nova_str = String::new();
+   let mut acumulado: u16 = 0;
+   let mut colidiu_na_parede = false;
+   let mut pilha_de_recuos: Vec<u16>;
+   pilha_de_recuos = Vec::with_capacity(100);
 
    for s in entradas.iter() {
       let repeticao = " ".repeat(acumulado as usize);
-      let tamanho = StringExtensao::len(*s);
+      let tamanho = StringExtensao::len(s.as_ref()) as u16;
+
       // adiciona "vácuo".
       nova_str.push_str(&repeticao[..]);
       // adiciona string.
-      nova_str.push_str(s);
+      nova_str.push_str(s.as_ref());
       // quebra de linha.
       nova_str.push('\n');
-      //let meio_str:u16;
-      if (tamanho as u16 + acumulado < largura_tela) &&
+
+      if (tamanho + acumulado < largura_tela) &&
       !colidiu_na_parede {
          // cotabilizando espaço recuado.
-         let meio_str:u16 = (tamanho / 2) as u16;
+         let meio_str = tamanho / 2;
          acumulado += meio_str;
          /* adiciona aculuma, para quando bater na tela, 
           * o movimento de retrocesso comece. E tal, 
@@ -91,8 +94,7 @@ pub fn escadinha(entradas:Vec<&str>) -> String {
           * o primeiro a entrar será o último a sair,
           * uma pilha! */
          pilha_de_recuos.push(meio_str);
-      }
-      else {
+      } else {
          /* tira o acumulo colocado no topo da pilha,
           * e subtrai, criando como consequência um
           * movimento inverso. */
@@ -104,7 +106,7 @@ pub fn escadinha(entradas:Vec<&str>) -> String {
             { colidiu_na_parede = false }
       }
    }
-    return nova_str;
+   return nova_str;
 }
 
 /** imprime entradas de forma a preencher toda 
@@ -122,6 +124,8 @@ pub struct Impressao<'a> {
 
 /// acrescimo para distânciar entradas.
 const X:u8 = 3;
+
+use std::fmt::{Debug};
 
 impl <'a>Impressao<'a> {
    // método construtor.
@@ -174,6 +178,29 @@ impl <'a>Impressao<'a> {
       if self.maior_comprimento < entrada.len() as u8 {
          self.maior_comprimento = entrada.len() as u8;
       }
+   }
+
+   /*** método estático que, faz uma impressão
+    direta, apenas dado uma array de valores 
+    "imprimiveis". E por obviedade(apenas olhe
+    o código) é mais lento do que o método 
+    tradicional. */
+   pub fn impressao_direta<T: Debug>(lista: &Vec<T>) {
+      let t = lista.len() + 1;
+      let mut impressoes: Vec<String>;
+      impressoes = Vec::with_capacity(t);
+      // passando tais para ela.
+      for o in lista.iter()
+         { impressoes.push(format!("{:?}", o)); }
+      /* instância da própria estrutura, que 
+       * já faz o trabalho. */
+      let impressoes_slices = {
+         impressoes.iter()
+         .map(|s| s.as_str())
+         .collect::<Vec<&str>>()
+      };
+      let i = Impressao::cria(impressoes_slices);
+      println!("{}", i);
    }
 }
 
@@ -323,9 +350,16 @@ mod tests {
 
    #[test]
    fn teste_basico_escadinha() {
-       let strings = vec!["era", "uma","casa", "muito","engraçada"];
-       println!("visualizando:\n{}", escadinha(strings));
-       assert!(true);
+      let strings = vec!["era", "uma","casa", "muito","engraçada"];
+      println!("visualizando:\n{}", escadinha(strings));
+      let strings = vec![
+         String::from("I young so"),
+         String::from("this is a happy ending"), 
+         String::from("my self make every possible mistake"), 
+         String::from("every you have done"),
+         String::from("i new soul... very straight")
+      ];
+      println!("visualizando:\n{}", escadinha(strings));
    }
 
    #[test]
@@ -417,5 +451,27 @@ mod tests {
       println!("{}", str_bordada);
 
       assert!(true);
+   }
+
+   use crate::aleatorio::sortear;
+
+   #[test]
+   fn um_metodo_direto() {
+      let exemplo = (1..=200).collect::<Vec<u8>>();
+      Impressao::impressao_direta(&exemplo);
+
+      #[derive(Debug)]
+      struct Exemplo(char, u8);
+
+      let mut exemplo: Vec<Exemplo> = vec![];
+
+      for _ in 1..=150 { 
+         let x = sortear::u32(65..=126);
+         let char = char::from_u32(x).unwrap();
+         let y = sortear::u8(0..=255);
+         exemplo.push(Exemplo(char, y));
+      }
+
+      Impressao::impressao_direta(&exemplo);
    }
 }
