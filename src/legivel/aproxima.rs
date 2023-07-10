@@ -7,22 +7,19 @@ use super::{
    DIA, HORA, MINUTO, ANO
 };
 
-/* arredonda um número inteiro, este
- * do com um byte de tamanho. */
-fn arredonda(x:f32) -> u8 {
-   let inteiro:u8 = x as u8;
-   let fracao:f32 = ((inteiro as f32) - x).abs();
-   if fracao < 0.5 { return inteiro;  }
-   else { return inteiro + 1; }
-}
-
-
 /* arredonda o valor decimal da string
  * que representa tempo, segue as mesmas
  * regras de arredondamento de um valor comum. */
-fn arredondando_str(s:&str) -> String {
-   let mut partes = s.split_whitespace();
-   
+fn arredondando_str<S: AsRef<str>>(s: &S) -> String {
+   let mut partes = s.as_ref().split_whitespace();
+   let arredonda = { |x: f32| {
+      let inteiro: f32 = (x as u8) as f32;
+      let fracao: f32 = (inteiro - x).abs();
+      if fracao < 0.5 
+         { inteiro as u8 }
+      else 
+         { (inteiro + 1.0) as u8 }
+   }};
    let valor = f32::from_str(partes.next().unwrap()).unwrap();
    let peso = partes.next().unwrap();
    format!("{} {}", arredonda(valor), peso)
@@ -36,35 +33,42 @@ fn arredondando_str(s:&str) -> String {
 
  # Exemplo:
 ```
-let trasnformacao_1 = tempo_detalhado("3.5 horas")
-let trasnformacao_2 = tempo_detalhado("8.1 minutos")
-let trasnformacao_3 = tempo_detalhado("5.4 meses")
+use utilitarios::legivel::tempo_detalhado;
 
-assert_eq!(transformacao_1, 
-         Some(String::from("3 horas 30 minutos")));
-assert_eq!(transformacao_2, 
-   Some(String::from("8 minutos 6 segundos")));
-assert_eq!(transformacao_3, 
-   Some(String::from("5 meses 8 dias")));
+assert_eq!(
+    tempo_detalhado("3.5 horas"),
+   Some(String::from("3 horas 30 minutos"))
+);
+assert_eq!(
+   tempo_detalhado("8.1 minutos"),
+   Some("8 minutos 6 segundos".to_string())
+);
+assert_eq!(
+   tempo_detalhado("5.4 meses"),
+   Some("5 meses 12 dias".to_string())
+);
+assert_eq!(tempo_detalhado("12 min"), None);
 ``` */
-pub fn tempo_detalhado<'a>(tempo_str:&'a str) -> Option<String> {
-   let mut partes = tempo_str.split_whitespace();
-   
+pub fn tempo_detalhado<'a, S>(tempo_str:&'a S) 
+  -> Option<String> 
+  where S: AsRef<str> + ?Sized
+{
+   let mut partes = tempo_str.as_ref().split_whitespace();
    let valor = partes.next().unwrap();
    let peso = partes.next().unwrap();
    
    let (parte_inteira, parte_fracionaria) = {
-      valor.split_once(".")
-      .unwrap()
+      match valor.split_once(".") {
+         Some((int, fraction)) => (int, fraction),
+         // se não têm fração, não tem porque processar...
+         None => { return None; }
+      }
    };
 
    // partes inteira e fracionária em valores numéricos.
    let mut aux = String::from("0.");
    aux += parte_fracionaria;
-   let f = f32::from_str(aux.as_str()).unwrap_or(0.0);
-
-   // se não têm fração, não tem porque processar...
-   if f == 0.0 { return None; }
+   let f = f32::from_str(&aux).unwrap_or(0.0);
 
    // converte no peso antecessor do dado.
    let calc:u64;
@@ -92,7 +96,7 @@ pub fn tempo_detalhado<'a>(tempo_str:&'a str) -> Option<String> {
    let conversao = super::tempo(calc, false);
    /* arredonda se está quebrada, pois a recursão 
     * do "tempo_detalhado" ainda não foi implementada.  */
-   let conversao = arredondando_str(conversao.as_str());
+   let conversao = arredondando_str(&conversao);
 
    // concatenando as partes:
    let mut s = String::new();
