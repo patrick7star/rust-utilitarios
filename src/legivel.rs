@@ -9,8 +9,11 @@
 // extensão do módulo:
 mod fracao_seg;
 mod aproxima;
-pub use fracao_seg::*;
-pub use aproxima::*;
+mod generico;
+// reexportando certas funções.
+pub use aproxima::tempo_detalhado;
+pub use generico::tempo_humano;
+pub use fracao_seg::tempo_fracao;
 
 
 // múltiplos de tempo(equivalente em seg).
@@ -39,59 +42,6 @@ pub fn tempo(segundos:u64, contracao:bool) -> String {
    let t:f32 = segundos as f32;
    let calculo:f32;
    let sigla:&str;
-   if t >= MINUTO && t < HORA {
-      sigla = if contracao {"min"} else {"minutos" };
-      calculo = t / MINUTO;
-   }
-   else if t >= HORA && t < DIA {
-      sigla = if contracao{"h"} else{"horas"};
-      calculo = t / HORA;
-   }
-   else if t >= DIA && t < MES {
-      sigla = "dias";
-      calculo = t / DIA;
-   }
-   else if t >= MES && t < ANO {
-      sigla = if contracao{"mês"} else{"meses"};
-      calculo = t / MES;
-   }
-   else if t >= ANO && t < DECADA {
-      sigla = "anos";
-      calculo = t / ANO;
-   }
-   else if t >= DECADA && t < SECULO {
-      sigla = if contracao{"dec"} else{"décadas"};
-      calculo = t / DECADA;
-   }
-   else if t >= SECULO && t < MILENIO {
-      sigla = if contracao{"sec"} else{"séculos"};
-      calculo = t / SECULO;
-   }
-   else if t >= MILENIO && t < 10_f32*MILENIO {
-      sigla = "milênios";
-      calculo = t / MILENIO;
-   }
-   else {
-      sigla = if contracao{"seg"} else{"segundos"};
-      calculo = t;
-   }
-   format!("{:0.1} {}", calculo, sigla)
-} 
-
-#[allow(unused)]
-use std::convert::{TryInto, TryFrom};
-/** retorna uma string contendo o valor legendado
-  porém numa faixa mais legível. */
-#[allow(unused, non_snake_case)]
-pub fn tempoII<V: TryInto<f32>>(segundos: V, contracao:bool) -> String
-{
-   // renomeação da variável a comparar e computar.
-   //let forma_str = segundos.to_string();
-   //let t: f32 = f32::from_str(&forma_str).unwrap();
-   let t: f32 = segundos.try_into().unwrap_or(-1.0);
-   let calculo: f32;
-   let sigla: &str;
-
    if t >= MINUTO && t < HORA {
       sigla = if contracao {"min"} else {"minutos" };
       calculo = t / MINUTO;
