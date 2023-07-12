@@ -117,6 +117,20 @@ fn calibra_str(s:&str, limite:u8) -> String {
    return outra_str;
 }
 
+impl<U> PartialEq for Coluna<U> 
+  where U: PartialEq + Eq + Clone + ToString
+{
+   fn eq(&self, outro: &Self) -> bool {
+      if self.rotulo != outro.rotulo { false }
+      else {
+         self.rol.iter().zip(outro.rol.iter())
+         .all(|(s, r)| s == r)
+      }
+   }
+   fn ne(&self, outro: &Self) -> bool 
+      { !self.eq(outro) }
+}
+
 
 #[cfg(test)]
 mod tests {

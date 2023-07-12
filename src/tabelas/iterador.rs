@@ -115,7 +115,6 @@ impl Iterator for ColunaStr {
 #[cfg(test)]
 #[allow(non_snake_case)]
 mod tests {
-   //use crate::aleatorio::sortear;
    use super::*;
 
    #[test]

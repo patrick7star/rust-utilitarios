@@ -292,10 +292,13 @@ fn cria_barra(string:&str) -> String {
    return BARRA.to_string().repeat(comprimento).to_string();
 }
 
+
+
 #[cfg(test)]
 #[allow(non_snake_case)]
 mod tests {
    use crate::aleatorio::sortear;
+   use crate::{cria_coluna, cria_tabela};
    use super::*;
 
    #[test]
@@ -311,14 +314,15 @@ mod tests {
           vec![5288.32, 1_000.10, 893.25, 1_839.00]
       );
 
-      let generos = Coluna::nova(
-         "gênero(macho/fêmea)", 
-          vec!['F','F','F','F','M','M',
-             'F','M','M','F','F','F','M']
-      );
+      let generos = cria_coluna!{
+         "gênero(macho/fêmea)" : [
+            'F','F','F','F','M','M',
+             'F','M','M','F','F','F','M'
+          ]
+      };
 
-      let nomes = Coluna::nova(
-         "candidatos", vec!["Claúdio", "Ana Joana",
+      let nomes = cria_coluna!(
+         "candidatos": ["Claúdio", "Ana Joana",
          "Marcelo", "Flávia", "Henrique Barcelos"]
       );
 
@@ -391,5 +395,80 @@ mod tests {
       t.adiciona(salarios);
 
       println!("{}", t);
+   }
+   #[test]
+   fn macroCriaColuna() {
+      let cA = Coluna::nova(
+         "lançamento moedas",
+         vec![
+            "Cara", "Coroa",
+            "Coroa", "Cara",
+            "Cara", "Cara",
+            "Coroa", "Coroa",
+         ]
+      );
+      println!("{:#?}", cA);
+      let cB = cria_coluna!(
+         "lançamento moedas": [
+            "Cara", "Coroa",
+            "Coroa", "Cara",
+            "Cara", "Cara",
+            "Coroa", "Coroa"
+         ]
+      );
+      println!("versão mais direta e organizada:\n{:#?}", cB);
+      assert_eq!(cA, cB);
+   }
+   #[test]
+   fn macroTabela() {
+      let moedas_magicas = Coluna::nova(
+         "moedas mágicas(qtd.)",
+         vec![198, 1923, 038, 932, 38_839,
+            3, 12, 538, 752, 657]
+      );
+      let salarios = Coluna::nova(
+         "salário(R$)",
+          vec![5288.32, 1_000.10, 893.25, 1_839.00]
+      );
+      let generos = cria_coluna!{
+         "gênero(macho/fêmea)" : [
+            'F','F','F','F','M','M',
+             'F','M','M','F','F','F','M'
+          ]
+      };
+      let nomes = cria_coluna!(
+         "candidatos": ["Claúdio", "Ana Joana",
+         "Marcelo", "Flávia", "Henrique Barcelos"]
+      );
+
+      // método antigo.
+      let mut tA = Tabela::nova(false);
+      tA.adiciona(moedas_magicas);
+      tA.adiciona(generos);
+      tA.adiciona(salarios);
+      tA.adiciona(nomes);
+
+      let tB = cria_tabela!(
+         // total de moedas mágicas:
+         "moedas mágicas(qtd.)": [
+            198, 1923, 038, 932, 38_839,
+            3, 12, 538, 752, 657
+         ];
+         // equivalente gêneros:
+         "gênero(macho/fêmea)" : [
+            'F','F','F','F','M','M',
+             'F','M','M','F','F','F','M'
+          ];
+         // cédulas de salários:
+         "salário(R$)": [5288.32, 1_000.10, 893.25, 1_839.00];
+         // nome de alguns candidatos:
+         "candidatos": [
+            "Claúdio", "Ana Joana", "Marcelo", 
+            "Flávia", "Henrique Barcelos"
+         ]
+      );
+      println!("método antigo:\n{}\nmétodo novo:\n{}", tA, tB);
+      // confirmação visual.
+      assert!(true);
    }
 }
