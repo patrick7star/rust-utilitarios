@@ -21,6 +21,7 @@ mod tabelacao;
 mod matriz_texto;
 mod revestimento;
 mod iterador;
+mod macros;
 use string_complemento::StringExtensao as StrExt;
 // re-exportando ...
 pub use objeto::Coluna;
@@ -89,14 +90,17 @@ fn entrelacando_strings(str1:&Vec<&str>, str2:&Vec<&str>) -> String {
    return tabela_str;
 }
 
+type Col<X> = Coluna<X>;
 /** Pega duas estruturas `Coluna` e junta-as numa 
  formatação string, fazendo o resultado ser uma
  tabela com estas duas `Coluna`s e seus *rol's* 
  de valores. 
 */
-pub fn tabelar_dados<I, C>
-(coluna_i:Coluna<I>, coluna_ii:Coluna<C>) -> String 
-where I: Display + Copy, C: Display + Copy {
+#[allow(dead_code)]
+fn tabelar_dados<I, C>
+  (coluna_i:Col<I>, coluna_ii:Col<C>) -> String 
+  where I: Display + Copy, C: Display + Copy 
+{
    // vetor com as strings ordenadas com base na linhas.
    let str_coluna_i = coluna_i.to_string();
    let str_coluna_ii = coluna_ii.to_string();
@@ -143,14 +147,15 @@ fn limites_laterais(s:&String) -> Vec<usize> {
 /* conta a quantia de quebra-de-linhas
  * na string, ou seja, conta a quantidade
  * total de linhas. */
-fn qtd_de_linhas(s:&String) -> usize {
+fn qtd_de_linhas(s:&str) -> usize {
+   /*
    let aux:Vec<&str> = {
      s.as_str()
      .lines()
-     .into_iter()
      .collect()
    };
-   return aux.len();
+   return aux.len();*/
+   s.lines().count()
 }
 
 fn circunscreve_borda(s:&mut String) {
@@ -219,7 +224,6 @@ fn circunscreve_borda(s:&mut String) {
    let mut linhas: Vec<&str> = {
       copia.as_str()
      .lines()
-     .into_iter()
      .collect()
    };
 
@@ -252,11 +256,12 @@ fn circunscreve_borda(s:&mut String) {
 }
 
 /// forma uma tabela com três colunas dadas.
-pub fn tabelar_tres_colunas <X, Y, Z>
-(colunas:(Coluna<X>, Coluna<Y>, Coluna<Z>)) -> String 
-where X: Display + Copy, 
-      Z: Display + Copy, 
-      Y: Display + Copy {
+#[allow(dead_code)]
+fn tabelar_tres_colunas <X, Y, Z>
+  (colunas:(Coluna<X>, Coluna<Y>, Coluna<Z>)) 
+  -> String where X: Display + Copy, 
+    Z: Display + Copy, Y: Display + Copy 
+{
    // formatações em string de todos objetos.
    let str_cx = colunas.0.to_string();
    let str_cy = colunas.1.to_string();
@@ -304,7 +309,7 @@ where X: Display + Copy,
    circunscreve_borda(&mut tabela);
    
    // retorno da tabela concatenada.
-   return tabela;
+   tabela
 }
 
 
@@ -377,7 +382,6 @@ mod tests {
 
       assert!(true);
    }
-
 
    #[test]
    fn tabulucao_dados_identicos() {

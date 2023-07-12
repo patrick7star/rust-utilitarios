@@ -115,22 +115,19 @@ pub fn lanca_prompt(dica:&str) -> String {
  fica a chave, lado direito o valor. Até que 
  se saiba, funciona com quase todos tipos
  primitivos.
+ ```
+ let dicio_1 = mapa! { 'a': 97,'b': 98,'c': 99 };
+ let mut dicio_2 = HashMap::<char, usize> = HashMap::new();
+
+ dicio_2.insert(&'a', 97);
+ dicio_2.insert(&'b', 98);
+ dicio_2.insert(&'c', 99);
+
+ assert_eq!(dicio_1, dicio2);
+ ```
  */
 #[macro_export]
 macro_rules! mapa {
-   /* inferir a 'chave' e o 'valor'. 
-    * Estamos falando numa declaração do tipo:
-    * let dicionario = meu_mapa!(
-    *    1: "primeiro",
-    *    2: "segundo",
-    *    3: "terceiro",
-    * );
-    * let dicionario = meu_mapa!(
-    *    'A': 65,
-    *    'B': 66,
-    *    'C': 67,
-    * );
-    */
    ( $( $chave:tt : $valor:tt ),+ ) => ({
       use std::collections::HashMap;
       use std::iter::FromIterator;
