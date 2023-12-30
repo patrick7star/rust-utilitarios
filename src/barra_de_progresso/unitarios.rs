@@ -12,6 +12,7 @@ mod tests {
    /* o primeiro tipo criado, e consequente,
     * o mais simples. */
    #[test]
+   #[allow(deprecated)]
    fn progresso_simples() {
       println!("a \"barra de progresso\" mais básica:\n\t'intervalo de quase um milhão'");
       // fim do progresso.
@@ -32,6 +33,7 @@ mod tests {
     * seja, está aqui é um pouco mais complexo
     * em detalhar o progresso. */
    #[test]
+   #[allow(deprecated)]
    fn progresso_em_dados() {
       println!("a \"barra de progresso de dados\":");
       for k in 1..360_582 {
@@ -47,6 +49,7 @@ mod tests {
     * couber inteiramente na tela; isto da direita
     * para esquerda */
    #[test]
+   #[allow(deprecated)]
    fn progresso_em_dados_tipo_download() {
       println!("a \"barra de progresso com rótulo\":");
       let mut texto: Logo = {
