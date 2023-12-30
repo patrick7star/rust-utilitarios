@@ -4,3 +4,5 @@ version = "1.4.2"
 edition = "2018"
 license = "mit"
 readme = "README.md"
+# tal pacote data desta versão, 2019 acho?!
+rust-version = "1.40"
