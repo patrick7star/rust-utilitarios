@@ -1,7 +1,6 @@
 
 
-/* método clássico: onde a volatilidade
- * vem do menor registro de tempo 
+/* método clássico: onde a volatilidade vem do menor registro de tempo 
  * que pode ser feito.
  */
 
@@ -9,13 +8,11 @@
 use std::ops::RangeInclusive;
 use std::time::SystemTime;
 
-/* função efeitua um "lançamento de moeda" levando
- * em conta repetição de dezenas de vezes da medição
- * do relógio do sistema, isto após ter somado a 
- * medição várias vezes, após isso pega a unidade
- * do número medido porque é a parte mais volátil
- * do número, principalmente depois de somado 
- * várias vezes. */
+/* função efeitua um "lançamento de moeda" levando em conta repetição de 
+ * dezenas de vezes da medição do relógio do sistema, isto após ter somado a 
+ * medição várias vezes, após isso pega a unidade do número medido porque é 
+ * a parte mais volátil do número, principalmente depois de somado várias 
+ * vezes. */
 fn lancamento() -> bool {
    // contador de tempo decorrido.
    let cronometro = SystemTime::now();
@@ -57,14 +54,12 @@ fn lancamento() -> bool {
 
 
 /**
- compila todas funções em uma só, que poder emitir
- quaisquer tipos num só módulo, onde têm funções com
- nomes parecidos dos tipos, assim invokar tal função 
- parece o tipo acompanhado de "()". As funções no
- só chamam as funções acimas que já trabalham na parte
- de gerar tais coisas aleatórias, e algumas também
- implemenetam 'Range' que as funções acimas foram deixas
- de fora nisso. 
+ compila todas funções em uma só, que poder emitir quaisquer tipos num só 
+ módulo, onde têm funções com nomes parecidos dos tipos, assim invokar tal 
+ função parece o tipo acompanhado de "()". As funções no só chamam as 
+ funções acimas que já trabalham na parte de gerar tais coisas aleatórias, e
+ algumas também implemenetam 'Range' que as funções acimas foram deixas de 
+ fora nisso. 
 */
 pub mod sortear {
    // importando do módulo "pai".
@@ -397,4 +392,6 @@ pub mod sortear {
       );
       return u64(a..=b) as usize;
    }
+   pub fn isize(intervalo: RangeInclusive<i64>) -> i64 
+    { i64(intervalo) }
 }

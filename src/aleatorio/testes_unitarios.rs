@@ -126,8 +126,9 @@ impl Display for Pool {
 mod tests {
    use super::*;
    use std::collections::HashSet;
-   use super::super::metodo_i::randomico;
+   use crate::aleatorio::sortear;
    use super::super::impressao::PP;
+   // use crate::barra_de_progresso::PP;
    use std::time::Duration;
 
    #[test]
@@ -141,7 +142,7 @@ mod tests {
       let total = (2_i32.pow(16)-1) as usize;
       // sortea até pega todos inteiros possíveis do tipo.
       while universo.len() != total {
-         let sorteio = randomico::u16();
+         let sorteio = sortear::u16(0..=u16::MAX);
          universo.insert(sorteio);
          contador += 1;
          // informação:
@@ -164,7 +165,7 @@ mod tests {
       let mut urna = Pool::novo(5_510_000);
 
       for _ in 1..=5_510_000 {
-         urna.adiciona(randomico::i32());
+         urna.adiciona(sortear::i32(0..=i32::MAX));
          monitor.dispara(urna.to_string().as_str());
       }
       // última visualizada(para o 'shotscreen').
@@ -176,14 +177,14 @@ mod tests {
    #[test]
    fn GeraTodosDemandados_usize() {
       for _ in 1..=250 
-         { print!("{}, ", randomico::usize(0..=10)); }
+         { print!("{}, ", sortear::usize(0..=10)); }
       print!("\n");
       // avaliação manual.
       assert!(true);
       let mut ultimo: bool = false;
       let mut primeiro: bool = false;
       for _ in 1..=30_000 {
-         let X = randomico::usize(32_327..=40_001);
+         let X = sortear::usize(32_327..=40_001);
          if X == 40_001
             { primeiro = true; dbg!(X); }
          else if X == 32_327
@@ -196,9 +197,9 @@ mod tests {
    fn RespeitaIntervalo_isize() {
       // faz 100 vezes para estressar em algum erro.
       for _ in 1..=100_000 {
-         assert!(randomico::isize(932..=15_932) >= 932);
-         assert!(randomico::isize(-1520..=15) >= -1520);
-         assert!(randomico::isize(-311..=-100) >= -311);
+         assert!(sortear::isize(932..=15_932) >= 932);
+         assert!(sortear::isize(-1520..=15) >= -1520);
+         assert!(sortear::isize(-311..=-100) >= -311);
       }
    }
 
@@ -208,7 +209,7 @@ mod tests {
       let mut primeiro = false;
       let mut ultimo = false;
       for _ in 1..=100_000 { 
-         let X = randomico::isize(32..=15_932); 
+         let X = sortear::isize(32..=15_932); 
          if X == 32 
             { primeiro = true; }
          else if X == 15_932
