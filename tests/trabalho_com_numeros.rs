@@ -11,7 +11,7 @@ use utilitarios::{
    por_extenso::escreve_por_extenso,
    romanos::decimal_para_romano,
    tabelas::{Coluna, Tabela},
-   aleatorio::randomico
+   aleatorio::sortear
 };
 
 
@@ -25,7 +25,7 @@ fn tabelaComConversoes() {
 
    // gerando 'rol de dados'.
    for _ in 1..=80 {
-      let X = randomico::usize(0..=2000);
+      let X = sortear::usize(0..=2000);
       cardinais.push(X);
       let extenso = escreve_por_extenso(X as u64).unwrap();
       escritos.push(extenso);
