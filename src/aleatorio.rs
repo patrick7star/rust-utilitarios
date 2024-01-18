@@ -1,30 +1,22 @@
 /*!  
  # Geração de números aleatórios
-  Neste código vamos apresentar algumas funções
- que geram, números inteiros e flutuantes, 
- arrays inteiras e intervalos de números
- aleatórios.
+  Neste código vamos apresentar algumas funções que geram, números inteiros 
+  e flutuantes, arrays inteiras e intervalos de números aleatórios.
 
-  O algoritmo é simples, pega o clock ou 
- tempo no exato momento de execução, como geralmente
- é um número na casa das dezenas de milhares, 
- obtem seu último dígito, que vária muito, e
- soma com outros mais cem números obtidos pelo
- mesmo processo, e, novamente arranca-se o
- valor unitário do número, que sempre varia
- de zero à dez. Em cima desta função que dá
- valores de 0 à 9 de forma randomizada, se
- constrói todo o ferramental de aleatoriaedade.
+  O algoritmo é simples, pega o clock ou tempo no exato momento de execução,
+ como geralmente é um número na casa das dezenas de milhares, obtem seu 
+ último dígito, que vária muito, e soma com outros mais cem números obtidos 
+ pelo mesmo processo, e, novamente arranca-se o valor unitário do número, 
+ que sempre varia de zero à dez. Em cima desta função que dá valores de 
+ 0 à 9 de forma randomizada, se constrói todo o ferramental de aleatoriedade.
  
-  Tais funções não foram feito para serem gerados
- em grandes escalas randomizadas, apenas um 
- em escalas de milisegundos a geração massissa
- estocástica funciona bem, portanto, um algoritmo
- extremamente lento.
+  Tais funções não foram feito para serem gerados em grandes escalas 
+ randomizadas, apenas um em escalas de milisegundos a geração massissa 
+ estocástica funciona bem, portanto, um algoritmo extremamente lento.
 */
 
 // complementar:
-mod metodo_i;
+// mod metodo_i;
 mod metodo_ii;
 mod impressao;
 
@@ -72,7 +64,7 @@ pub fn escolhe<C, S>(colecao: S, tamanho: usize) -> Option<C>
    let mut colecao_iter = colecao.into_iter();
    if tamanho == 0
       { return None; }
-   let escolha = randomico::usize(0..=(tamanho-1));
+   let escolha = sortear::usize(0..=(tamanho-1));
    colecao_iter.nth(escolha)
 } 
 
@@ -93,7 +85,7 @@ pub fn escolheI<C, D>(colecao: C) -> Option<D>
    let ultimo = tamanho - 1;
    /* escolhendo o índice nela, e removendo na mesma
     * array o índice desejado. */
-   Some(array.swap_remove(randomico::usize(0..=ultimo)))
+   Some(array.swap_remove(sortear::usize(0..=ultimo)))
 }
 
 /* Quase o mesmo que o acima, porém exige a slice
@@ -105,7 +97,7 @@ pub fn escolheI<C, D>(colecao: C) -> Option<D>
 pub fn escolheII<'s, D>(fatia: &'s [D]) -> Option<&'s D> {
    let tamanho = fatia.len();
    let ultimo = tamanho - 1;
-   fatia.get(randomico::usize(0..=ultimo))
+   fatia.get(sortear::usize(0..=ultimo))
 }
 
 type Intervalo = RangeInclusive<u8>;
@@ -166,7 +158,7 @@ fn string_do_conjunto(codigos: Codigos, tamanho: usize) -> String {
 
    // encher até alcançar o demandado.
    while string.len() < tamanho {
-      let indice = randomico::usize(0..=(total-1));
+      let indice = sortear::usize(0..=(total-1));
       let codigo: u32 = (*linear[indice]).into();
       let caractere = char::from_u32(codigo).unwrap();
       string.push(caractere);
