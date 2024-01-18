@@ -11,8 +11,8 @@ mod tests {
 
    /* o primeiro tipo criado, e consequente,
     * o mais simples. */
-   #[test]
    #[allow(deprecated)]
+   #[test]
    fn progresso_simples() {
       println!("a \"barra de progresso\" mais básica:\n\t'intervalo de quase um milhão'");
       // fim do progresso.
@@ -48,8 +48,8 @@ mod tests {
     * em que o texto fica em movimento se ele não
     * couber inteiramente na tela; isto da direita
     * para esquerda */
-   #[test]
    #[allow(deprecated)]
+   #[test]
    fn progresso_em_dados_tipo_download() {
       println!("a \"barra de progresso com rótulo\":");
       let mut texto: Logo = {
