@@ -1,8 +1,8 @@
 
 
-/** Não necessáriamente é relaicionado ao
- desenho dos diretórios, subdiretórios e
- arquivos, porém, tenta lineariza-lôs.
+/** 
+ * Não necessáriamente é relaicionado ao desenho dos diretórios, 
+ * subdiretórios e arquivos, porém, tenta lineariza-lôs.
 */
 
 // biblioteca do Rust:
@@ -39,8 +39,7 @@ fn percorre(pai: &Path, folhas: &mut Arquivos) {
    }
 }
 
-/** retorna lista com todos os arquivos 
- de dado diretório, e também em seus 
+/** retorna lista com todos os arquivos de dado diretório, e também em seus 
  sub-diretórios também.
 */
 pub fn listagem(raiz: &Path) -> Arquivos {
@@ -54,9 +53,7 @@ pub fn listagem(raiz: &Path) -> Arquivos {
    return lista;
 }
 
-/** retorna uma string com representação
- de árvore do caminho passado.
-*/
+/// retorna uma string com representação de árvore do caminho passado.
 pub fn ramifica_caminho(caminho: &str) -> String {
    let mut galho: String = String::new();
    // verificado se raíz "já foi computada".
@@ -91,6 +88,7 @@ pub fn ramifica_caminho(caminho: &str) -> String {
 
 
 #[cfg(test)]
+#[cfg(target_os="unix")]
 mod tests {
    // pegando tudo acima...
    use super::*;
