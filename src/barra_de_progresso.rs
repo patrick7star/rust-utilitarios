@@ -476,10 +476,11 @@ mod tests {
    use super::*;
 
    #[test]
+   #[allow(deprecated)]
    fn teste_progresso_com_rotulo() {
       let rotulo:&str = "isso e um teste basico, sem panico";
       let mut logo:Logo = Logo::novo(rotulo).unwrap();
-      for k in 1..(600_000+1) { 
+      for k in 1..=600_000 { 
          let bp = progresso_data_rotulo(
             logo.para_string(), 
             k, 600_000
