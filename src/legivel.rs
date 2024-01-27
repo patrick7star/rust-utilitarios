@@ -35,8 +35,8 @@ const PETA:u64 = 2_u64.pow(50);  // bytes por PB.
 
 
 
-/** retorna uma string contendo o valor legendado
-  porém numa faixa mais legível. */
+/** retorna uma string contendo o valor legendado porém numa faixa mais 
+ legível. */
 pub fn tempo(segundos:u64, contracao:bool) -> String {
    // renomeação da variável a comparar e computar.
    let t:f32 = segundos as f32;
@@ -81,9 +81,8 @@ pub fn tempo(segundos:u64, contracao:bool) -> String {
    format!("{:0.1} {}", calculo, sigla)
 } 
 
-/** retorna uma string contendo o tamanho 
-  legendado com um múltiplo, porém de forma
-  mais legível. */
+/** retorna uma string contendo o tamanho legendado com um múltiplo, 
+ porém de forma mais legível. */
 pub fn tamanho(qtd:u64, contracao:bool) -> String { 
    if qtd >= KILO && qtd < MEGA {
       let sigla = if contracao{"KiB"} else{"kilobytes"};
@@ -105,6 +104,39 @@ pub fn tamanho(qtd:u64, contracao:bool) -> String {
       let sigla = if contracao{"B's"} else {"bytes"};
       format!("{:.1} {}", qtd, sigla)
    }
+}
+
+/** pega valores muito grande, maiores que mil, e coloca eles de forma
+ mais legivel, com três algarismos significativos no máximo, e o peso de
+ em casas decimais. 
+ */
+pub fn valor_legivel(qtd: usize) -> String {
+   let mantisa: f64;
+   let peso: &str;
+
+   // só converte até a faixa dos quatrilhões.
+   if qtd > 1_000_000_000_000_000 {
+      mantisa = qtd as f64 / 1_000_000_000_000_000.0;
+      peso = " quadrilhões";
+   } else if qtd > 1_000_000_000_000 {
+      mantisa = qtd as f64 / 1_000_000_000_000.0;
+      peso = "tri";
+   } else if qtd > 1_000_000_000 {
+      mantisa = qtd as f64 / 1_000_000_000.0;
+      peso = "bi";
+   } else if qtd > 1_000_000 {
+      mantisa = qtd as f64 / 1_000_000.0;
+      peso = "mi";
+   } else if qtd > 1000 {
+      mantisa = qtd as f64 / 1000.0;
+      peso = "mil";
+   } else {
+      mantisa = qtd as f64;
+      peso = "";
+   } 
+
+   // convertendo para string, então adicionando ...
+   format!("{:0.1}{}", mantisa, peso)
 }
 
 
