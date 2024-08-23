@@ -13,20 +13,31 @@
   Tais funções não foram feito para serem gerados em grandes escalas 
  randomizadas, apenas um em escalas de milisegundos a geração massissa 
  estocástica funciona bem, portanto, um algoritmo extremamente lento.
+
+ ```
+ let inteiro_gigante = sortear::u64(1_000_000..=);
+
+ ```
 */
 
-// complementar:
-// mod metodo_i;
-mod metodo_ii;
-mod impressao;
+// Biblioteca do Rust:
+use std::collections::BTreeSet;
+use std::iter::FromIterator;
+use std::ops::RangeInclusive;
 
+// complementar:
+mod gerador;
+mod impressao;
 // complementar, porém é uma gama de testes:
 mod testes_unitarios;
 
 // re-exportando ...
-pub use metodo_ii::sortear;
-#[cfg(target_os="linux")]
-pub use metodo_i::randomico;
+pub use gerador::sortear;
+
+// conjunto com inteiros positivos.
+type Codigos = BTreeSet<u8>;
+type Intervalo = RangeInclusive<u8>;
+
 
 // troca valores dentro de uma array genérica.
 fn troca<A>(lista: &mut Vec<A>, p1: usize, p2:usize) {
@@ -34,7 +45,17 @@ fn troca<A>(lista: &mut Vec<A>, p1: usize, p2:usize) {
    lista.insert(p2, remocao);
 } 
 
-/// embaralha a array referênciada.
+/** Embaralha uma array referênciada, seja ela o tipo que for.
+ *
+ * ```
+ * let mut array = vec!['k', 'a', 'z', 'M'];
+ * embaralha(&mut array);
+ * assert!(
+ *    array[0] != 'k' || array[1] != 'a' ||
+ *    array[2] != 'z' || array[3] != 'M'
+ * );
+ * ```
+ */
 pub fn embaralha<B>(array: &mut Vec<B>) {
    let mut tamanho = array.len();
    let ultimo: u64 = (tamanho - 1) as u64;
@@ -58,6 +79,9 @@ pub fn embaralha<B>(array: &mut Vec<B>) {
    }
 }
 
+/** Faz uma seleção aleatória em qualquer **coleção** que você escolher, 
+ * seja ela padrão(da linguagem), ou não, contando que seja iterável.
+ */
 pub fn escolhe<C, S>(colecao: S, tamanho: usize) -> Option<C>
   where S: IntoIterator<Item=C> 
 {
@@ -68,11 +92,10 @@ pub fn escolhe<C, S>(colecao: S, tamanho: usize) -> Option<C>
    colecao_iter.nth(escolha)
 } 
 
-/* O mesmo que acima, mas com dois "porém's". O
- * primeiro é que sua complexidade algoritímica 
- * é O(n), já que despeja todo o conteúdo numa 
- * nova array; a outra, que é uma vantagem, não 
- * necessita do parametro 'tamanho' da coleção. */
+#[doc="O mesmo que acima, mas com dois 'porém's'. O primeiro é que sua 
+   complexidade algoritímica é `O(n)`, já que despeja todo o conteúdo numa 
+  nova array; a outra, que é uma vantagem, não necessita do parametro 
+  'tamanho' da coleção."]
 #[allow(non_snake_case)]
 pub fn escolheI<C, D>(colecao: C) -> Option<D>
   where C: IntoIterator<Item=D>
@@ -88,11 +111,10 @@ pub fn escolheI<C, D>(colecao: C) -> Option<D>
    Some(array.swap_remove(sortear::usize(0..=ultimo)))
 }
 
-/* Quase o mesmo que o acima, porém exige a slice
- * do objeto para fazer a seleção entre. Sem falar
- * que, retorna a referência de tal, ao invés de 
- * o elemento em sí. Entretanto, possívelmente só
- * funciona com alguns 'collections'. */
+/** Quase o mesmo que o acima, porém exige a slice do objeto para fazer a 
+ seleção entre. Sem falar que, retorna a referência de tal, ao invés de o 
+ elemento em sí. Entretanto, possívelmente só funciona com alguns 
+ 'collections'. */
 #[allow(non_snake_case)]
 pub fn escolheII<'s, D>(fatia: &'s [D]) -> Option<&'s D> {
    let tamanho = fatia.len();
@@ -100,8 +122,6 @@ pub fn escolheII<'s, D>(fatia: &'s [D]) -> Option<&'s D> {
    fatia.get(sortear::usize(0..=ultimo))
 }
 
-type Intervalo = RangeInclusive<u8>;
-use std::ops::RangeInclusive;
 /** cria uma string ascii de forma aleatória. */
 pub fn string_ascii(code: Intervalo, comprimento: usize) 
   -> Result<String, &'static str>
@@ -124,7 +144,9 @@ pub fn string_ascii(code: Intervalo, comprimento: usize)
    Ok(string)
 }
 
-// que tipo de letra deseja-se.
+/// Que tipo de letra deseja-se(minúscula, maiúscula, ou ambas).
+/// *Nota*: A versão ambas, decide alternadamente quando mostrar qualquer
+/// tipo.
 #[derive(Debug)]
 pub enum Modo {
    Maiuscula,
@@ -132,6 +154,11 @@ pub enum Modo {
    Ambos
 }
 
+/** Qual tipo de string aleatório você deseja gerar. Uma apenas com letras,
+ * que podem variar entre minúscular ou maiúsculas([aA-zZ]), ou ambas ao 
+ * mesmo tempo; uma só com dígitos numéricos(0 à 9); ou você deseja apenas 
+ * pontos ortográficos(!.*,^][).
+ */
 #[derive(Debug)]
 pub enum Classe { 
    Alfabeto(Modo), 
@@ -142,12 +169,6 @@ pub enum Classe {
    Pares,
    Matematico
 }
-
-
-use std::collections::BTreeSet;
-use std::iter::FromIterator;
-// conjunto com inteiros positivos.
-type Codigos = BTreeSet<u8>;
 
 fn string_do_conjunto(codigos: Codigos, tamanho: usize) -> String {
    let mut string = String::with_capacity(tamanho);
@@ -168,6 +189,8 @@ fn string_do_conjunto(codigos: Codigos, tamanho: usize) -> String {
    string
 }
 
+/** Forma uma string da `Classe` escolhida, com um **comprimento** também
+ * personalizado. */
 pub fn string_classe(tipo: Classe, comprimento: usize)
   -> Result<String, &'static str>
 {
@@ -208,6 +231,9 @@ pub fn string_classe(tipo: Classe, comprimento: usize)
 #[cfg(test)]
 mod tests {
    use super::{string_classe, Classe, Modo};
+   use std::thread::{JoinHandle, spawn};
+   use std::collections::HashSet;
+   use std::iter::FromIterator;
 
    #[test]
    #[should_panic]
@@ -233,7 +259,6 @@ mod tests {
       assert!(dbg!(p) > 0.95);
    }
 
-   use std::thread::{JoinHandle, spawn};
    #[test]
    fn e_multi_thread() {
       let mut selecoes: Vec<u8> = Vec::new();
@@ -323,8 +348,6 @@ mod tests {
       );
    }
 
-   use std::collections::HashSet;
-   use std::iter::FromIterator;
    #[test]
    fn escolhe_com_hashset() {
       let mut amostra = vec![

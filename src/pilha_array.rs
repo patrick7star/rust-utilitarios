@@ -1,4 +1,4 @@
-/* Não existe uma pilha official na coleção do Rust, então aqui será 
+/** Não existe uma pilha official na coleção do Rust, então aqui será 
  * implementado uma. Esta versão aqui é estática(usando array).
  * Poderia implementar um "embrulho" da deque ou vetor, entretanto, farei
  * usando "raw pointer", mesmo que em C.
@@ -12,9 +12,13 @@ use std::fmt::{Display, Result as Resultfmt, Formatter};
 
 // Valor padrão para alocação.
 const CAPACIDADE: usize = 50;
-// Apelido da estrutura em Inglês:
+///  Apelido conhecido da estrutura em Inglês.
 pub type StackArray<M> = PilhaArray<M>;
 
+/** Estrutura com um comportamento `LIFO`, entrentanto usando *array* ao 
+ * invés de uma *lista-ligada*. Ela também é feita usando *pointeiros*,
+ * ao invés de ser um *embrulho* de outras estrutura -- como várias outras
+ * estruturas de dados desta `lib`. */
 pub struct PilhaArray<T> {
    // Todos itens colocados lado-a-lado numa array. O topo dela é a ponta
    // móvel direita.
@@ -31,6 +35,9 @@ impl<T> PilhaArray<T> {
 /* A pilha será aplicável para cada tipo de dado, como o mínimo de 
  * requisitos possíveis. Pensei em colocar como 'trait bound' a visualização
  * do dado, mas não neste lote de implementação. */
+
+   /// Aloca uma `pilha` com no mínimo 50 itens espaços, antes de o
+   /// redimesionamento automático.
    pub fn nova() -> Self {
       let modo = Layout::array::<T>(CAPACIDADE);
       let raw_array = unsafe { alloc(modo.unwrap()) };
@@ -42,12 +49,17 @@ impl<T> PilhaArray<T> {
       }
    }
 
+   /// Total de itens que estão na *pilha*.
    pub fn comprimento(&self) -> usize
       { self.quantia }
 
+   /// Verifica se ela não tem qualquer item.
    pub fn vazia(&self) -> bool
       { self.quantia == 0 }
 
+   /// Adiciona um item no seu "topo", então retorna `true` se for sucedida.
+   /// A única falha que pode ocorrer aqui, logo o retorno será `false`, é 
+   /// se a memória do computador se esgotar.
    pub fn coloca(&mut self, dado: T) -> bool {
       let indice = self.quantia;
 
@@ -65,6 +77,9 @@ impl<T> PilhaArray<T> {
       true
    }
 
+   /// Retira o primeiro item no seu "topo", se houver algum é claro. O 
+   /// retorno é o dado removido "encapsulado". É assim porque em caso de
+   /// a pilha está *vázia* o retorno será algo dado nenhum `None`.
    pub fn retira(&mut self) -> Option<T> {
       if self.vazia()
          { return None; }
@@ -83,6 +98,9 @@ impl<T> PilhaArray<T> {
       Some(dado)
    }
 
+   /// Retorna a referência do item no *topo* da **pilha**, se houver algum
+   /// é claro. Caso não haja nada, o retorno será `None`, já que o retorno
+   /// também da referência é "encapsulado".
    pub fn topo(&self) -> Option<&T> {
       if self.vazia()
       // Nada será retornado se estiver vázio.
@@ -97,9 +115,26 @@ impl<T> PilhaArray<T> {
       }
       Some(top)
    }
+
+   /// O total de espaço vago que pode ser preenchido com novas inserções.
+   /// Também serve para que se possa deduzir a capacidade da estrutura,
+   /// tipo, `capacidade = total_de_itens + espaço_ocioso`
+   pub fn vago(&self) -> usize
+      { self.capacidade - self.quantia }
 }
 
 impl<T: Display> Display for PilhaArray<T> {
+   /** A formatação do estrutura é a seguinte. O nome que ela tem, então
+    * dois pontos para separar sua identificação dos dados em sí. O item
+    * entre cholchetes/ou parênteses é seu **topo**, já os demais entre
+    * chaves são os dados, ou próximos ao topo, seguindo uma hierarquia
+    * da esquerda a direita. Um exemplo abaixo mostrará o resultado:
+    *
+    * # `Pilha:["jabuticaba"]-{"banana", "morango", "abacaxi"}`
+    *
+    *   A um limite de impressão, se qualquer instância, contendo mais de
+    * 5000 itens for demandada sua visualização, o programa simplesmente
+    * será interrompido. */
    fn fmt(&self, output: &mut Formatter<'_>) -> Resultfmt   
    {
       const LIMITE_DE_IMPRESSAO: usize = 5000;
@@ -142,10 +177,10 @@ impl<T: Display> Display for PilhaArray<T> {
    }
 }
 
-impl<T> PilhaArray<T> {
-/* Interface dos métodos em Inglês. A maioria dos métodos chamado acima
+/** Interface dos métodos em Inglês. A maioria dos métodos chamado acima
  * são mais conhecidos por seus nomes na língua anglofona. Para não confudir
  * outros que usam isso, vamos embrulhar tais chamadas com tais nomes. */
+impl<T> PilhaArray<T> {
    pub fn new() -> Self { PilhaArray::nova() }
 
    pub fn empty(&self) -> bool { self.vazia() }
