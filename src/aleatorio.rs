@@ -29,7 +29,7 @@ use std::ops::RangeInclusive;
 mod gerador;
 mod impressao;
 // complementar, porém é uma gama de testes:
-mod testes_unitarios;
+mod testes;
 
 // re-exportando ...
 pub use gerador::sortear;

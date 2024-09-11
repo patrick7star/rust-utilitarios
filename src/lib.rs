@@ -20,57 +20,47 @@
 */
 
 
-/** dado um diretório desenha uma árvore em string
- baseando nos arquivos e diretórios do atual(raíz)
- e seus subdirs.
-*/
+/** Dado um diretório desenha uma árvore em string baseando nos arquivos e 
+ * diretórios do atual(raíz) e seus subdirs. */
 pub mod arvore;
 
 mod tela_auxiliar;
-/** talvez o mais complexo do pacote, cria uma estrura
- para manipular de forma maleável a impressão de
- texto e desenhos simples no terminal.
-*/
+/** Talvez o mais complexo do pacote, cria uma estrura para manipular de 
+ * forma maleável a impressão de texto e desenhos simples no terminal. */
 pub mod tela;
 
-/** converte valores inteiros e fluantes, que representam
- grandezas importantes em computação, para valores
- legíveis, tais na formatação de strings. 
-*/
+/** Converte valores inteiros e fluantes, que representam grandezas 
+ * importantes em computação, para valores legíveis, tais na formatação de 
+ * strings. 
+ */
 pub mod legivel;
 
-/** 
-  Pega lista e arrays de dados e faz uma tabela
- delas para simples impressões.
-*/
+/** Pega lista e arrays de dados e faz uma tabela delas para simples 
+  * impressões.
+  */
 pub mod tabelas;
 
-/** Gerador de números pseudo-aleatórios. Todos
- tipos de dados inteiros estão inclusos no pacote,
- inclusive não-inteiros como valores de "decimais".
+/** Gerador de números pseudo-aleatórios. Todos tipos de dados inteiros 
+ * estão inclusos no pacote, inclusive não-inteiros como valores de 
+ * "decimais". 
  */
 pub mod aleatorio;
 
-/** Transforma strings e inteiros que representam valores
- decimais/ou binários para números romanos, o inverso
- também, ou seja, romanos para números decimais/inteiros.
-*/
+/** Transforma strings e inteiros que representam valores decimais/ou 
+ * binários para números romanos, o inverso também, ou seja, romanos para 
+ * números decimais/inteiros. */
 pub mod romanos;
 
 /// Incrementa vários modos de impressão na tela.
 pub mod impressao;
 
-/** 
-  Variádos tipos de barras de progressos, que informam
- de forma dinâmica como a computabilidade de tais 
- dados abordados está indo. */
+/** Variádos tipos de barras de progressos, que informam de forma dinâmica 
+ * como a computabilidade de tais dados abordados está indo. */
 pub mod barra_de_progresso;
 
-/** 
-  Obtém a dimensão do terminal que roda tal lib. 
- Portanto agora, podemos excluir a biblioteca externa
- utilizada para fazer tal, substituindo por esta. 
-*/
+/** Obtém a dimensão do terminal que roda tal lib. Portanto agora, podemos 
+ * excluir a biblioteca externa utilizada para fazer tal, substituindo por 
+ * esta. */
 pub mod terminal_dimensao;
 
 /// escreve um número dado por extenso.
@@ -78,9 +68,9 @@ pub mod por_extenso;
 
 
 use std::io::{Write, stdin, stdout};
-/** Como sem um nome de módulo no momento, vamos 
-  colocar aqui a implementação de um prompt 
-  genérico. 
+
+/** Como sem um nome de módulo no momento, vamos colocar aqui a 
+ * implementação de um prompt genérico. 
  */
 pub fn lanca_prompt(dica:&str) -> String {
    // formantando dica.
@@ -138,14 +128,6 @@ macro_rules! mapa {
       ))
    };*/
 }
-
-/**
- * Coleção que não vem por padrão no Rust, porém é muito útil. Seria simples
- * sim, usar as que vem, e embrulhar-las para produzir tal comportamento,
- * entretanto, usando a parte `unsafe` do Rust para produzir tal, é muito
- * melhor para o aprendizado da linguagem, como ganhar experiência também.
- */
-pub mod pilha_array;
 
 #[cfg(test)]
 mod tests {
