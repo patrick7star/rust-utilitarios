@@ -4,5 +4,8 @@ version = "1.5.0"
 edition = "2018"
 license = "mit"
 readme = "README.md"
-# tal pacote data desta versão, 2019 acho?!
+# Tal pacote data desta versão, 2019 acho?!
 rust-version = "1.40"
+
+[profile.dev]
+opt-level=0
