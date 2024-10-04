@@ -5,10 +5,10 @@
 
 use super::tempo;
 use super::fracao_seg::tempo_fracao;
-
 use std::str::FromStr;
-/** retorna uma string contendo o valor legendado
-  porém numa faixa mais legível. */
+
+/** Retorna uma string contendo o valor legendado porém numa faixa mais 
+ * legível. */
 #[allow(unused)]
 pub fn tempo_humano<V>(segundos: V, contracao:bool) 
   -> Option<String> where V: ToString  
