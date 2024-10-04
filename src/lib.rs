@@ -19,6 +19,7 @@
  recentemente aprendidas da **linguagem Rust**, ou de computação em geral.
 */
 
+use std::io::{Write, stdin, stdout};
 
 /** Dado um diretório desenha uma árvore em string baseando nos arquivos e 
  * diretórios do atual(raíz) e seus subdirs. */
@@ -67,8 +68,6 @@ pub mod terminal_dimensao;
 pub mod por_extenso;
 
 
-use std::io::{Write, stdin, stdout};
-
 /** Como sem um nome de módulo no momento, vamos colocar aqui a 
  * implementação de um prompt genérico. 
  */
@@ -91,6 +90,7 @@ pub fn lanca_prompt(dica:&str) -> String {
    drop(conteudo.pop().unwrap());
    return conteudo;
 }
+
 /** Macro importante para agilizar na criação
  de um Mapa(HashMap). A forma que tem que ser
  escrito é, dado dois tipos, lado esquerdo

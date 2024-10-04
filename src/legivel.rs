@@ -1,9 +1,12 @@
-
 /*! 
  # Grandezas mais legíveis 
-  Faz conversões de grandezas referentes a 
- dados utilizados em computação, ou outros 
- campos. 
+  Faz conversões de grandezas referentes a dados utilizados em computação, 
+  ou outros campos. O negócio é deixa-lo mais legiveis, agrupados na forma
+  númerica de vários tipos de submultiplos e múltiplos de potências de dez.
+  O tempo também é mostrado de forma mais humana, mas considerando a 
+  organização fundamental de tempo, que por mais que seja ainda S.I., é algo
+  bem diferente -- de sessenta em sessenta, então passa para de mil em mil 
+  quando levado em conta valores menores que um segundo, é uma bagunça.
 */
 
 // extensão do módulo:
@@ -15,27 +18,25 @@ pub use aproxima::tempo_detalhado;
 pub use generico::tempo_humano;
 pub use fracao_seg::tempo_fracao;
 
-
 // múltiplos de tempo(equivalente em seg).
-const MINUTO:f32 = 60.0;           // segundos por minuto.
-const HORA:f32 = MINUTO*MINUTO;  // segundos por hora.
-const DIA:f32 = 24.0*HORA;         // segundos por dia.
-const MES:f32 = 30.0*DIA;          // segundos/mês.
-const ANO:f32 = 365.0*DIA;         // segundos/ano.
-const DECADA:f32 = 10.0*ANO;       // segundos/década.
-const SECULO:f32 = 10.0*DECADA;    // segundos por século.
-const MILENIO:f32 = 10.0*SECULO;   // seg/milênio.
+const MINUTO:f32   = 60.0;             // segundos por minuto.
+const HORA: f32    = MINUTO * MINUTO;  // segundos por hora.
+const DIA: f32     = 24.0 * HORA;      // segundos por dia.
+const MES: f32     = 30.0 * DIA;       // segundos/mês.
+const ANO: f32     = 365.0 * DIA;      // segundos/ano.
+const DECADA: f32  = 10.0 * ANO;       // segundos/década.
+const SECULO: f32  = 10.0 * DECADA;    // segundos por século.
+const MILENIO: f32 = 10.0 * SECULO;    // seg/milênio.
 
 // múltiplos de tamanho(equivalente em bytes).
-const KILO:u64 = 2_u64.pow(10);  // bytes por kB.
-const MEGA:u64 = 2_u64.pow(20);  // bytes por MB.
-const GIGA:u64 = 2_u64.pow(30);  // bytes por GB.
-const TERA:u64 = 2_u64.pow(40);  // bytes por TB.
-const PETA:u64 = 2_u64.pow(50);  // bytes por PB.
+const KILO: u64 = 2_u64.pow(10);  // bytes por kB.
+const MEGA: u64 = 2_u64.pow(20);  // bytes por MB.
+const GIGA: u64 = 2_u64.pow(30);  // bytes por GB.
+const TERA: u64 = 2_u64.pow(40);  // bytes por TB.
+const PETA: u64 = 2_u64.pow(50);  // bytes por PB.
 
 
-
-/** retorna uma string contendo o valor legendado porém numa faixa mais 
+/** Retorna uma string contendo o valor legendado porém numa faixa mais 
  legível. */
 pub fn tempo(segundos:u64, contracao:bool) -> String {
    // renomeação da variável a comparar e computar.
@@ -81,8 +82,8 @@ pub fn tempo(segundos:u64, contracao:bool) -> String {
    format!("{:0.1} {}", calculo, sigla)
 } 
 
-/** retorna uma string contendo o tamanho legendado com um múltiplo, 
- porém de forma mais legível. */
+/** Retorna uma string contendo o tamanho legendado com um múltiplo, porém 
+ * de forma mais legível. */
 pub fn tamanho(qtd:u64, contracao:bool) -> String { 
    if qtd >= KILO && qtd < MEGA {
       let sigla = if contracao{"KiB"} else{"kilobytes"};
@@ -106,10 +107,9 @@ pub fn tamanho(qtd:u64, contracao:bool) -> String {
    }
 }
 
-/** pega valores muito grande, maiores que mil, e coloca eles de forma
+/** Pega valores muito grande, maiores que mil, e coloca eles de forma
  mais legivel, com três algarismos significativos no máximo, e o peso de
- em casas decimais. 
- */
+ em casas decimais. */
 pub fn valor_legivel(qtd: usize) -> String {
    let mantisa: f64;
    let peso: &str;
