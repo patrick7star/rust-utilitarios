@@ -122,7 +122,7 @@ fn erro_mensagem_isize(a: isize, b: isize)
 pub mod sortear {
    use super::*;
 
-   /// gera um intero de(quantia variada) bytes, randomicamente.
+   /// Gera um intero de(quantia variada) bytes, randomicamente.
    pub fn usize(i: Intervalo<usize>) -> usize 
    {
       let (a, b) = (*i.start(), *i.end());
@@ -136,6 +136,7 @@ pub mod sortear {
       else { n }
    }
 
+   /// Gera maior inteiro com sinal que a máquina permite.
    pub fn isize(i: Intervalo<isize>) -> isize
    {
       let (a, b) = (*i.start(), *i.end());
@@ -186,12 +187,13 @@ pub mod sortear {
       }
    }
 
+   /// Gera um valor lógico, `true` ou `false`.
    pub fn bool() -> bool 
    /* Se um valor randômico é maior o igual a cinco, o lançamento se torna
     * verdadeiro, caso contrário, falso. */
       { usize(0..=9) >= 5 }
 
-   /// gera valor inteiro positivo de 8-bits(0 à 255).
+   /// Gera valor inteiro positivo de 8-bits(0 à 255).
    pub fn u8(i: Intervalo<u8>) -> u8 
    { 
       let a = *i.start() as usize;
@@ -200,7 +202,7 @@ pub mod sortear {
       usize(a..=b) as u8
    }
 
-   /// gera um inteiro de 8-bits de modo randômico.
+   /// Gera um inteiro de 8-bits de modo randômico.
    pub fn i8(i: Intervalo<i8>) -> i8 
    {
       let a = *i.start() as isize;
@@ -209,7 +211,7 @@ pub mod sortear {
       isize(a..=b) as i8
    }
 
-   /// gera um inteiro positivo de 16-bits randômico.
+   /// Gera um inteiro positivo de 16-bits randômico.
    pub fn u16(i: Intervalo<u16>) -> u16 {
       let a = *i.start() as usize;
       let b = *i.end() as usize;
@@ -217,7 +219,7 @@ pub mod sortear {
       usize(a..=b) as u16
    }
 
-   /// gera um inteiro de 16-bits de modo randômico.
+   /// Gera um inteiro de 16-bits de modo randômico.
    pub fn i16(i: Intervalo<i16>) -> i16 
    {
       let a = *i.start() as isize;
@@ -226,7 +228,7 @@ pub mod sortear {
       isize(a..=b) as i16
    }
 
-   /// gera um inteiro positivo de 32-bits randômico.
+   /// Gera um inteiro positivo de 32-bits randômico.
    pub fn u32(i: Intervalo<u32>) -> u32 
    {
       let a = *i.start() as usize;
@@ -235,7 +237,7 @@ pub mod sortear {
       usize(a..=b) as u32
    }
 
-   /// gera um inteiro de 32-bits(4 bytes) de modo randômico.
+   /// Gera um inteiro de 32-bits(4 bytes) de modo randômico.
    pub fn i32(i: Intervalo<i32>) -> i32 
    { 
       let a = *i.start() as isize;
@@ -244,7 +246,7 @@ pub mod sortear {
       isize(a..=b) as i32
    }
    
-   /// gera um inteiro positivo de 64-bits(8 bytes) randômico.
+   /// Gera um inteiro positivo de 64-bits(8 bytes) randômico.
    pub fn u64(i: Intervalo<u64>) -> u64 
    { 
       let a = *i.start() as usize;
@@ -253,7 +255,7 @@ pub mod sortear {
       usize(a..=b) as u64
    }
 
-   /// gera um inteiro de 64-bits(8 bytes) de modo randômico.
+   /// Gera um inteiro de 64-bits(8 bytes) de modo randômico.
    pub fn i64(i: Intervalo<i64>) -> i64 
    {
       let a = *i.start() as isize;
