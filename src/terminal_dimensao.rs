@@ -28,25 +28,30 @@
 // biblioteca padrão do Rust.
 use std::process::Command;
 use std::str::FromStr;
+#[cfg(target_os="windows")]
+use std::os::windows::raw::HANDLE;
+#[cfg(target_os="windows")]
+use std::mem::{transmute, zeroed};
 
 
-/** Estrutura que "embrulha" um inteiro positivo
- de 16-bits, este significando a ***largura***
- do terminal. */
+/** Estrutura que "embrulha" um inteiro positivo de 16-bits, este 
+ * significando a ***largura*** do terminal. */
 pub struct Largura(pub u16);
-/** Estrutura que "embrulha" um inteiro positivo
- de 16-bits, este significando a **altura**
- do terminal. */
+/** Estrutura que "embrulha" um inteiro positivo de 16-bits, este 
+ * significando a **altura** do terminal. */
 pub struct Altura(pub u16);
 
 // apelido para melhorar legibilidade.
 type TerminalDimensao = Option<(Largura, Altura)>;
 type TermLargura = Result<Largura, &'static str>;
 type TermAltura = Result<Altura, &'static str>;
+type Bytes = Vec<u8>;
+#[cfg(target_os="windows")]
+type Dimensao = (u16, u16);
 
 
-/** de forma direta retorna o Enum contendo
- apenas a largura do terminal. */
+/** De forma direta, retorna o Enum contendo apenas a largura do 
+ * terminal. */
 pub fn terminal_largura() -> TermLargura {
    // executa comando para obter largura primeiramente ...
    let mut resultado:Vec<u8> = {
@@ -101,10 +106,8 @@ pub fn terminal_largura() -> TermLargura {
    Ok(Largura(largura))
 }
 
-/** diretamente retorna o Enum apenas com um
- inteiro de 16-bits *encapsulado* como dado
- dentro dele. */
-type Bytes = Vec<u8>;
+/** Diretamente, retorna o Enum apenas com um inteiro de 16-bits 
+ * *encapsulado* como dado dentro dele. */
 pub fn terminal_altura() -> TermAltura {
    // executa comando para obter largura primeiramente ...
    let mut resultado: Bytes = {
@@ -158,9 +161,9 @@ pub fn terminal_altura() -> TermAltura {
    Ok(Altura(altura))
 }
 
-/** função retorna tupla com dimensão, porém implementação
- distinta da anterior, encapsulando valores com 
- "structs" ao invés de Enum's. */
+/** Tal Função, retorna tupla com dimensão, porém implementação
+ distinta da anterior, encapsulando valores com "structs" ao invés de 
+ Enum's. */
 pub fn dimensao() -> TerminalDimensao {
    /* usando construto acima de auxilio, para 
     * não ter que fazer a mesma coisa de novo.
@@ -178,10 +181,67 @@ pub fn dimensao() -> TerminalDimensao {
    Some((Largura(largura), Altura(altura)))
 }
 
+
+
+/** Retorno mais rápido da `Dimensão` pois usa o API do Windows. Também
+ * o tipo de retorno é mais simples, só uma tupla com dois inteiros 
+ * positivos de 16-bits, em que, o primeiro é referente as linhas do 
+ * terminal, e o segundo as colunas. */
+#[allow(non_snake_case)]
+#[cfg(target_os="windows")]
+pub fn terminal_dimensao() -> Dimensao {
+/* Diferente das demais, esta aqui, já usa a API padrão do Windows para
+ * obter tal valor relativo. Também o retorno é bem simplificado, 
+ * quando comparado aos demais, aqui a tupla significa, diretamente,
+ * nesta ordem, respectivamente linhas e colunas. */
+   #[repr(C)]
+   struct COOD { X: i16, Y: i16}
+
+   #[repr(C)]
+   struct SMALL_RECT { Left: i16, Top: i16, Right: i16, Bottom: i16 }
+
+   #[repr(C)]
+   struct CONSOLE_SCREEN_BUFFER_INFO {
+        dwSize: COOD,
+        dwCursorPostion: COOD,
+        wAttributes: i16,
+        srWindow: SMALL_RECT,
+        dwMaximumWindowSize: COOD
+    }
+
+   const STD_OUT_HANDLE: u32 = u32::MAX - 11;
+
+    /* Depois de ter definido todas estruturas necessárias acima, que
+     * são nativa do Windows, e que são usada nas declarações e 
+     * chamadas abaixo, então "declaramos" as funções em si. */
+    extern "C" {
+        fn GetStdHandle(_: u32) -> HANDLE;
+        fn GetConsoleScreenBufferInfo
+          (_: HANDLE, _: *mut CONSOLE_SCREEN_BUFFER_INFO) -> bool;
+    }
+
+    let mut info: CONSOLE_SCREEN_BUFFER_INFO;
+    let console: HANDLE; 
+    let ptr_info: *mut CONSOLE_SCREEN_BUFFER_INFO;
+
+    // Apelido para encurtar tipo de variável.
+    type CSBI = CONSOLE_SCREEN_BUFFER_INFO;
+
+    unsafe { 
+        console = GetStdHandle(STD_OUT_HANDLE);
+        info = zeroed();
+        ptr_info = transmute::<&mut CSBI, *mut CSBI>(&mut info);
+         GetConsoleScreenBufferInfo(console, ptr_info);
+    };
+
+    (info.dwSize.Y as u16, info.dwSize.X as u16)
+}
+
 #[cfg(test)]
 #[allow(non_snake_case)]
 mod tests {
    use super::*;
+   use std::time::{Duration, Instant};
 
    #[test]
    fn testa_dimensao() {
@@ -204,6 +264,7 @@ mod tests {
          }
       };
    }
+
    #[test]
    fn funcaoTA() {
       match terminal_altura() {
@@ -215,4 +276,34 @@ mod tests {
          }
       };
    }
+
+   #[test]
+   #[cfg(target_os="windows")]
+   fn funcaoNativaDoOS() {
+      let clock = Instant::now();
+      let dim = terminal_dimensao();
+      let ta = clock.elapsed();
+      let (Largura(l), Altura(h)) = dimensao().unwrap();
+      let tb = clock.elapsed() - ta;
+      let razao = tb.as_secs_f32() / ta.as_secs_f32();
+
+      println!("Dimensão antiga: {}x{}", h, l); 
+      assert_eq!(dim.0, h);
+      assert_eq!(dim.1, l);
+      println!("Dimensão do API: {:?}", dim);
+      println!("Tempo do novo: {:#?}\nTempo do antigo: {:#?}", ta, tb);
+      println!("Ele é quase {} mais rápido!", razao);
+      assert!(ta < tb);
+    }
+
+   #[test]
+   #[cfg(target_os="windows")]
+   fn valorRecuperadoEmTempoDeExecucao() {
+       println!("Linhas x Colunas:");
+        for _ in 1..=27 {
+            let dim = terminal_dimensao();
+            println!("\t{} x {}", dim.0, dim.1);
+            std::thread::sleep(Duration::from_millis(800));
+        }
+    }
 }
