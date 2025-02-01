@@ -1,17 +1,14 @@
 /*! 
  # Desenho dos diretórios em árvore
-  Fazer uma árvore para visualização
- de forma organizada, ramificando seus 
- arquivos e sub-diretórios. Ao acionar a
- função pode-se escolher tanto se quer
- apenas a visualiazão dos sub-diretórios,
- como também dos seus arquivos.
+   Fazer uma árvore para visualização de forma organizada, ramificando seus 
+ arquivos e sub-diretórios. Ao acionar a função pode-se escolher tanto se 
+ quer apenas a visualiazão dos sub-diretórios, como também dos seus arquivos.
 */
-
-
 // biblioteca padrão do Rust.
 use std::fs::read_dir;
 use std::path::Path;
+use std::io::{Result};
+use std::collections::{VecDeque};
 
 // do próprio caixote:
 use constroi_simbolos::{
@@ -34,11 +31,19 @@ const GALHO_V:char = '\u{2502}';
 const GALHO_VH:char = '\u{2570}';
 /// conector entre dois verticais e um horizontal.
 const GALHO_VHV:char = '\u{251c}';
+/* Caso uma string exceda a tela do terminal a função vai reduzi-lá e 
+ * implicitar que tal string é mais extensa, continua... */
+static mut JA_COMPUTADO: bool = false;
+static mut LARGURA: usize = u16::MAX as usize;
+// Apelidos para estruturas abaixo:
+type Matriz = Vec<Vec<char>>;
+// Espaço fixo do recuo.
+const RECUO: usize = 3;
 
 
-/* escreva toda uma trilha, com ramificações
- * de sub-diretórios e arquivos, dado uma raiz
- * principal. */
+/* Escreva toda uma trilha, com ramificações de sub-diretórios e arquivos, 
+ * dado uma raiz principal. */
+#[allow(dead_code)]
 fn desenha_trilha(esboco:&mut String, caminho:&Path , pfd:&mut u8) {
    // navegando arquivos e diretórios.
    let lista_no_dir = match read_dir(caminho) {
@@ -103,49 +108,31 @@ fn desenha_trilha(esboco:&mut String, caminho:&Path , pfd:&mut u8) {
    }
 }
 
-/* caso uma string exceda a tela do terminal
- * a função vai reduzi-lá e implicitar que
- * tal string é mais extensa, continua... */
-static mut JA_COMPUTADO:bool = false;
-static mut LARGURA:usize = u16::MAX as usize;
-
 fn ajusta_string(s:&mut String, e_diretorio:bool) {
-   // obter a largura.
-   let largura:usize;
-   unsafe {
-      if !JA_COMPUTADO {
-         /*
-         largura = match terminal_size() {
-            Some((Width(l), _)) => l as usize,
-            None => panic!("erro ao obter LARGURA do terminal"),
-         };
-         */
-         largura = match dimensao() {
-            Some((Largura(l), _)) => l as usize,
-            None => panic!("erro ao obter LARGURA do terminal"),
-         };
-         // obtendo largura de vez.
-         LARGURA = largura;
-         // dá como já calculado tal valor.
-         JA_COMPUTADO = true;
-      } 
-      // apenas atribuir valor JÁ calculado.
-      else { largura = LARGURA; }
-   }
+   let largura = {
+      unsafe {
+         if !JA_COMPUTADO {
+            // Registra largura,então informa que já foi computado.
+            if let Some((Largura(l), _)) = dimensao()
+               { LARGURA = l as usize; }
+            JA_COMPUTADO = true;
+         } 
+         LARGURA
+      }
+   };
 
-   // comprimento da string.
-   let str_largura = s.len();
-   if str_largura > largura {
-      //let intervalo = (largura-4)..;
+   // Se comprimento da string exceder o da tela.
+   if s.len() > largura {
       if e_diretorio 
-         { s.replace_range((largura-8)..,"(...):\n"); }
+         { s.replace_range((largura - 8)..,"(...):\n"); }
       else 
-         {s.replace_range((largura-2)..,"...\n");}
+         { s.replace_range((largura - 2)..,"...\n");}
    }
 }
    
 /* escreva trilha, porém só registros diretórios...
  * arquivos não será ramificados na árvore. */
+#[allow(dead_code)]
 fn desenha_trilha_dirs(esboco:&mut String, caminho:&Path , pfd:&mut u8) {
    // navegando arquivos e diretórios.
    let lista_no_dir = match read_dir(caminho) {
@@ -213,7 +200,7 @@ fn acha_galho_dobrado(linha:&Vec<char>) -> Option<usize> {
    return None;
 }
 
-fn preenchendo_galhos(arvore:&mut Vec<Vec<char>>) {
+fn preenchendo_galhos(arvore:&mut Matriz) {
    // dimensão da matriz:
    let max_y = arvore.len();
    // variável mutável para posição móvel da última linha.
@@ -228,9 +215,8 @@ fn preenchendo_galhos(arvore:&mut Vec<Vec<char>>) {
          None => { continue; }
       };
 
-      /* subindo e trocando espaços até encontrar
-       * outro galho de dobra.
-       * proposições:   */
+      /* Subindo e trocando espaços até encontrar outro galho de dobra.
+       * Proposições:   */
       let mut p1 = arvore[l1-1][c] != GALHO_VH; 
       let mut p2 = arvore[l1-1][c].is_whitespace();
       let mut p3 = !(
@@ -253,7 +239,7 @@ fn preenchendo_galhos(arvore:&mut Vec<Vec<char>>) {
    }
 }
 
-fn troca_galhos_adequadamente(arvore:&mut Vec<Vec<char>>) {
+fn troca_galhos_adequadamente(arvore:&mut Matriz) {
    // dimensão da matriz:
    let max_y = arvore.len();
    let max_x = arvore[0].len();
@@ -276,7 +262,7 @@ fn troca_galhos_adequadamente(arvore:&mut Vec<Vec<char>>) {
    }
 }
 
-fn preenche_primeira_coluna(arvore:&mut Vec<Vec<char>>) {
+fn preenche_primeira_coluna(arvore:&mut Matriz) {
    let inicio = 1;  
    let mut fim = 1;
 
@@ -299,61 +285,185 @@ fn preenche_primeira_coluna(arvore:&mut Vec<Vec<char>>) {
    }
 }
 
-/** 
- retorna string representado tudo dentro de 
- um dado diretório, ramificando-os em arquivos
- e sub-diretórios. 
-*/
-pub fn arvore(caminho:&str, mostra_arquivos:bool) -> String {
-   // string para concatenar strings representado trilha.
+/** Retorna string representado tudo dentro de um dado diretório, 
+ * ramificando-os em arquivos e sub-diretórios. */
+pub fn arvore<P>(caminho:&P, mostra_arquivos:bool) -> String 
+  where P: AsRef<Path> + ?Sized 
+{
+   // String para concatenar strings representado trilha.
    let mut trilha = String::new();
-   // obtendo o nome do diretório raíz.
-   let caminho_i = Path::new(caminho);
-   let raiz_nome:&str = {
-      caminho_i
-      .file_name()
-      .unwrap()
-      .to_str()
-      .unwrap()
-   };
+   // Raiz, de onde parte a trilhagem...
+   let raiz = caminho.as_ref();
+   // Obtendo o nome do diretório raíz.
+   let raiz_nome = raiz.file_name().unwrap().to_str().unwrap();
+   // Espaçar cada vez mais, em cada novo sub-diretório.
+   let mut profundidade: usize = 0;
 
-   // colocando raíz no começo...
+   // Anexa a raíz do diretório no começo da representação.
    trilha.push_str(raiz_nome);
    trilha.push_str(":\n");
 
-   // espaçar cada vez mais, em cada novo sub-diretório.
-   let mut profundidade:u8 = 0;
-   // raiz, de onde parte a trilhagem...
-   let raiz = Path::new(caminho);
-   // se estiver configurado para mostrar arquivos...
+   // Se estiver configurado para mostrar arquivos...
+   /*
    if mostra_arquivos 
       { desenha_trilha(&mut trilha, raiz, &mut profundidade); }
    else 
       { desenha_trilha_dirs(&mut trilha, raiz, &mut profundidade); }
+    *
+    * */
+   let _= desenha_trilha_personalizado
+      (&mut trilha, raiz, &mut profundidade, None, None, mostra_arquivos);
 
-   // fazendo ajustes...
+   // Fazendo ajustes...
    let mut matriz_arv = matriciar_string(trilha.clone());
    preenchendo_galhos(&mut matriz_arv); 
    troca_galhos_adequadamente(&mut matriz_arv);
    preenche_primeira_coluna(&mut matriz_arv);
 
-   // retorna string representando trilha.
-   return matriz_para_string(&matriz_arv);
+   /* Converte a matriz de caractéres de volta numa string, então retorna
+    * o resultado. */
+   matriz_para_string(&matriz_arv)
 }
 
+fn molda_caminho_de_acordo(esboco:&mut String, caminho: &Path, depth: usize) 
+  -> Result<()>
+{
+   let tabulacao = " ".repeat(depth);
+   let nome_do_caminho = caminho.file_name().unwrap().to_str().unwrap();
+   let mut formatacao: String;
 
-// ----------- testando funções --------
+   if caminho.is_dir() {
+      formatacao = format!(
+          "{1}{2}{3}{4} {0}:\n",
+         nome_do_caminho, tabulacao, GALHO_VH,GALHO_H,GALHO_H
+      );
+   } else {
+      if caminho.is_symlink() {
+         formatacao = format!(
+            "{1}{2}{3}{4} {0}(->)\n",
+            nome_do_caminho, tabulacao, GALHO_VH,GALHO_H,GALHO_H
+         );
+      } else {
+         formatacao = format!(
+            "{1}{2}{3}{4} \"{0}\"\n",
+            nome_do_caminho, tabulacao, GALHO_VH,GALHO_H,GALHO_H
+         );
+      }
+   }
+   // ajusta a string na tela.
+   ajusta_string(&mut formatacao, true);
+   esboco.push_str(formatacao.as_str());
+   Ok(())
+}
+
+type Exclusoes<'b> = Option<VecDeque<&'b str>>;
+type MaxDepth = Option<usize>;
+
+fn desenha_trilha_personalizado(esboco: &mut String, caminho:&Path, 
+  profundidade:&mut usize, limite: MaxDepth, mut padrao: Exclusoes,
+  mostra_arquivos: bool) 
+  -> Result<()>
+{
+/* Escreva toda uma trilha, com ramificações de sub-diretórios e arquivos, 
+ * dado uma raiz principal. Veja, ela não pecorre linque símbolicos. Esta
+ * versão aqui pode-se impor um 'limite' de profundidade, assim como, 
+ * que tipo de padrão ignorá, referente aos diretórios. Tais opções podem
+ * ser ativadas ou não. */
+   let mut entradas_do_diretorio = read_dir(caminho)?;
+
+   if let Some(maximo) = limite { 
+   // Se uma profundidade máxima for selecionada, para de ir até ela.
+      if *profundidade / RECUO > maximo
+         { return Ok(()); }
+   }
+
+   if let Some(ref mut fila) = padrao {
+   /* Se algum dos subdiretórios, ou arquvios, tiver tal string compondo-a,
+    * então o resto do processamento sobre tal será discartado imediatamente.
+    */
+      let mut total_de_exclusoes = fila.len();
+
+      while total_de_exclusoes > 0 {
+         let mut caminhos_partes = caminho.components();
+
+         if let Some(pattern) = fila.pop_front() {
+            while let Some(parte) = caminhos_partes.next() {
+               if parte.as_os_str() == pattern 
+                  { return Ok(()); }
+            }
+            fila.push_back(pattern);
+         }
+         total_de_exclusoes -= 1;
+      }
+   }
+
+   // Encurtando para caber na tela; melhor a legibilidade do código.
+   let visivel = mostra_arquivos;
+   let depth = profundidade;
+
+   while let Some(Ok(entry)) = entradas_do_diretorio.next() {
+      let caminho = entry.path();
+
+      if caminho.is_dir() && !caminho.is_symlink() 
+      {
+         let _= molda_caminho_de_acordo(esboco, &caminho, *depth);
+          /* Cada chamada recursiva, aumenta a profundidade, quando termina
+           * apenas recua de volta o espaçado. */
+          (*depth) += RECUO; 
+          let _= desenha_trilha_personalizado
+           (esboco, &caminho, depth, limite, padrao.clone(), visivel);
+          (*depth) -= RECUO; 
+
+      } else {
+      // se for apenas um arquivo, só registra.
+         if mostra_arquivos
+            { let _= molda_caminho_de_acordo(esboco, &caminho, *depth); }
+      }
+   }
+   Ok(())
+}
+
+/** Mesmo capilaridade do que a árvore acima, porém, agora ela tem funções
+ * extras, como: restrigir até determinada profundidade, e também exclui 
+ * certos diretórios que forem listados. */
+pub fn arvore_a<P>(caminho:&P, mostra_arquivos:bool, max: MaxDepth,
+  exclusao: Exclusoes) -> String where P: AsRef<Path> + ?Sized 
+{
+   let raiz = caminho.as_ref();
+   let mut profundidade: usize = 0;
+   // String para concatenar strings representado trilha.
+   let mut trilha = String::new();
+   // Obtendo o nome do diretório raíz.
+   let raiz_nome = raiz.file_name().unwrap().to_str().unwrap();
+
+   // Anexa a raíz do diretório no começo da representação; seu cabeçalho.
+   trilha.push_str(raiz_nome); trilha.push_str(":\n");
+
+   // Se estiver configurado para mostrar arquivos...
+   let _= desenha_trilha_personalizado
+      (&mut trilha, raiz, &mut profundidade, max, exclusao, mostra_arquivos);
+
+   // Remendando, renderizando, e fazendo últimos ajustes.
+   let mut grade_de_desenho = matriciar_string(trilha);
+   preenchendo_galhos(&mut grade_de_desenho); 
+   troca_galhos_adequadamente(&mut grade_de_desenho);
+   preenche_primeira_coluna(&mut grade_de_desenho);
+
+   /* Converte a matriz de caractéres de volta numa string, então retorna
+    * o resultado. */
+   matriz_para_string(&grade_de_desenho)
+}
 
 #[cfg(test)]
 #[cfg(target_os="linux")]
 mod tests {
    // biblioteca padrão do Rust.
-   use std::path::Path;
-   use std::env::var;
-   //use constroi_simbolos::imprime;
+   use std::path::{Path};
+   use std::env::{self, var};
    use super::*;
+
    // para testes.
-   fn imprime(matriz:Vec<Vec<char>>) {
+   fn imprime(matriz: Matriz) {
        // pega a linha da matriz.
        for row in matriz {
            // coluna na linha.
@@ -384,13 +494,15 @@ mod tests {
    }
 
    #[test]
-   fn coloca_galhos() {
-      let caminho = concat!(env!("HOME"), "/Documents/códigos_rust");
-      let arv = arvore(caminho,false);
+   fn coloca_galhos() -> std::io::Result<()> {
+      let caminho = env::current_dir()?;
+      let arv = arvore(&caminho,false);
       let mut matriz_arv = matriciar_string(arv);
       preenchendo_galhos(&mut matriz_arv);
       imprime(matriz_arv);
+
       assert!(true);
+      Ok(())
    }
 
    #[test]
@@ -418,5 +530,50 @@ mod tests {
       println!("{}\n\n{}\n",arv1, arv2);
 
       assert!(true);
+   }
+
+   #[test]
+   fn escupidor_de_trilha_personalizado() {
+      const N: usize = 2_000;
+      let mut e = String::with_capacity(N);
+      let r = env::current_dir().unwrap();
+      let mut p: usize = 0;
+      let l = VecDeque::from(["deps", "implementors", "doc", "debug"]);
+
+      println!("Limitação por profundidade:");
+      desenha_trilha_personalizado
+         (&mut e, &r, &mut p, Some(3), None, true).unwrap();
+      println!("{}", e);
+
+      println!("\nExclusão de subdiretórios:");
+      e.clear();
+      desenha_trilha_personalizado
+         (&mut e, &r, &mut p, None, Some(l), true).unwrap();
+      println!("{}", e);
+
+      println!("\nNão mostra arquivos:");
+      e.clear();
+      desenha_trilha_personalizado
+         (&mut e, &r, &mut p, None, None, false).unwrap();
+      println!("{}", e);
+   }
+
+   #[test]
+   fn funcao_de_arvore_personalizada() {
+      let mut raiz = Path::new(env!("CCODES")).to_path_buf();
+      raiz.push("utilitarios-em-c");
+
+      println!("Impressão normal, que o velho método faz:");
+      let tree_a = arvore_a(&raiz, true, None, None);
+      println!("{tree_a:}");
+
+      println!("\nComo limite de alcance:");
+      let tree_b = arvore_a(&raiz, true, Some(1), None);
+      println!("{tree_b:}");
+
+      println!("\nComo excluindo alguns diretórios:");
+      let lista = VecDeque::from(["static", "shared"]);
+      let tree_c = arvore_a(&raiz, true, None, Some(lista));
+      println!("{tree_c:}");
    }
 }
