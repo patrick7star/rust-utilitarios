@@ -20,7 +20,7 @@ use super::{
    iterador::ColunaStr
 };
 // do próprio caixote.
-use crate::terminal_dimensao::{Largura, terminal_largura};
+use crate::terminal::{Largura, terminal_largura};
 
 // componente que lacra a tabela.
 pub const BARRA: char = '#';
