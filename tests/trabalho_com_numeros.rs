@@ -1,19 +1,14 @@
-
-
-/* tabelação da tradução de milhares de 
- * números que serão representados em:
- * cardinal, por-extenso e romano. Todas
- * ferramentas disponíveis na 'lib'.
+/* Tabelação da tradução de milhares de números que serão representados em:
+ * cardinal, por-extenso e romano. Todas ferramentas disponíveis na 'lib'.
  */
 
 extern crate utilitarios;
 use utilitarios::{
-   por_extenso::escreve_por_extenso,
+   porextenso::escreve_por_extenso,
    romanos::decimal_para_romano,
    tabelas::{Coluna, Tabela},
    aleatorio::sortear
 };
-
 
 
 #[test]
@@ -36,7 +31,7 @@ fn tabelaComConversoes() {
    let coluna1 = Coluna::nova("cardinais", cardinais);
    let coluna2 = Coluna::nova("números por-extenso", escritos);
    let coluna3 = Coluna::nova("números romanos", romanos);
-   
+
    // criando a tabela.
    let mut tabela = Tabela::nova(false);
    tabela.adiciona(coluna1);
