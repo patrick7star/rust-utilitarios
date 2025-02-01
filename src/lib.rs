@@ -23,7 +23,6 @@
  * diretórios do atual(raíz) e seus subdirs. */
 pub mod arvore;
 
-mod tela_auxiliar;
 /** Talvez o mais complexo do pacote, cria uma estrura para manipular de 
  * forma maleável a impressão de texto e desenhos simples no terminal. */
 pub mod tela;
