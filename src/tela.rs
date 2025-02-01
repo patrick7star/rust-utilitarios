@@ -1,32 +1,35 @@
 /*!
   # Tela para desenho
-  Criando toda uma estrutura de dados para desenhar formas de texto, ou 
-  texto numa tela de terminal. Ela contém tanto o modo de impressão, como 
-  uma formatação para `string`, então o jeito de visualizar-lá ficará à 
+  Criando toda uma estrutura de dados para desenhar formas de texto, ou
+  texto numa tela de terminal. Ela contém tanto o modo de impressão, como
+  uma formatação para `string`, então o jeito de visualizar-lá ficará à
   cargo do desenvolvedor implementar.
 */
 
+// Submódulos deste módulo:
+mod mudanca;
+mod pilha;
 // própria lib.:
 use crate::terminal::{Largura, Altura, dimensao};
 // bibloteca padrão do Rust:
 use std::string::ToString;
-use super::tela_auxiliar::{Mudanca, Pilha};
+use crate::tela::{mudanca::{Mudanca}, pilha::{Pilha}};
 
-/** constante com equivalente dos caractéres 
- na tela dado uma "polegada"; neste caso a 
- largura da "polegada", que equivale aqui 
+/** constante com equivalente dos caractéres
+ na tela dado uma "polegada"; neste caso a
+ largura da "polegada", que equivale aqui
  à 7 caractéres.*/
 pub const POLEGADA_H:u8 = 7; // colunas
 
-/** aqui a mesma equivalência entre "polegada" 
- e caractéres, porém representando a altura de 
- tal; neste caso uma "polegada" equivale a quatro 
+/** aqui a mesma equivalência entre "polegada"
+ e caractéres, porém representando a altura de
+ tal; neste caso uma "polegada" equivale a quatro
  linhas-caractéres. */
 pub const POLEGADA_V:u8 = 4; // linhas
 
 
-/** baseado no enum `Direcao` que mostra a direção 
- do risco este no caso, re-direciona a vertical 
+/** baseado no enum `Direcao` que mostra a direção
+ do risco este no caso, re-direciona a vertical
  onde será riscado. */
 #[derive(Copy, Clone)]
 pub enum TipoD {
@@ -34,7 +37,7 @@ pub enum TipoD {
    Secundaria,
 }
 
-/** indica como será o risco, a escrita de string e 
+/** indica como será o risco, a escrita de string e
  etc dos métodos de inscrição da estrutura `Tela`. */
 #[derive(Copy, Clone)]
 pub enum Direcao {
@@ -44,7 +47,7 @@ pub enum Direcao {
 }
 
 /** estrutura de coordenada para indicar onde na tela.
- será o começo do risco; das strings impressas; 
+ será o começo do risco; das strings impressas;
  o enquadramento e etc... */
 #[derive(Copy, Clone)]
 pub struct Ponto { linha:u8, coluna:u8 }
@@ -52,7 +55,7 @@ pub struct Ponto { linha:u8, coluna:u8 }
 /** Estrutura de dados representando a tela em sí. Aqui
  será inscritos todas as coisas, que gerará uma string
  no formato atual do terminal onde será impresso.
- Têm vários métodos demonstrando como inscrever, e o que 
+ Têm vários métodos demonstrando como inscrever, e o que
  inscrever nela. */
 pub struct Tela {
     // dimensão da tela de terminal.
@@ -60,9 +63,9 @@ pub struct Tela {
     /* seus "pixels", como eles são caractéres
      * no geral, será uma multiarray destes. */
     tela: Vec<Vec<char>>,
-    /* Uma pilha contendo todas escritas feitas 
+    /* Uma pilha contendo todas escritas feitas
      * na tela, baseado nas escritas pelos métodos
-     * abaixo, assim também terar um método de 
+     * abaixo, assim também terar um método de
      * desfazer e refazer últimas mudanças. */
     pilha_alteracoes: Pilha<Mudanca>
 }
@@ -70,8 +73,8 @@ pub struct Tela {
 // implementando seus métodos:
 impl Tela {
    /** cria a instância da `Tela`; com algumas
-    configurações ativadas/desativadas como: 
-    se haverá uma grade(meio pixelada) com 
+    configurações ativadas/desativadas como:
+    se haverá uma grade(meio pixelada) com
     pontos, ou também, uma borda delimitando
     até onde pode-se escrever no objeto. */
    pub fn cria(grade:bool, borda:bool) -> Tela {
@@ -79,7 +82,7 @@ impl Tela {
       let mensagem = "não foi possível obter a dimensão da tela!";
       let (col, lin):(u8, u8) = {
          match dimensao() {
-            Some((Largura(l), Altura(h))) => 
+            Some((Largura(l), Altura(h))) =>
                { (l as u8, h as u8) },
             None => { panic!("{}", mensagem); }
          }
@@ -88,9 +91,9 @@ impl Tela {
       // cria a tela.
       let mut matriz:Vec<Vec<char>> = Vec::new();
       for _ in 1..(lin){
-         if grade 
+         if grade
             { matriz.push(vec!['.';col as usize])}
-         else 
+         else
             { matriz.push(vec![' '; col as usize])}
       }
 
@@ -102,7 +105,7 @@ impl Tela {
          pilha_alteracoes: Pilha::nova()
       };
 
-      // se for exigido, desenhar uma borda na tela. 
+      // se for exigido, desenhar uma borda na tela.
       if borda { circunscreve_borda(&mut objeto);}
       return objeto;
    }
@@ -113,7 +116,7 @@ impl Tela {
       // percorrendo caractéres da string.
       for (i,caracter) in string.chars().enumerate() {
          let (l,c):(usize, usize) = (
-            coord.linha as usize, 
+            coord.linha as usize,
             coord.coluna as usize
          );
          // registrando alteração que será feita.
@@ -130,16 +133,16 @@ impl Tela {
    }
 
    /** Escreve múltiplas strings(múltiplas quer dizer cinco)
-    tudo à partir de uma dada coordenada(`Ponto`). 
-      O tanto de strings é determinado em tempo de 
+    tudo à partir de uma dada coordenada(`Ponto`).
+      O tanto de strings é determinado em tempo de
    compilação por uma constante, então pode ser
    alterada para "escrever" mais que está quantia.*/
    pub fn escreve_strs(&mut self, strings:[&str; 5], coord:Ponto) {
       for (l, s) in strings.iter().enumerate() {
          let coord = Ponto{
-            linha: coord.linha + (l as u8), 
+            linha: coord.linha + (l as u8),
             coluna: coord.coluna
-         }; 
+         };
          Tela::escreve(self, s, coord);
       }
       /* mesclando todas as 'alterações' das palavras
@@ -151,15 +154,15 @@ impl Tela {
       };
       for _ in 1..=4 {
          let mut a = self.pilha_alteracoes.desempilha().unwrap();
-         for pixel in a.pontilhados_escritos.drain(..) 
+         for pixel in a.pontilhados_escritos.drain(..)
             { alteracao.incrementa(pixel); }
       }
       self.pilha_alteracoes.empilha(alteracao).unwrap();
    }
 
-   /** Faz um risco na tela de um certo `Ponto`, e 
+   /** Faz um risco na tela de um certo `Ponto`, e
    também a `Direcao` cedida; com um dado comprimento. */
-   pub fn risca(&mut self, coord:Ponto, compr:u8, 
+   pub fn risca(&mut self, coord:Ponto, compr:u8,
    simbolo:char, dir:Direcao) {
       // proposições:
       // risco cabe inteiramente dentro da tela.
@@ -190,9 +193,9 @@ impl Tela {
       if risco_esta_dentro && esta_na_tela {
          // de onde partir a coordenada, e quanto ir...
          let fim:usize = {
-            (coord.linha as usize) + 
+            (coord.linha as usize) +
             (compr as usize) as usize
-         }; 
+         };
          let inicio:usize = coord.linha as usize;
 
          // alterações realizadas.
@@ -227,7 +230,7 @@ impl Tela {
             let p = Ponto { linha: l as u8, coluna: c as u8 };
             let s = self.tela[l][c];
             alteracao.incrementa((p, s));
-            // colocar caractére na posição computada. 
+            // colocar caractére na posição computada.
             self.tela[l][c] = simbolo;
          }
          // salva mudança, empilhando-a.
@@ -249,17 +252,17 @@ impl Tela {
       let mut alteracao = Mudanca::cria_vazio();
       // apelidando coordenadas com nomes mais legíveis:
       let (ay, ax, by, bx):(usize, usize, usize, usize) = (
-         ponto_a.linha.into(), 
+         ponto_a.linha.into(),
          ponto_a.coluna.into(),
-         ponto_b.linha.into(), 
+         ponto_b.linha.into(),
          ponto_b.coluna.into()
       );
       /* registrando cantos do perímetro e
        * registrando isso na 'alteração'. */
       let sequencias = [
-         (ay, ax, CSE), 
-         (by, ax, CIE), 
-         (by, bx, CID), 
+         (ay, ax, CSE),
+         (by, ax, CIE),
+         (by, bx, CID),
          (ay, bx, CSD)
       ];
       for tupla in sequencias {
@@ -269,7 +272,7 @@ impl Tela {
          self.tela[tupla.0][tupla.1] = tupla.2;
          alteracao.incrementa(
             (Ponto {
-               linha: tupla.0 as u8, 
+               linha: tupla.0 as u8,
                coluna:tupla.1 as u8
             },
             ea)
@@ -320,18 +323,18 @@ impl Tela {
    pub fn moldura(&mut self, ponto:Ponto, largura:u8, altura:u8) {
       // dá uma borda para o conteúdo interior.
       let ponto_a = Ponto{
-         linha: ponto.linha - 1, 
+         linha: ponto.linha - 1,
          coluna: ponto.coluna - 1
       };
       let ponto_b = Ponto{
-         linha: ponto.linha - 1 + altura + 1, 
+         linha: ponto.linha - 1 + altura + 1,
          coluna: ponto.coluna + largura + 1
       };
       /* usa função que já faz isso, porém para pontos,
        * com os pontos criados, é só preciso chamar-lá.
-       * Como a função que ele usa de auxílio já 
+       * Como a função que ele usa de auxílio já
        * registra uma 'alteração', outra não é preciso
-       * nem algo como mesclar, pois apenas faz uma 
+       * nem algo como mesclar, pois apenas faz uma
        * só 'alteração'. */
       self.circunscreve(ponto_a, ponto_b);
    }
@@ -393,7 +396,7 @@ impl ToString for Tela {
       }
 
       // retorna o objeto criado.
-      tela_str 
+      tela_str
    }
 }
 
@@ -408,13 +411,13 @@ mod tests {
       let  mut monitor:super::Tela = super::Tela::cria(true, false);
 
       monitor.escreve(
-         "hoje é um dia!", 
+         "hoje é um dia!",
          super::Ponto{linha:5, coluna:10}
       );
       let lin = 3*super::POLEGADA_V;
       let col = (super::POLEGADA_H as f32/2.0) as u8;
       monitor.escreve(
-         "uma frase simples!", 
+         "uma frase simples!",
          super::Ponto{linha:lin, coluna:col}
       );
        println!("{}",monitor.to_string());
@@ -466,7 +469,7 @@ mod tests {
       let mut t = super::Tela::cria(false, true);
       let ponto = super::Ponto{linha:10, coluna:200};
       t.risca(
-         ponto, 13, '&', 
+         ponto, 13, '&',
          super::Direcao::Diagonal(super::TipoD::Principal)
       );
       println!("{}", t.to_string());
@@ -502,7 +505,7 @@ mod tests {
       nova_tela.moldura(super::Ponto{linha:7, coluna:30}, 10, 5);
       // para esquiparar no debug.
       nova_tela.escreve_strs(["salamandra","côco","barba azul",
-                            "abajú","clarice"], 
+                            "abajú","clarice"],
                             super::Ponto{linha:7, coluna:50});
       println!("{}", nova_tela.to_string());
    }
@@ -522,14 +525,14 @@ mod tests {
       nova_tela.escreve_strs(
          ["salamandra","côco",
          "barba azul", "abajú",
-         "clarice"], 
+         "clarice"],
          ponto
       );
       nova_tela.moldura(Ponto{linha:7, coluna:30}, 10, 5);
       nova_tela.escreve_strs(
          ["salamandra",
          "côco","barba azul",
-         "abajú","clarice"], 
+         "abajú","clarice"],
          Ponto{linha:7, coluna:50}
       );
       // faz riscos em forma de cruz ...
@@ -542,7 +545,7 @@ mod tests {
       );
       nova_tela.escreve(
          "isso aqui é algo histórico",
-         Ponto{linha:1, coluna:10} 
+         Ponto{linha:1, coluna:10}
       );
       println!("original:\n{}", nova_tela.to_string());
       // desfazendo cada uma das alterações ...
