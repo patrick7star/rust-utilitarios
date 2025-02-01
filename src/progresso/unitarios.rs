@@ -1,13 +1,10 @@
 
-
 #[cfg(test)]
 mod tests {
-   /* teste conjunto de todos tipos de 
-    * progressos criados.
-    */
+   /* teste conjunto de todos tipos de progressos criados. */
    use std::time::{Duration, Instant};
    use std::thread::sleep;
-   use crate::barra_de_progresso::*;
+   use crate::progresso::*;
 
    /* o primeiro tipo criado, e consequente,
     * o mais simples. */
