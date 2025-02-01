@@ -1,4 +1,3 @@
-
 /*!
  # O que são estes Utilitários 
    Todos códigos que não tiverem elaborações bem complexas, ou seus esboços 
@@ -19,7 +18,6 @@
  recentemente aprendidas da **linguagem Rust**, ou de computação em geral.
 */
 
-use std::io::{Write, stdin, stdout};
 
 /** Dado um diretório desenha uma árvore em string baseando nos arquivos e 
  * diretórios do atual(raíz) e seus subdirs. */
@@ -57,39 +55,16 @@ pub mod impressao;
 
 /** Variádos tipos de barras de progressos, que informam de forma dinâmica 
  * como a computabilidade de tais dados abordados está indo. */
-pub mod barra_de_progresso;
+pub mod progresso;
 
 /** Obtém a dimensão do terminal que roda tal lib. Portanto agora, podemos 
  * excluir a biblioteca externa utilizada para fazer tal, substituindo por 
  * esta. */
-pub mod terminal_dimensao;
+pub mod terminal;
 
 /// escreve um número dado por extenso.
-pub mod por_extenso;
+pub mod porextenso;
 
-
-/** Como sem um nome de módulo no momento, vamos colocar aqui a 
- * implementação de um prompt genérico. 
- */
-pub fn lanca_prompt(dica:&str) -> String {
-   // formantando dica.
-   let dica = format!("{}: ", dica);
-   let mut saida = stdout();
-   let entrada = stdin();
-   // buffer.
-   let mut conteudo = String::new();
-
-   // escreve o prompt.
-   saida.write(dica.as_bytes()).unwrap();
-   // sem guardar no buffer para ir antes do 'stdin'.
-   saida.flush().unwrap();
-
-   // retornando conteudo digitado.
-   entrada.read_line(&mut conteudo).unwrap();
-   // removendo quebra-de-linha.
-   drop(conteudo.pop().unwrap());
-   return conteudo;
-}
 
 /** Macro importante para agilizar na criação
  de um Mapa(HashMap). A forma que tem que ser
@@ -133,18 +108,6 @@ macro_rules! mapa {
 mod tests {
    use super::*;
    use std::str::FromStr;
-   #[test]
-   fn testa_lanca_prompt() {
-      let msg:&str = "digite mensagem-chave('chocolate')";
-      let conteudo = super::lanca_prompt(msg);
-      if cfg!(windows) { 
-         // desconsiderando o recuo.
-         let fim = conteudo.len() - 1;
-         let chocolate = conteudo.get(0..fim).unwrap();
-         assert_eq!(chocolate, "chocolate");
-      } else 
-        { assert_eq!(conteudo, "chocolate"); }
-   }
 
    #[test]
    fn converte_romano() {

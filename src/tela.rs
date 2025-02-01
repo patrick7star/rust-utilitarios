@@ -1,16 +1,13 @@
-
 /*!
   # Tela para desenho
-  Criando toda uma estrutura de dados para 
-  desenhar formas de texto, ou texto numa 
-  tela de terminal. Ela contém tanto o modo 
-  de impressão, como uma formatação para `string`,
-  então o jeito de visualizar-lá ficará à cargo
-  do desenvolvedor implementar.
+  Criando toda uma estrutura de dados para desenhar formas de texto, ou 
+  texto numa tela de terminal. Ela contém tanto o modo de impressão, como 
+  uma formatação para `string`, então o jeito de visualizar-lá ficará à 
+  cargo do desenvolvedor implementar.
 */
 
 // própria lib.:
-use crate::terminal_dimensao::{Largura, Altura, dimensao};
+use crate::terminal::{Largura, Altura, dimensao};
 // bibloteca padrão do Rust:
 use std::string::ToString;
 use super::tela_auxiliar::{Mudanca, Pilha};

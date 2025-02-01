@@ -1,8 +1,7 @@
 /*!
  # Impressão na tela de vários tipos
-  Imprime e cria uma string que cuida
- de, dado uma tupla com valores imprimiveis
- faz tal impressão na forma de escada.
+  Imprime e cria uma string que cuida de, dado uma tupla com valores 
+  imprimiveis faz tal impressão na forma de escada.
 */
 
 // biblioteca do Rust:
@@ -11,7 +10,7 @@ use std::dbg;
 use std::string::String;
 
 // biblioteca externa:
-use crate::terminal_dimensao::*;
+use crate::terminal::*;
 
 
 /* reescrevendo o método do len da string para 
