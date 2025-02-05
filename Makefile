@@ -33,20 +33,23 @@ check:
 # === === ===  === === === === === === === === === === === === === === ====
 #						Iterpolaridade com código C/C++.
 # === === ===  === === === === === === === === === === === === === === ====
-HEADER_C = interpola_c/
+HEADER_C = -Iinterpola/include/
+LIB_C = -Ltarget/debug -linterpolacao
+LIB_II_C = -Linterpola/lib/ -lteste -ltempo -llegivel -lterminal -lm
 
 compila-lib-to-c:
-	cargo rustc --release --package interpola_c \
+	cargo rustc --release --package interpolacao \
 		--crate-type staticlib --crate-type cdylib 
 
 compila-lib-to-c-debug:
-	cargo rustc -p interpola_c --crate-type staticlib --crate-type cdylib 
+	cargo rustc -p interpolacao --crate-type staticlib --crate-type cdylib 
 
-compila-interpola-c-testes:
-	@mkdir -p interpola_c/bin
-	gcc -I$(HEADER_C) -o interpola_c/bin/ut_teste_wn \
-		interpola_c/tests/teste_wn.c \
-		-Ltarget/debug/ -linterpola_c
-	gcc -I$(HEADER_C) -o interpola_c/bin/ut_teste_tree \
-		interpola_c/tests/teste_tree.c \
-		-Ltarget/debug/ -linterpola_c
+compila-interpolacao-testes:
+	@mkdir -p interpola/bin
+	gcc $(HEADER_C) -o interpola/bin/ut_teste_wn \
+		interpola/tests/teste_wn.c $(LIB_C)
+	gcc $(HEADER_C) -o interpola/bin/ut_teste_tree \
+		interpola/tests/teste_tree.c $(LIB_C)
+	gcc $(HEADER_C) -o interpola/bin/ut_teste_tree_config \
+		interpola/tests/teste_tree_config.c $(LIB_C) $(LIB_II_C) 
+		
