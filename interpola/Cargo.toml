@@ -1,0 +1,11 @@
+[package]
+name         = "interpolacao"
+version      = "0.1.0"
+edition      = "2018"
+license      = "mit"
+readme       = "README.md"
+rust-version = "1.40"
+repository   = "https://github.com/patrick7star/rust-utilitarios"
+
+[dependencies]
+utilitarios = { path=".." }
