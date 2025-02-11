@@ -9,6 +9,7 @@ use std::fs::read_dir;
 use std::path::Path;
 use std::io::{Result};
 use std::collections::{VecDeque};
+use std::ffi::{OsStr};
 
 // do próprio caixote:
 use constroi_simbolos::{
@@ -18,7 +19,7 @@ use constroi_simbolos::{
 // partes "externas" deste módulo:
 mod constroi_simbolos;
 mod utilidades;
-use crate::terminal_dimensao::{dimensao, Largura};
+use crate::terminal::{dimensao, Largura};
 pub use utilidades::{listagem, ramifica_caminho};
 
 
@@ -35,10 +36,12 @@ const GALHO_VHV:char = '\u{251c}';
  * implicitar que tal string é mais extensa, continua... */
 static mut JA_COMPUTADO: bool = false;
 static mut LARGURA: usize = u16::MAX as usize;
-// Apelidos para estruturas abaixo:
-type Matriz = Vec<Vec<char>>;
 // Espaço fixo do recuo.
 const RECUO: usize = 3;
+// Apelidos para estruturas abaixo:
+type Matriz = Vec<Vec<char>>;
+type Exclusoes<'b> = Option<VecDeque<&'b str>>;
+type MaxDepth = Option<usize>;
 
 
 /* Escreva toda uma trilha, com ramificações de sub-diretórios e arquivos, 
@@ -325,28 +328,29 @@ pub fn arvore<P>(caminho:&P, mostra_arquivos:bool) -> String
    matriz_para_string(&matriz_arv)
 }
 
-fn molda_caminho_de_acordo(esboco:&mut String, caminho: &Path, depth: usize) 
-  -> Result<()>
+fn molde_do_caminho(esboco:&mut String, caminho: &Path, depth: usize,
+  msg_adicional: Option<&str>) -> Result<()>
 {
    let tabulacao = " ".repeat(depth);
    let nome_do_caminho = caminho.file_name().unwrap().to_str().unwrap();
    let mut formatacao: String;
+   let extra = msg_adicional.unwrap_or("");
 
    if caminho.is_dir() {
       formatacao = format!(
-          "{1}{2}{3}{4} {0}:\n",
-         nome_do_caminho, tabulacao, GALHO_VH,GALHO_H,GALHO_H
+          "{1}{2}{3}{4} {0}: {5}\n",
+         nome_do_caminho, tabulacao, GALHO_VH,GALHO_H,GALHO_H, extra
       );
    } else {
       if caminho.is_symlink() {
          formatacao = format!(
-            "{1}{2}{3}{4} {0}(->)\n",
-            nome_do_caminho, tabulacao, GALHO_VH,GALHO_H,GALHO_H
+            "{1}{2}{3}{4} {0}(->) {5}\n",
+            nome_do_caminho, tabulacao, GALHO_VH,GALHO_H,GALHO_H, extra
          );
       } else {
          formatacao = format!(
-            "{1}{2}{3}{4} \"{0}\"\n",
-            nome_do_caminho, tabulacao, GALHO_VH,GALHO_H,GALHO_H
+            "{1}{2}{3}{4} \"{0}\" {5}\n",
+            nome_do_caminho, tabulacao, GALHO_VH,GALHO_H,GALHO_H, extra
          );
       }
    }
@@ -356,8 +360,25 @@ fn molda_caminho_de_acordo(esboco:&mut String, caminho: &Path, depth: usize)
    Ok(())
 }
 
-type Exclusoes<'b> = Option<VecDeque<&'b str>>;
-type MaxDepth = Option<usize>;
+fn esta_listado(caminho: &Path, exclusoes: &Exclusoes) -> bool
+{
+/* Verifica se o componente final do caminho dado está na lista de exclusão
+ * dada como argumento. */
+   let nome = caminho.file_name().unwrap();
+
+   if let Some(colecao) = exclusoes {
+      let mut iteracao_dos_itens = colecao.iter();
+
+      while let Some(ref item) = iteracao_dos_itens.next() {
+         if nome == OsStr::new(item)
+            { return true; }
+      }
+   }
+   /* Se nada foi modificado, o atual diretório ou arquivo não faz parte 
+    * da lista de exclusão, caso contrário confirma a pergunta que é a 
+    * mesma que o nome da função. */ 
+   false
+}
 
 fn desenha_trilha_personalizado(esboco: &mut String, caminho:&Path, 
   profundidade:&mut usize, limite: MaxDepth, mut padrao: Exclusoes,
@@ -400,24 +421,31 @@ fn desenha_trilha_personalizado(esboco: &mut String, caminho:&Path,
    // Encurtando para caber na tela; melhor a legibilidade do código.
    let visivel = mostra_arquivos;
    let depth = profundidade;
+   let mut msg: Option<&str> = None;
 
    while let Some(Ok(entry)) = entradas_do_diretorio.next() {
       let caminho = entry.path();
 
+      if esta_listado(&caminho, &padrao) && padrao.is_some()
+      /* Sinalizada que diretório ou arquivo foram excluídos. */
+         { msg = Some("\t\t... <pulado>"); } 
+
       if caminho.is_dir() && !caminho.is_symlink() 
       {
-         let _= molda_caminho_de_acordo(esboco, &caminho, *depth);
-          /* Cada chamada recursiva, aumenta a profundidade, quando termina
-           * apenas recua de volta o espaçado. */
-          (*depth) += RECUO; 
-          let _= desenha_trilha_personalizado
-           (esboco, &caminho, depth, limite, padrao.clone(), visivel);
-          (*depth) -= RECUO; 
+         let _= molde_do_caminho(esboco, &caminho, *depth, msg);
+         msg = None; // Restaura para não afeter os demais.
+
+         /* Cada chamada recursiva, aumenta a profundidade, quando termina
+          * apenas recua de volta o espaçado. */
+         (*depth) += RECUO; 
+         let _= desenha_trilha_personalizado
+         (esboco, &caminho, depth, limite, padrao.clone(), visivel);
+         (*depth) -= RECUO; 
 
       } else {
       // se for apenas um arquivo, só registra.
          if mostra_arquivos
-            { let _= molda_caminho_de_acordo(esboco, &caminho, *depth); }
+           { let _= molde_do_caminho(esboco, &caminho, *depth, None); }
       }
    }
    Ok(())
@@ -576,4 +604,18 @@ mod tests {
       let tree_c = arvore_a(&raiz, true, None, Some(lista));
       println!("{tree_c:}");
    }
+
+   #[test]
+   fn exclusao_de_subdirs_na_arvore() {
+      let raiz = Path::new(env!("CCODES")).to_path_buf();
+
+      println!("\nComo excluindo alguns diretórios:");
+      let lista = VecDeque::from(["bin","lib", "build", "tests"]);
+      let tree = arvore_a(&raiz, true, None, Some(lista));
+      println!("{tree:}");
+
+      /* Avaliação manual é: a exclusão é bem sucedida, nenhum dos subdirs
+       * da lista burlou a restriação. */
+   }
 }
+
