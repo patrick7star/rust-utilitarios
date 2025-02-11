@@ -1,6 +1,6 @@
 [package]
 name        = "utilitarios"
-version     = "1.6.1"
+version     = "1.6.2"
 edition     = "2018"
 license     = "mit"
 readme      = "README.md"
@@ -14,5 +14,5 @@ opt-level=0
 opt-level=3
 
 [workspace]
-members = ["interpola_c"]
+members = ["interpola"]
 
