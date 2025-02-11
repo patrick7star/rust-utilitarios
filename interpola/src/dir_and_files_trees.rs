@@ -143,35 +143,60 @@ mod tests {
       }
    }
 
+   
    #[test]
-   fn funcao_de_geracao_de_arvore_personalizada() {
-      let caminho = Path::new(env!("C_CODES"));
-      let caminho_c = caminho.to_str().unwrap().as_ptr() as *const i8;
+   fn geracao_de_arvore_personalizada_maxima_profundidade() {
+      let caminho_c = CString::new(env!("CCODES")).unwrap();
+      let caminho_str = caminho_c.to_str().unwrap();
+      let caminho = Path::new(caminho_str);
+      let caminho_ptr = caminho_str.as_ptr() as *const i8;
+
+      println!("caminho em Rust: {}\n", caminho.display());
+      print!("caminho em C: "); visualiza_raw_string(caminho_ptr);
+      print!("\n\n");
 
       unsafe {
          println!("Acionando limite de profundidade ...");
          let output = gera_arvore_config
-            (caminho_c, true as u8, 2, EXCLUSAO_OFF, 0); 
-         let fmt = CStr::from_ptr(output).to_str().unwrap();
+            (caminho_ptr, true as u8, 2, EXCLUSAO_OFF, 0); 
+         let s = CStr::from_ptr(output);
+         let fmt = &s.to_str().unwrap();
          let n = fmt.len();
          let memoria = Layout::array::<c_char>(n);
 
          println!("{}", fmt);
          dealloc(output as *mut u8, memoria.unwrap());
+      }
+   }
 
-         println!("\nAgora acionando a lista de exclusão ...");
-         let excluir = [
-            CString::new("build").unwrap(),
-            CString::new("bin").unwrap()
-         ];
-         let n = excluir.len() as i32;
-         let lista = [excluir[0].as_ptr(), excluir[1].as_ptr()];
-         let lista_ptr: *const *const c_char; 
+   #[test]
+   fn geracao_de_arvore_personalizada_exclusoes() {
+      let caminho_c = CString::new(env!("CCODES")).unwrap();
+      let caminho_str = caminho_c.to_str().unwrap();
+      let caminho_ptr = caminho_str.as_ptr() as *const i8;
 
-         lista_ptr = lista.as_ptr();
+      let targets = [
+         CString::new("utilitarios-em-c").unwrap(),
+         CString::new("build").unwrap(),
+         CString::new("bin").unwrap(),
+         CString::new("praticas").unwrap(),
+         CString::new("lib").unwrap()
+      ];
+      let minhas_exclusoes = [
+         targets[0].as_ptr() as *const c_char, 
+         targets[1].as_ptr() as *const c_char, 
+         targets[2].as_ptr() as *const c_char,
+         targets[3].as_ptr() as *const c_char, 
+         targets[4].as_ptr() as *const c_char
+      ];
+      let lista_ptr = minhas_exclusoes.as_ptr() as *const *const c_char;
+
+      unsafe {
+         println!("Acionando lista de exclusão ...");
          let output = gera_arvore_config
-            (caminho_c, true as u8, MAX_DEPTH_OFF, lista_ptr, n); 
-         let fmt = CStr::from_ptr(output).to_str().unwrap();
+            (caminho_ptr, true as u8, MAX_DEPTH_OFF, lista_ptr, 5); 
+         let s = CStr::from_ptr(output);
+         let fmt = &s.to_str().unwrap();
          let n = fmt.len();
          let memoria = Layout::array::<c_char>(n);
 
