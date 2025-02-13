@@ -6,6 +6,8 @@ use std::collections::{VecDeque};
 use std::path::{PathBuf};
 use std::ffi::{c_void, c_int, c_char, CString, CStr};
 use std::ptr::{null};
+use std::mem::{size_of};
+use std::convert::{TryInto};
 // Outros módulos do caixote.
 use crate::written_numerals::{aloca_cstring_na_heap};
 
@@ -20,8 +22,10 @@ type c_bool = u8;
 extern "C" {
    fn abort() -> c_void;
    fn perror(s: *const c_char) -> c_void;
-}
 
+   fn AmostraDeFrutas() -> *const *const c_char;
+   fn AmostraDeFrutasSize() -> i32;
+}
 
 /* == == == == == == == == == == == == == == == == == == == == == == == == =
  *                   Funções de Geração Gráfica de Árvore
@@ -66,9 +70,49 @@ pub extern "C" fn gera_arvore(caminho: *const c_char, visivel: c_bool)
    aloca_cstring_na_heap(&result)
 }
 
+use crate::written_numerals::{strlen};
+use std::alloc::{Layout, alloc, dealloc};
+use std::ptr::{copy_nonoverlapping};
+
+fn strcpy(array: *const c_char) -> *mut c_char
+{
+   let t = strlen(array);
+   let sz = size_of::<c_char>();
+   let n = (t + 1) * sz;
+   let modelo = Layout::array::<c_char>(t).unwrap(); 
+   let bloco_de_bytes = unsafe { alloc(modelo) };
+   let mut bloco_ptr = bloco_de_bytes as *mut c_char;
+
+   unsafe { 
+      copy_nonoverlapping(array, bloco_ptr, n); 
+      bloco_de_bytes as *mut c_char
+   }
+}
+
+fn transforma_multiarray_char_to_queue_cstring
+  (mut multiarray: *const *const c_char, n: i32) -> VecDeque<CString>
+{
+/* Tentarei uma abordagem nova. Transformarei em bytes, pegarei cada 
+ * caractére nulo, então copiarei os trechos entre bytes nulos. */
+   let mut fila_de_cstring: VecDeque<CString>; 
+   let mut pointer = multiarray;
+   let sz = size_of::<*const c_char>();
+
+   fila_de_cstring = VecDeque::with_capacity(n as usize);
+   for p in 0..(n as usize) {
+      unsafe { 
+         let copia = strcpy(*pointer);
+         let cstring = CString::from_raw(copia);
+         fila_de_cstring.push_back(cstring); 
+         pointer = multiarray.add(p);
+      }
+   }
+   fila_de_cstring
+}
+
 #[no_mangle]
 pub extern "C" fn gera_arvore_config(caminho: *const c_char, visivel: c_bool,
-  profundidade: c_int, exclusao: *const *const c_char, n: c_int)
+  profundidade: c_int, mut exclusao: *const *const c_char, n: c_int)
   -> *mut c_char
 {
 /* Pega todos parâmetros, tais que são compatíveis com C, então transforma
@@ -86,21 +130,31 @@ pub extern "C" fn gera_arvore_config(caminho: *const c_char, visivel: c_bool,
       else
          { Some(profundidade as usize) }
    };
-   let exclusion = unsafe {
+   let exclusion_cstring = unsafe {
       if exclusao == EXCLUSAO_OFF { None }
       else {
-         let mut fila = VecDeque::new();
-
-         // Transformando 'raw pointers of char' para strings.
-         for _ in 1..=n {
-            let ptr =  *exclusao;
-            let cstr = CStr::from_ptr(ptr); 
-            let str = cstr.to_str().unwrap();
-            fila.push_back(str);
-         }
-         Some(fila)
+         let tMcTqC = transforma_multiarray_char_to_queue_cstring;
+         Some(tMcTqC(exclusao, n))
       }
    };
+   let exclusion_string = {
+      if let Some(mut colecao) = exclusion_cstring {
+         Some(
+            colecao.drain(..)
+            .map(|cstr| cstr.into_string().unwrap())
+            .collect::<VecDeque<String>>()
+         )
+      } else { None}
+   };
+   let exclusion_str = {
+      if let Some(ref colecao) = exclusion_string {
+         Some(
+            colecao.iter().map(|s| s.as_str())
+            .collect::<VecDeque<&str>>()
+          )
+      } else { None }
+   };
+   let exclusion = exclusion_str;
 
    // Para a aplicação se o caminho for inválido.
    // erro_por_caminho_nao_ser_dir(caminho);
@@ -143,7 +197,6 @@ mod tests {
       }
    }
 
-   
    #[test]
    fn geracao_de_arvore_personalizada_maxima_profundidade() {
       let caminho_c = CString::new(env!("CCODES")).unwrap();
@@ -176,18 +229,16 @@ mod tests {
       let caminho_ptr = caminho_str.as_ptr() as *const i8;
 
       let targets = [
-         CString::new("utilitarios-em-c").unwrap(),
-         CString::new("build").unwrap(),
          CString::new("bin").unwrap(),
-         CString::new("praticas").unwrap(),
-         CString::new("lib").unwrap()
+         CString::new("build").unwrap(),
+         CString::new("lib").unwrap(),
+         CString::new("tests").unwrap()
       ];
       let minhas_exclusoes = [
          targets[0].as_ptr() as *const c_char, 
          targets[1].as_ptr() as *const c_char, 
          targets[2].as_ptr() as *const c_char,
          targets[3].as_ptr() as *const c_char, 
-         targets[4].as_ptr() as *const c_char
       ];
       let lista_ptr = minhas_exclusoes.as_ptr() as *const *const c_char;
 
@@ -203,6 +254,9 @@ mod tests {
          println!("{}", fmt);
          dealloc(output as *mut u8, memoria.unwrap());
       }
+
+      /* Observação: com uma avaliação manual, o resultado foi que funcionou
+       * perfeitamente em suprimir todos diretórios listados. */
    }
 
    #[test]
@@ -231,5 +285,34 @@ mod tests {
             ptr = ptr.add(1);
          }
       }
+   }
+
+   fn visualiza_multiarray_char(lista: *const *const c_char, n: i32)
+   {
+      let mut pointer = lista;
+      let sz = size_of::<*const c_char>() as i32;
+
+      for p in 0..n { unsafe {
+         visualiza_raw_string(*pointer as *const i8);
+         pointer = lista.offset(p as isize);
+      }}
+   }
+
+   #[test]
+   fn convertendo_multiarray_char() {
+      let entrada = unsafe {  super::AmostraDeFrutas() };
+      let n: i32 = unsafe { super::AmostraDeFrutasSize() };
+
+      println!("Dados de entrada(veio de um código C):");
+      visualiza_multiarray_char(entrada, n);
+
+      let transforma = transforma_multiarray_char_to_queue_cstring;
+      let saida = transforma(entrada, n);
+
+      println!("\nApós conversão:");
+      for item in saida.iter() { println!("{item:?}"); }
+      /*
+
+      assert_eq!(saida, data); */
    }
 }

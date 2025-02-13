@@ -5,9 +5,9 @@
  */
 
 // Módulos importantes...
-mod dir_and_files_trees;
+mod tree;
 mod written_numerals;
 
 // Exportando apenas o necessário:
 pub use written_numerals::{escrita_por_extenso};
-pub use dir_and_files_trees::{gera_arvore, gera_arvore_config};
+pub use tree::{gera_arvore, gera_arvore_config};
