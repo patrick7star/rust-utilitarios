@@ -9,6 +9,7 @@ pub type Str = &'static str;
 
 pub trait StringExtensao<S> {
    /* maior entre duas strings. */
+   #[allow(dead_code)]
    fn max(&self, string: &S) -> usize; 
 
    /* computa o tamanho de bytes entre strings
@@ -17,6 +18,7 @@ pub trait StringExtensao<S> {
 
    /* converte uma string de um caractére
     * num char. */
+   #[allow(dead_code)]
    fn to_char(&self) -> Result<char, Str>;
 }
 
@@ -30,6 +32,7 @@ impl StringExtensao<&str> for str {
       // retornando o outro.
       else { b }
    }
+
    fn len(&self) -> usize {
       // conta a quantia de acentuações comuns.
       let mut qtd:usize = 0;
@@ -50,6 +53,7 @@ impl StringExtensao<&str> for str {
       let tamanho:usize = self.len();
       return tamanho - qtd;
    }
+
    fn to_char(&self) -> Result<char, Str> {
       let tamanho = self.len();
       if tamanho >= 1 && tamanho <= 4 { 
