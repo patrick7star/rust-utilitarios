@@ -275,14 +275,14 @@ pub fn escreve_por_extenso(numero:u64) -> Result<String, &'static str> {
                escrita += forma_numero.as_str();
                // tira de ambos, pois o próximo pode ser do outro.
                escrita += pesos.remove(indice);
-               drop(pesos_unitario.remove(indice));
+               pesos_unitario.remove(indice);
                // nova quantia de pesos atualizada.
                if indice > 0 { indice -= 1 };
             } else if no_singular {
                escrita += forma_numero.as_str();
                // tira de ambos, pois o próximo pode ser do outro.
                escrita += pesos_unitario.remove(indice);
-               drop(pesos.remove(indice));
+               pesos.remove(indice);
                // nova quantia de pesos atualizada.
                if indice > 0 { indice -= 1 };
             }

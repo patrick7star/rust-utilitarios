@@ -46,7 +46,7 @@ type Dimensao         = (u16, u16);
 pub fn terminal_largura() -> TermLargura {
    // executa comando para obter largura primeiramente ...
    let mut resultado:Vec<u8> = {
-      if cfg!(linux) || cfg!(unix) {
+      if  cfg!(target_os="linux") {
           match Command::new("tput").arg("cols").output() {
              // retorna array de bytes que é o resultado.
              Ok(r) => r.stdout,
@@ -72,7 +72,7 @@ pub fn terminal_largura() -> TermLargura {
             \r\tlinux: {}
             \r\twindows: {}
             \r\tunix: {}",
-            cfg!(linux), cfg!(windows), cfg!(unix)
+            cfg!(target_os="linux"), cfg!(windows), cfg!(unix)
          );
          panic!("ainda não implementado para tal sistema."); 
       }
@@ -84,7 +84,7 @@ pub fn terminal_largura() -> TermLargura {
       resultado.pop();
       resultado.pop();
       resultado.pop();
-   } else if cfg!(linux) || cfg!(unix) 
+   } else if cfg!(unix) 
        { resultado.pop(); }
 
    // transformando em número.
@@ -102,7 +102,7 @@ pub fn terminal_largura() -> TermLargura {
 pub fn terminal_altura() -> TermAltura {
    // executa comando para obter largura primeiramente ...
    let mut resultado: Bytes = {
-      if cfg!(unix) || cfg!(linux) {
+      if cfg!(target_os="linux") {
           match Command::new("tput").arg("lines").output() {
              // retorna array de bytes que é o resultado.
              Ok(r) => dbg!(r.stdout),
@@ -128,7 +128,7 @@ pub fn terminal_altura() -> TermAltura {
             \r\tlinux: {}
             \r\twindows: {}
             \r\tunix: {}",
-            cfg!(linux), cfg!(windows), cfg!(unix)
+            cfg!(target_os="linux"), cfg!(windows), cfg!(unix)
          );
          panic!("ainda não implementado para tal sistema."); }
    };
@@ -139,7 +139,7 @@ pub fn terminal_altura() -> TermAltura {
       resultado.pop();
       resultado.pop();
       resultado.pop();
-   } else if cfg!(linux) || cfg!(unix) 
+   } else if cfg!(target_os="linux")
        { resultado.pop(); }
 
    // transformando em número.
@@ -245,7 +245,7 @@ pub fn lanca_prompt(dica:&str) -> String {
    // retornando conteudo digitado.
    entrada.read_line(&mut conteudo).unwrap();
    // removendo quebra-de-linha.
-   drop(conteudo.pop().unwrap());
+   conteudo.pop().unwrap();
    return conteudo;
 }
 

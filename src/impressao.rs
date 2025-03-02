@@ -460,6 +460,7 @@ mod tests {
       Impressao::impressao_direta(&exemplo);
 
       #[derive(Debug)]
+      #[allow(dead_code)]
       struct Exemplo(char, u8);
 
       let mut exemplo: Vec<Exemplo> = vec![];
