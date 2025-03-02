@@ -7,7 +7,6 @@ use std::path::{PathBuf};
 use std::ffi::{c_void, c_int, c_char, CString, CStr};
 use std::ptr::{null};
 use std::mem::{size_of};
-use std::convert::{TryInto};
 // Outros módulos do caixote.
 use crate::written_numerals::{aloca_cstring_na_heap};
 
@@ -71,7 +70,7 @@ pub extern "C" fn gera_arvore(caminho: *const c_char, visivel: c_bool)
 }
 
 use crate::written_numerals::{strlen};
-use std::alloc::{Layout, alloc, dealloc};
+use std::alloc::{Layout, alloc};
 use std::ptr::{copy_nonoverlapping};
 
 fn strcpy(array: *const c_char) -> *mut c_char
@@ -81,7 +80,7 @@ fn strcpy(array: *const c_char) -> *mut c_char
    let n = (t + 1) * sz;
    let modelo = Layout::array::<c_char>(t).unwrap(); 
    let bloco_de_bytes = unsafe { alloc(modelo) };
-   let mut bloco_ptr = bloco_de_bytes as *mut c_char;
+   let bloco_ptr = bloco_de_bytes as *mut c_char;
 
    unsafe { 
       copy_nonoverlapping(array, bloco_ptr, n); 
@@ -90,13 +89,12 @@ fn strcpy(array: *const c_char) -> *mut c_char
 }
 
 fn transforma_multiarray_char_to_queue_cstring
-  (mut multiarray: *const *const c_char, n: i32) -> VecDeque<CString>
+  (multiarray: *const *const c_char, n: i32) -> VecDeque<CString>
 {
 /* Tentarei uma abordagem nova. Transformarei em bytes, pegarei cada 
  * caractére nulo, então copiarei os trechos entre bytes nulos. */
    let mut fila_de_cstring: VecDeque<CString>; 
    let mut pointer = multiarray;
-   let sz = size_of::<*const c_char>();
 
    fila_de_cstring = VecDeque::with_capacity(n as usize);
    for p in 0..(n as usize) {
@@ -112,7 +110,7 @@ fn transforma_multiarray_char_to_queue_cstring
 
 #[no_mangle]
 pub extern "C" fn gera_arvore_config(caminho: *const c_char, visivel: c_bool,
-  profundidade: c_int, mut exclusao: *const *const c_char, n: c_int)
+  profundidade: c_int, exclusao: *const *const c_char, n: c_int)
   -> *mut c_char
 {
 /* Pega todos parâmetros, tais que são compatíveis com C, então transforma
@@ -130,9 +128,10 @@ pub extern "C" fn gera_arvore_config(caminho: *const c_char, visivel: c_bool,
       else
          { Some(profundidade as usize) }
    };
-   let exclusion_cstring = unsafe {
+   let exclusion_cstring = {
       if exclusao == EXCLUSAO_OFF { None }
       else {
+         #[allow(non_snake_case)]
          let tMcTqC = transforma_multiarray_char_to_queue_cstring;
          Some(tMcTqC(exclusao, n))
       }

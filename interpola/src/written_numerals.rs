@@ -12,7 +12,7 @@ const STRING_NULA: &'static str = "\0\0\0";
 /* == == == == == == == == == == == == == == == == == == == == == == == == =
  *                         Utilitários Genéricos
  * == == == == == == == == == == == == == == == == == == == == == == == = */
-fn strlen(mut pointer: *const c_char) -> usize {
+pub fn strlen(mut pointer: *const c_char) -> usize {
 /* Igual o 'strlen' do C, retorna o número de bytes, sem contar o caractére
  * nulo. */
    let mut contador = 0;
