@@ -1,6 +1,6 @@
 [package]
 name        = "utilitarios"
-version     = "1.6.2"
+version     = "1.6.3"
 edition     = "2018"
 license     = "mit"
 readme      = "README.md"
