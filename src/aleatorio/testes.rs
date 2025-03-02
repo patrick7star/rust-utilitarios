@@ -32,7 +32,7 @@ impl Pool {
          0..=10 => {
             let chave: u8 = qtd_de_algs(n) as u8;
             match self.qtd_e_media.get_mut(&chave) {
-               Some(mut tupla) =>
+               Some(tupla) =>
                   { tupla.0 += 1; tupla.1 += t; }
                None => ()
             };
