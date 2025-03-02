@@ -88,7 +88,7 @@ pub fn ramifica_caminho(caminho: &str) -> String {
 
 
 #[cfg(test)]
-#[cfg(target_os="unix")]
+#[cfg(target_os="linux")]
 mod tests {
    // pegando tudo acima...
    use super::*;
