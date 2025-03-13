@@ -13,19 +13,26 @@
 mod fracao_seg;
 mod aproxima;
 mod generico;
+// Biblioteca padrão do Rust(apenas o necessário).
+use std::{
+   iter::{FromIterator}, collections::{HashMap}, time::{Duration},
+};
 // reexportando certas funções.
 pub use aproxima::tempo_detalhado;
 pub use generico::tempo_humano;
 pub use fracao_seg::tempo_fracao;
 
+// Apelidos pra uma 'lookup table'.
+type PesosTempo<'a> = HashMap<&'a str, f32>;
+
 // múltiplos de tempo(equivalente em seg).
-const MINUTO:f32   = 60.0;             // segundos por minuto.
-const HORA: f32    = MINUTO * MINUTO;  // segundos por hora.
-const DIA: f32     = 24.0 * HORA;      // segundos por dia.
-const MES: f32     = 30.0 * DIA;       // segundos/mês.
-const ANO: f32     = 365.0 * DIA;      // segundos/ano.
-const DECADA: f32  = 10.0 * ANO;       // segundos/década.
-const SECULO: f32  = 10.0 * DECADA;    // segundos por século.
+const MINUTO:  f32 = 60.0;             // segundos por minuto.
+const HORA:    f32 = MINUTO * MINUTO;  // segundos por hora.
+const DIA:     f32 = 24.0 * HORA;      // segundos por dia.
+const MES:     f32 = 30.0 * DIA;       // segundos/mês.
+const ANO:     f32 = 365.0 * DIA;      // segundos/ano.
+const DECADA:  f32 = 10.0 * ANO;       // segundos/década.
+const SECULO:  f32 = 10.0 * DECADA;    // segundos por século.
 const MILENIO: f32 = 10.0 * SECULO;    // seg/milênio.
 
 // múltiplos de tamanho(equivalente em bytes).
@@ -40,10 +47,11 @@ const PETA: u64 = 2_u64.pow(50);  // bytes por PB.
  legível. */
 pub fn tempo(segundos:u64, contracao:bool) -> String {
    // renomeação da variável a comparar e computar.
-   let t:f32 = segundos as f32;
-   let calculo:f32;
-   let sigla:&str;
-   if t >= MINUTO && t < HORA {
+   let t: f32 = segundos as f32;
+   let calculo: f32;
+   let sigla: &str;
+
+   if (MINUTO..HORA).contains(&t) {
       sigla = if contracao {"min"} else {"minutos" };
       calculo = t / MINUTO;
    }
@@ -140,6 +148,49 @@ pub fn valor_legivel(qtd: usize) -> String {
 }
 
 
+/** Está função processa string com representação de tempo, seja qual for 
+ * o múltiplo represetando-a. A formatação básica do input pra funcionar é,
+ * valor númerico(seja decimal ou apenas um inteiro), e o pesso representando
+ * tal, se não houver um, a primeira parte, sendo esta a numerica, apenas é
+ * considerada como segundos. */
+pub fn interpleta_string_de_tempo(input: &str) -> Option<Duration> {
+   let mut valor = String::new();
+   let mut peso = String::new();
+   #[allow(non_snake_case)]
+   let LOOKUP_TABLE: PesosTempo = HashMap::from_iter([
+      ("segundo", 1.0), ("minuto", MINUTO), ("hora", HORA), ("dia", DIA),
+      ("mes", MES), ("ano", ANO), 
+      // Versão mais curta das formas acima.
+      ("seg", 1.0), ("min", MINUTO), ("h", HORA), ("d", DIA),
+      ("m", MES), ("a", ANO), 
+      // Versão Plural dos pesos acimas.
+      ("segundos", 1.0), ("minutos", MINUTO), ("horas", HORA), 
+      ("dias", DIA), ("meses", MES), ("anos", ANO), 
+      // Versão acentuada.
+      ("mês", MES)
+   ]);
+
+   // Separa à parte númerica da parte textual.
+   for simbolo in input.chars() 
+   {
+      if simbolo.is_ascii_digit() || simbolo == '.'
+         { valor.push(simbolo); }
+      else if simbolo.is_alphabetic()
+         { peso.push(simbolo); }
+   }
+
+   if let Ok(valor_real) = valor.parse::<f32>() 
+   {
+      if peso.is_empty()
+         { return Some(Duration::from_secs_f32(valor_real)); }
+
+      if let Some(peso_real) = LOOKUP_TABLE.get(peso.as_str()) 
+         { return Some(Duration::from_secs_f32(valor_real * peso_real)); }
+   }
+   None
+}
+
+
 #[cfg(test)]
 mod tests {
    use crate::legivel::*;
@@ -222,4 +273,39 @@ mod tests {
          Some(String::from("1 milênios 5 séculos"))
       );
    } 
+
+   #[test]
+   #[allow(non_snake_case)]
+   fn aplicacao_da_interpletacao_de_strings() {
+      let inputs = [
+         "12.3 minutos", "30 horas", "53 segundos", "12 meses", 
+         "1 mês", 
+      ];
+      let inputs_a = [
+         "8.7 min", "8.7min", "123seg", "123 seg", "8a", "8 a", "25.4 m",
+         "25.4m", "87.3d", "87.3 d"
+      ];
+      let inputs_b = [
+         "24 minutos", "78.1segundos", "10 anos", "23meses", "14dias", 
+         "31 horas"
+      ];
+
+      println!("\nExemplos de amostras bem formais ...");
+      for In in inputs { 
+         let Out = interpleta_string_de_tempo(In);
+         println!("\t- {} ===> {:?}", In, Out); 
+      }
+
+      println!("\nExemplos de amostras contracionadas e espaçadas ...");
+      for In in inputs_a { 
+         let Out = interpleta_string_de_tempo(In);
+         println!("\t- {} ===> {:?}", In, Out); 
+      }
+
+      println!("\nExemplos de amostras com pesos completos no plural ...");
+      for In in inputs_b { 
+         let Out = interpleta_string_de_tempo(In);
+         println!("\t- {} ===> {:?}", In, Out); 
+      }
+   }
 }
