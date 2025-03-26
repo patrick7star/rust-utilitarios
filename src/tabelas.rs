@@ -47,4 +47,33 @@ mod tests {
 
       assert!(true);
    }
+
+   #[test]
+   fn verificando_importacao_de_macros() {
+      let col_a = crate::cria_coluna!(
+         "Animais de fazenda": [
+            "coelho", "galinha", "ovelha", "boi", "vaca", "galo",
+            "cachorro", "porco", "cadumongo", "avestruz"
+         ]
+      );
+      let col_b = crate::cria_coluna!(
+         "Suas cores": [
+            "branco", "amarela-queimado", "branco", "preto", "preto e branco"
+            , "azul-escuro", "caramelo", "rosa", "marron"
+         ]
+      );
+      let mut table = Tabela::nova(true);
+
+      println!("colunas: {}\n{}", col_a, col_b);
+      table += col_a;
+      table += col_b;
+      println!("table:\n{}", table);
+
+      let table_a = crate::cria_tabela!(
+         "Itens": [ "copo", "relógio", "livro", "cadeado", "cesto" ];
+         "Preços(RS)": [5.12, 34.2, 13.4, 8.99];
+         "estoque(unidades)": [5, 9, 28, 50, 30]
+      );
+      println!("{table_a:}");
+   }
 }
