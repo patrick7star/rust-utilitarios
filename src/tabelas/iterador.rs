@@ -1,31 +1,22 @@
+/* Colocando o iterador aqui por motivo simplesmente... de refatoração. Não 
+ * só toma muito espaço no outro arquivo, como também tem funções auxiliares
+ * que fazem o mesmo, sem falar nos testes unitários. */
 
-
-/* Colocando o iterador aqui por 
- * motivo simplesmente... de
- * refatoração. Não só toma muito
- * espaço no outro arquivo, como também
- * tem funções auxiliares que fazem 
- * o mesmo, sem falar nos testes unitários.
- */
-
-// biblioteca padrão:
+// Biblioteca padrão:
 use std::fmt::Display;
-// restante do módulo:
-use super::objeto::Coluna;
+// Restante do módulo:
+use crate::tabelas::objeto::Coluna;
 
 
 pub struct ColunaStr {
-   //forma_padrao: String,
-   /* quantia padrão de linhas da Coluna,
-    * ou uma nova preenchido com campos
+   /* Quantia padrão de linhas da Coluna, ou uma nova preenchido com campos
     * em branco. */
    pub altura: Option<usize>,
-   // células e cabeçalho mais espaços vázios.
+   // Células e cabeçalho mais espaços vázios.
    iterador: Vec<String>,
-   // posição do atual item no iterador.
+   // Posição do atual item no iterador.
    posicao: usize,
-   // largura da ColunaStr, que é a mesma
-   // da Coluna passada na instância.
+   // Largura da ColunaStr, que é a mesma da Coluna passada na instância.
    pub largura: usize
 }
 
@@ -48,67 +39,51 @@ fn campo_vago(comprimento: usize) -> String {
 }
 
 impl ColunaStr {
-   // método construtor:
-   pub fn nova<X>(coluna: Coluna<X>, aumento: Option<usize>) 
-   -> Self 
+   pub fn nova<X>(coluna: Coluna<X>, aumento: Option<usize>) -> Self 
       where X: Display + Clone 
    {
       let mut iterador: Vec<String> = Vec::new();
-      // decompondo sua forma de string em linhas...
-      //let versao_str = format!("{}", coluna.clone());
+      // Decompondo sua forma de string em linhas...
       for linha in coluna.to_string().lines() 
-      //for linha in versao_str.lines() 
          { iterador.push(linha.to_string()); }
 
-      match aumento {
-         Some(valor) => {
-            let lrg = coluna.largura();
-            let cv = campo_vago(lrg);
-            let diferenca = abs(valor, coluna.linhas());
+      if let Some(valor) = aumento {
+         let lrg = coluna.largura();
+         let cv = campo_vago(lrg);
+         let diferenca = abs(valor, coluna.linhas());
 
-            for _ in 1..=diferenca 
-               { iterador.push(cv.clone()); }
-         } None => ()
-      };
-
-      Self {
-         //forma_padrao, 
-         altura: aumento, 
-         iterador, posicao: 0, 
-         largura: coluna.largura()
+         for _ in 1..=diferenca 
+            { iterador.push(cv.clone()); }
       }
+
+      Self {altura: aumento, iterador, posicao:0, largura: coluna.largura()}
    }
    // atualiza a quantia de campos vázios da ColunaStr.
    pub fn atualiza(&mut self, aumento: Option<usize>) {
-      match aumento {
-         Some(valor) => {
-            let l = self.largura;
-            let ql = match self.altura {
-               Some(valor) => valor,
-               None => 0
-            };
-            let cv = campo_vago(l);
-            let diferenca = valor-ql;
-            // adicionando a 'diferença' ...
-            for _ in 1..=diferenca 
-               { self.iterador.push(cv.clone()); }
-            // resetando qualquer iteração.
-            self.posicao = 0;
-         } None => ()
-      };
+      if let Some(valor) = aumento {
+         let l = self.largura;
+         let ql = self.altura.unwrap_or(0);
+         let cv = campo_vago(l);
+         let diferenca = valor-ql;
+
+         // Adicionando a 'diferença' ...
+         for _ in 1..=diferenca 
+            { self.iterador.push(cv.clone()); }
+         // Resetando qualquer iteração.
+         self.posicao = 0;
+      }
    }
 }
 
-// fazendo do objeto um iterador ...
 impl Iterator for ColunaStr {
    type Item = String;
 
-   // retorna a próxima célula string da Coluna.
    fn next(&mut self) -> Option<Self::Item> {
       if self.posicao <= self.iterador.len()-1 {
          self.posicao += 1;
          Some(self.iterador[self.posicao-1].clone())
-      } else { self.posicao = 0; None }
+      } else 
+         { self.posicao = 0; None }
    }
 }
 

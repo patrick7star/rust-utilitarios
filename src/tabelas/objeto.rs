@@ -1,14 +1,10 @@
-
-/** Colocando a coluna aqui, novamente,
-por motivos de organização. Tudo fica
-no mesmo arquivo dificulta "exponencialmente"
-o processo de releitura do que já foi
-codificado.
-*/
+/** Colocando a coluna aqui, novamente, por motivos de organização. Tudo 
+ * fica no mesmo arquivo dificulta "exponencialmente" o processo de 
+ * releitura do que já foi codificado. */
 
 // biblioteca do Rust:
 use std::fmt::{Formatter, Display, Result as Resultado};
-use super::StrExt;
+use super::string_complemento::{StringExtensao as StrExt};
 
 // Abreviação por motivo de legibilidade.
 type Str = &'static str;

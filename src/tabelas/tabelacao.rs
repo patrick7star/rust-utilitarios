@@ -1,39 +1,33 @@
+/* Reescrita do código de tabelar tais colunas, baseado no código similar 
+ * feito em Python. Se ficar mais simples que o atual, este será substituído 
+ * pelo novo. */
 
-/* Reescrita do código de tabelar
- * tais colunas, baseado no código
- * similar feito em Python. Se 
- * ficar mais simples que o atual,
- * este será substituído pelo novo.
- */
-
-// biblioteca padrão do Rust:
+// Biblioteca padrão do Rust:
 use std::string::ToString;
-use std::fmt::{
-   Display,  Formatter,
-   Result as Resultado
-};
+use std::fmt::{ Display,  Formatter, Result as Resultado };
 use std::collections::VecDeque;
-// extensão do módulo:
-use super::{
-   objeto::Coluna, StrExt,
+// Extensão do módulo:
+use crate::tabelas::{
+   string_complemento::{StringExtensao as StrExt},
+   objeto::Coluna,
    revestimento::reveste,
    iterador::ColunaStr
 };
-// do próprio caixote.
+// Módulos e funções externos ao módulo, porém ainda no mesmo projeto.
 use crate::terminal::{Largura, terminal_largura};
 
-// componente que lacra a tabela.
-pub const BARRA: char = '#';
-pub const ESPACO: &'static str = ">";
-pub const RECUO:usize  = 4;
+// Componente que lacra a tabela.
+pub const BARRA: char           = '#';
+pub const ESPACO: &'static str  = ">";
+pub const RECUO:usize           = 4;
+// Apelido de Fila de String pra só 'fila', já que é a única trabalhada aqui.
 type Fila = VecDeque<String>;
 
 
-/** Objeto que serve na visualização da tabela.
- Ele se cria concatena várias `Colunas` produzidas,
- sejam elas de tamanhos diferentes, ou tipos, este 
- é o responsável pelo formato da `Tabela`, assim
- como sua visualização, claro do modo desejado.  */
+/** Objeto que serve na visualização da tabela. Ele se cria concatena várias
+ * `Colunas` produzidas, sejam elas de tamanhos diferentes, ou tipos, este 
+ * é o responsável pelo formato da `Tabela`, assim como sua visualização, 
+ * claro do modo desejado.  */
 pub struct Tabela {
    // lista das strings já consertadas das Colunas.
    lista: Vec<ColunaStr>,
@@ -53,39 +47,10 @@ pub struct Tabela {
    primeira: bool,
 }
 
+/* Métodos auxiliares na construção da tabela. Todos eles são privados, e
+ * podem ser chamados apenas dentro de outros métodos privados ou públicos. 
+ */
 impl Tabela {
-   // método construtor:
-   pub fn nova(maximo_de_tela: bool) -> Self {
-      Self { 
-         lista: Vec::new(), 
-         preenche_tela: maximo_de_tela,
-         tabela_str: String::new(),
-         maior_ql: None, 
-         primeira: maximo_de_tela
-      }
-   }
-   // adiciona nova Coluna passada.
-   pub fn adiciona<Y>(&mut self, coluna: Coluna<Y>) 
-      where Y: Display + Clone 
-   {
-      // atualizando primeiramente altura da tabela.
-      match self.maior_ql {
-         Some(h) => {
-            if h < coluna.linhas()
-               { self.maior_ql = Some(coluna.linhas()); }
-         } None => 
-               { self.maior_ql = Some(coluna.linhas()); }
-      };
-      // transforma a mesma numa versão textual.
-      let aumento: Option<usize>;
-      if self.primeira { aumento = None; }
-      else { aumento = self.maior_ql; }
-      let coluna_str = ColunaStr::nova(coluna.clone(), aumento);
-      // insere na memória da tabela.
-      self.lista.push(coluna_str);
-      // refaz desenho da tabela.
-      self.desenha_tabela();
-   }
    // método auxiliar para construção da tabela como string.
    fn desenha_tabela(&mut self) {
       // limpa string antiga.
@@ -279,6 +244,49 @@ impl Tabela {
          }
          self.tabela_str = auxiliar;
       }
+   }
+}
+
+/* Os métodos públicos foram separados neste "escopo", por motivos de 
+ * organização, nem sequer é um escopo separado abstratamente, apesar de na
+ * codificação parace ser. */
+impl Tabela {
+   /** Construtor do tipo de dado. O parâmetro máximo, diz que tal formatação
+    * deve respeitar/ou não a atual dimensão do terminal. */
+   pub fn nova(maximo_de_tela: bool) -> Self {
+      Self { 
+         lista: Vec::new(), 
+         preenche_tela: maximo_de_tela,
+         tabela_str: String::new(),
+         maior_ql: None, 
+         primeira: maximo_de_tela
+      }
+   }
+
+   /** Pega uma nova coluna, e então concatena na próxima parte da tabela.
+    * O conflito com o tamanho da tela, é essencialmente responsabilidade 
+    * do chamador de tal função.
+    */
+   pub fn adiciona<Y>(&mut self, coluna: Coluna<Y>) 
+      where Y: Display + Clone 
+   {
+      // atualizando primeiramente altura da tabela.
+      match self.maior_ql {
+         Some(h) => {
+            if h < coluna.linhas()
+               { self.maior_ql = Some(coluna.linhas()); }
+         } None => 
+               { self.maior_ql = Some(coluna.linhas()); }
+      };
+      // transforma a mesma numa versão textual.
+      let aumento: Option<usize>;
+      if self.primeira { aumento = None; }
+      else { aumento = self.maior_ql; }
+      let coluna_str = ColunaStr::nova(coluna.clone(), aumento);
+      // insere na memória da tabela.
+      self.lista.push(coluna_str);
+      // refaz desenho da tabela.
+      self.desenha_tabela();
    }
 }
 

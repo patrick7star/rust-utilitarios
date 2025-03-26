@@ -1,10 +1,6 @@
-
-/* Para princípios de organização
- * todos trait e implementação padrão,
- * referente a string serão colocados
- * aqui.
+/* Para princípios de organização todos trait e implementação padrão,
+ * referente a string serão colocados aqui.
  */
-
 pub type Str = &'static str;
 
 pub trait StringExtensao<S> {
