@@ -6,6 +6,7 @@
 use std::string::ToString;
 use std::fmt::{ Display,  Formatter, Result as Resultado };
 use std::collections::VecDeque;
+use std::ops::{AddAssign};
 // Extensão do módulo:
 use crate::tabelas::{
    string_complemento::{StringExtensao as StrExt},
@@ -29,21 +30,19 @@ type Fila = VecDeque<String>;
  * é o responsável pelo formato da `Tabela`, assim como sua visualização, 
  * claro do modo desejado.  */
 pub struct Tabela {
-   // lista das strings já consertadas das Colunas.
+   // Lista das strings já consertadas das Colunas.
    lista: Vec<ColunaStr>,
-   /* diz se quer que use o máximo da 
-    * largura do atual terminal preenchendo
-    * com o restante da tabela, ao invés de
-    * fazer um contínuo "pergaminho". */
+   /* Diz se quer que use o máximo da largura do atual terminal preenchendo
+    * com o restante da tabela, ao invés de fazer um contínuo "pergaminho". 
+    */
    preenche_tela: bool,
-   /* Salva construção inicialmente feita, pois
-    * o processo de faze-lô é sempre custoso, 
-    * então não dá para ficar reconstruindo 
-    * em cada chamada.  */
+   /* Salva construção inicialmente feita, pois o processo de faze-lô é 
+    * sempre custoso, então não dá para ficar reconstruindo em cada chamada. 
+    */
    tabela_str: String,
-   // maior quantia de linhas até agora da tabela.
+   // Maior quantia de linhas até agora da tabela.
    maior_ql: Option<usize>,
-   // se é a primeira inserção.
+   // Se é a primeira inserção.
    primeira: bool,
 }
 
@@ -298,6 +297,16 @@ impl Display for Tabela {
 fn cria_barra(string:&str) -> String {
    let comprimento = StrExt::len(string);
    return BARRA.to_string().repeat(comprimento).to_string();
+}
+
+/* Fazendo da concatenação algo mais intuitivo por meio da implementação de
+ * operadores no tipo. */
+impl<T: Display + Clone> AddAssign<Coluna<T>> for Tabela 
+{
+   fn add_assign(&mut self, col: Coluna<T>) 
+   /* Implementação simples, apenas utiliza o método que já faz isso, então
+    * passa o argumento pra ele. */
+      { self.adiciona(col); }
 }
 
 
