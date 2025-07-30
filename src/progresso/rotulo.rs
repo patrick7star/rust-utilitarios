@@ -1,9 +1,7 @@
-/**!
-   O progresso simples que há, que trabalha em 'tamanho dos dados' e 
- 'quantia total', sem falar que retorna muitas strings por microsegundo, 
- também há algumas que mostram os rótulos. Vamos mesclar tudo numa única 
- função.
- */
+/**! O progresso simples que há, que trabalha em 'tamanho dos dados' e 
+ * 'quantia total', sem falar que retorna muitas strings por microsegundo, 
+ * também há algumas que mostram os rótulos. Vamos mesclar tudo numa única 
+ * função. */
 
 // Biblioteca padrão do Rust:
 use std::fmt::{ Display, Formatter, Result as Result_fmt };
@@ -39,16 +37,10 @@ const TEXTO_MAX: usize = 40;
  */
 pub enum Formato { Dado, Quantia, Detalhe }
 
-/** 
- progresso de dados mais para saídas
- simples, com argumentos opcionais,
- que depedendo da sua inclusão habilitam
- ou não configurações.
- Portanto, tal estrutura na verdade não
- é simples em opções adicionais e saídas,
- simples apenas que simula a primeira 
- barra de progresso feita.
- */
+/** Progresso de dados mais para saídas simples, com argumentos opcionais, 
+ * que depedendo da sua inclusão habilitam ou não configurações. Portanto, 
+ * tal estrutura na verdade não é simples em opções adicionais e saídas, 
+ * simples apenas que simula a primeira barra de progresso feita. */
 pub struct ProgressoSimples<'b> {
    // rótulo de uma string a girá, é opcional.
    rotulo: Option<Logo<'b>>,
@@ -204,8 +196,8 @@ fn progresso_data(atual: usize, total: usize) -> String {
  * contraído para se ajustar, ou virar um "slogan" dinâmico que mostra toda 
  * legenda, mas para isso move-se.
  */
-pub fn temporizador_progresso(rotulo:&str, tempo_atual:Duration, 
- tempo_total: Duration) -> String 
+pub fn temporizador_progresso
+  (rotulo:&str, tempo_atual:Duration, tempo_total: Duration) -> String 
 {
    // total baseado na validade dada.
    let total: usize = tempo_total.as_secs() as usize;
@@ -290,7 +282,7 @@ mod tests {
       );
       // rótulo dinâmico.
       let r = Logo::novo(mensagem).unwrap();
-      let total: u64 = 30;
+      let total = 30;
       let mut instancias = vec![
          PS::novo(total, Some(r.clone()), Formato::Quantia),
          PS::novo(total, Some(r.clone()), Formato::Detalhe),
