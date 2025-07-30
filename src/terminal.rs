@@ -249,6 +249,7 @@ pub fn lanca_prompt(dica:&str) -> String {
    return conteudo;
 }
 
+#[cfg(target_os="linux")]
 #[cfg(test)]
 #[allow(non_snake_case)]
 mod tests {
@@ -289,7 +290,28 @@ mod tests {
    }
 
    #[test]
-   #[cfg(target_os="windows")]
+   fn testa_lanca_prompt() {
+      let msg:&str = "digite mensagem-chave('chocolate')";
+      let conteudo = super::lanca_prompt(msg);
+      if cfg!(windows) { 
+         // desconsiderando o recuo.
+         let fim = conteudo.len() - 1;
+         let chocolate = conteudo.get(0..fim).unwrap();
+         assert_eq!(chocolate, "chocolate");
+      } else 
+        { assert_eq!(conteudo, "chocolate"); }
+   }
+}
+
+#[cfg(test)]
+#[cfg(target_os="windows")]
+#[allow(non_snake_case)]
+mod tests {
+/* Bloco de teste que apenas é compilado para plataformas Windows.*/
+   use super::*;
+   use std::time::{Instant, Duration};
+
+   #[test]
    fn funcaoNativaDoOS() {
       let clock = Instant::now();
       let dim = terminal_dimensao();
@@ -308,7 +330,7 @@ mod tests {
     }
 
    #[test]
-   #[cfg(target_os="windows")]
+   #[ignore="Preciso de iteração com o GUI"]
    fn valorRecuperadoEmTempoDeExecucao() {
        println!("Linhas x Colunas:");
         for _ in 1..=27 {
@@ -317,17 +339,4 @@ mod tests {
             std::thread::sleep(Duration::from_millis(800));
         }
     }
-
-   #[test]
-   fn testa_lanca_prompt() {
-      let msg:&str = "digite mensagem-chave('chocolate')";
-      let conteudo = super::lanca_prompt(msg);
-      if cfg!(windows) { 
-         // desconsiderando o recuo.
-         let fim = conteudo.len() - 1;
-         let chocolate = conteudo.get(0..fim).unwrap();
-         assert_eq!(chocolate, "chocolate");
-      } else 
-        { assert_eq!(conteudo, "chocolate"); }
-   }
 }
