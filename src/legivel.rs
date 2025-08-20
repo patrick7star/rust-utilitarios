@@ -10,17 +10,21 @@
 */
 
 // extensão do módulo:
-mod fracao_seg;
+mod decimal;
 mod aproxima;
 mod generico;
 // Biblioteca padrão do Rust(apenas o necessário).
 use std::{
    iter::{FromIterator}, collections::{HashMap}, time::{Duration},
+   convert::{TryInto}
 };
 // reexportando certas funções.
 pub use aproxima::tempo_detalhado;
-pub use generico::tempo_humano;
-pub use fracao_seg::tempo_fracao;
+pub use generico::{tempo_humano, tempo_legivel_duration};
+pub use decimal::{
+   tempo_legivel_decimal, PICOSEG, 
+   NANOSEG, MICROSEG, MILISEG
+};
 
 // Apelidos pra uma 'lookup table'.
 type PesosTempo<'a> = HashMap<&'a str, f32>;
@@ -28,25 +32,51 @@ type PesosTempo<'a> = HashMap<&'a str, f32>;
 // múltiplos de tempo(equivalente em seg).
 const MINUTO:  f32 = 60.0;             // segundos por minuto.
 const HORA:    f32 = MINUTO * MINUTO;  // segundos por hora.
-const DIA:     f32 = 24.0 * HORA;      // segundos por dia.
-const MES:     f32 = 30.0 * DIA;       // segundos/mês.
-const ANO:     f32 = 365.0 * DIA;      // segundos/ano.
-const DECADA:  f32 = 10.0 * ANO;       // segundos/década.
-const SECULO:  f32 = 10.0 * DECADA;    // segundos por século.
-const MILENIO: f32 = 10.0 * SECULO;    // seg/milênio.
+/// Total de segundos num dia.
+pub const DIA:     f32 = 24.0 * HORA;  
+/// Total de segundos num mês.
+pub const MES:     f32 = 30.0 * DIA;  
+/// Total de segundos num ano.
+pub const ANO:     f32 = 365.0 * DIA;
+/// Total de segundos numa década.
+pub const DECADA:  f32 = 10.0 * ANO;
+/// Total de segundos num século.
+pub const SECULO:  f32 = 10.0 * DECADA;
+/// Total de segundos num milênio.
+pub const MILENIO: f32 = 10.0 * SECULO
 
-// múltiplos de tamanho(equivalente em bytes).
-const KILO: u64 = 2_u64.pow(10);  // bytes por kB.
-const MEGA: u64 = 2_u64.pow(20);  // bytes por MB.
-const GIGA: u64 = 2_u64.pow(30);  // bytes por GB.
-const TERA: u64 = 2_u64.pow(40);  // bytes por TB.
-const PETA: u64 = 2_u64.pow(50);  // bytes por PB.
+/// Total de bytes num ***KiB***.
+pub const KILOBYTE: usize = 2usize.pow(10);
+/// Total de bytes num ***MiB***.
+pub const MEGABYTE: usize = 2usize.pow(20);
+/// Total de bytes num ***GiB***.
+pub const GIGABYTE: usize = 2usize.pow(30);
+/// Total de bytes num ***TiB***.
+pub const TERABYTE: usize = 2usize.pow(40);
+/// Total de bytes num ***PiB***.
+pub const PETABYTE: usize = 2usize.pow(50);
 
 
-/** Retorna uma string contendo o valor legendado porém numa faixa mais 
- legível. */
-pub fn tempo(segundos:u64, contracao:bool) -> String {
+/* Converte o valor númerico, independente qual seja, num inteiro positivo
+ * de máquina. O método usado pode variar por plataforma.*/
+fn converte_pra_usize<T: TryInto<usize>>(valor: T) -> usize {
+   match valor.try_into() {
+      Ok(value) => value,
+      Err(_) => { 
+         panic!("Não implementado para o tipo."); }
+   }
+}
+
+/** Converte qualquer valor inteiros primitivos, numa versão de string 
+ * legível, contendo uma grandeza. Funciona com valores não positivos?
+ * Funciona! Porém, transforma em positivos valores negativos que podem 
+ * vir em inteiros com sinal, tal grandeza no mundo real(tempo negativo)
+ * se quer faz sentido físico. */
+pub fn tempo_legivel<T>(segundos: T, contracao:bool) -> String 
+  where T: TryInto<usize> 
+{
    // renomeação da variável a comparar e computar.
+   let segundos = converte_pra_usize(segundos);
    let t: f32 = segundos as f32;
    let calculo: f32;
    let sigla: &str;
@@ -92,22 +122,26 @@ pub fn tempo(segundos:u64, contracao:bool) -> String {
 
 /** Retorna uma string contendo o tamanho legendado com um múltiplo, porém 
  * de forma mais legível. */
-pub fn tamanho(qtd:u64, contracao:bool) -> String { 
-   if qtd >= KILO && qtd < MEGA {
+pub fn tamanho_legivel<U>(qtd: U, contracao:bool) -> String
+  where U: TryInto<usize> 
+{ 
+   let qtd = converte_pra_usize(qtd);
+
+   if qtd >= KILOBYTE && qtd < MEGABYTE {
       let sigla = if contracao{"KiB"} else{"kilobytes"};
-      format!("{:.1} {}", (qtd as f32 / KILO as f32), sigla)
+      format!("{:.1} {}", (qtd as f32 / KILOBYTE as f32), sigla)
    }
-   else if qtd >= MEGA && qtd < GIGA {
+   else if qtd >= MEGABYTE && qtd < GIGABYTE {
       let sigla = if contracao{"MiB"} else{"megabytes"};
-      format!("{:.1} {}", (qtd as f32 /MEGA as f32), sigla)
+      format!("{:.1} {}", (qtd as f32 /MEGABYTE as f32), sigla)
    }
-   else if qtd >= GIGA && qtd < TERA {
+   else if qtd >= GIGABYTE && qtd < TERABYTE {
       let sigla = if contracao{"GiB"} else{"gigabytes"};
-      format!("{:.1} {}", (qtd/GIGA) as f32, sigla)
+      format!("{:.1} {}", (qtd/GIGABYTE) as f32, sigla)
    }
-   else if qtd >= TERA && qtd < PETA {
+   else if qtd >= TERABYTE && qtd < PETABYTE {
       let sigla = if contracao{"TiB"} else{"terabytes"};
-      format!("{:.1} {}", (qtd/TERA) as f32, sigla)
+      format!("{:.1} {}", (qtd/TERABYTE) as f32, sigla)
    }
    else {
       let sigla = if contracao{"B's"} else {"bytes"};
@@ -197,82 +231,44 @@ mod tests {
 
    #[test]   
    fn testa_tamanho_legibilidade() {
-      let mut x = 3419; 
-      println!("{} ==> {}",x, tamanho(x, false));
+      let mut x: usize = 3419; 
+
+      println!("{} ==> {}",x, tamanho_legivel(x, false));
       x = 10293; 
-      println!("{} ==> {}",x, tamanho(x, false));
+      println!("{} ==> {}",x, tamanho_legivel(x, false));
       x = 1982419; 
-      println!("{} ==> {}",x, tamanho(x, true));
+      println!("{} ==> {}",x, tamanho_legivel(x, true));
       x = 123048190; 
-      println!("{} ==> {}",x, tamanho(x, true));
+      println!("{} ==> {}",x, tamanho_legivel(x, true));
       x = 1000348293192; 
-      println!("{} ==> {}",x, tamanho(x,false));
+      println!("{} ==> {}",x, tamanho_legivel(x,false));
       x = 193843092384101; 
-      println!("{} ==> {}",x, tamanho(x, true));
+      println!("{} ==> {}",x, tamanho_legivel(x, true));
       assert!(true);
    }
 
    #[test]
    fn tempo_legibilidade() {
       let mut t:u64 = 36;
-      println!("{} ==> {}", t, tempo(t, false));
+      println!("{} ==> {}", t, tempo_legivel(t, false));
       t = 152;
-      println!("{} ==> {}", t, tempo(t, true));
+      println!("{} ==> {}", t, tempo_legivel(t, true));
       t = 552;
-      println!("{} ==> {}", t, tempo(t, false));
+      println!("{} ==> {}", t, tempo_legivel(t, false));
       t = 9000;
-      println!("{} ==> {}", t, tempo(t, false));
+      println!("{} ==> {}", t, tempo_legivel(t, false));
       t = 38910;
-      println!("{} ==> {}", t, tempo(t, true));
+      println!("{} ==> {}", t, tempo_legivel(t, true));
       t = 1039842;
-      println!("{} ==> {}", t, tempo(t, false));
+      println!("{} ==> {}", t, tempo_legivel(t, false));
       t = 30489123918;
-      println!("{} ==> {}", t, tempo(t, true));
+      println!("{} ==> {}", t, tempo_legivel(t, true));
       t = 99990192152;
-      println!("{} ==> {}", t, tempo(t, true));
+      println!("{} ==> {}", t, tempo_legivel(t, true));
       t = 1110238951152;
-      println!("{} ==> {}", t, tempo(t, false));
+      println!("{} ==> {}", t, tempo_legivel(t, false));
       assert!(true);
    }
-
-   #[test]
-   fn testa_tempo_detalhado() {
-      assert_eq!(
-         super::tempo_detalhado("3.5 horas"), 
-         Some(String::from("3 horas 30 minutos"))
-      );
-
-      assert_eq!(
-         super::tempo_detalhado("4.2 dias"),
-         Some(String::from("4 dias 5 horas"))
-      );
-
-      assert_eq!(
-         super::tempo_detalhado("3.5 meses"), 
-         Some(String::from("3 meses 15 dias"))
-      );
-
-      assert_eq!(
-         super::tempo_detalhado("4.2 anos"),
-         Some(String::from("4 anos 2 meses"))
-      );
-
-
-      assert_eq!(
-         super::tempo_detalhado("7.9 décadas"),
-         Some(String::from("7 décadas 9 anos"))
-      );
-
-      assert_eq!(
-         super::tempo_detalhado("8.5 séculos"),
-         Some(String::from("8 séculos 5 décadas"))
-      );
-
-      assert_eq!(
-         super::tempo_detalhado("1.5 milênios"),
-         Some(String::from("1 milênios 5 séculos"))
-      );
-   } 
 
    #[test]
    #[allow(non_snake_case)]

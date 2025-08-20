@@ -11,7 +11,7 @@ mod rotulo;
 mod barra;
 
 // Módulos do próprio projeto:
-use crate::legivel::tamanho;
+use crate::legivel::{tamanho_legivel};
 // Submódulos deste módulo:
 pub use letreiro::*;
 use barra::{
@@ -79,7 +79,7 @@ pub fn progresso_data(qtd_atual:u64, qtd_total:u64) -> String {
    if percentagem > 1.0_f32
       { panic!("os valores de atual supera o total!"); }
    else if percentagem == 1.00 {
-      let total_bytes = tamanho(qtd_total, true);
+      let total_bytes = tamanho_legivel(qtd_total, true);
       return format!(
          "{}/{} [{}] {}%\n",
          total_bytes,
@@ -90,8 +90,8 @@ pub fn progresso_data(qtd_atual:u64, qtd_total:u64) -> String {
    }
    else {
       // strings dos valores.
-      let qa = tamanho(qtd_atual, true);
-      let qt = tamanho(qtd_total, true);
+      let qa = tamanho_legivel(qtd_atual, true);
+      let qt = tamanho_legivel(qtd_total, true);
       let qtd_algs = qt.len() as usize;
       let molde:String = format!(
          "{0:>espaco$}/{1} [{2}]{3:>5.1}%",
@@ -119,7 +119,7 @@ pub fn progresso_data_rotulo<'a>(rotulo:&'a str, qtd_atual:u64,
       panic!("os valores de atual supera o total!");
    }
    else if percentagem == 1f32 {
-      let total_bytes = tamanho(qtd_total, true);
+      let total_bytes = tamanho_legivel(qtd_total, true);
       return format!(
          "[{}] {}/{} [{}] {}%\n",
          rotulo,
@@ -131,8 +131,8 @@ pub fn progresso_data_rotulo<'a>(rotulo:&'a str, qtd_atual:u64,
    }
    else {
       // strings dos valores.
-      let qa = tamanho(qtd_atual, true);
-      let qt = tamanho(qtd_total, true);
+      let qa = tamanho_legivel(qtd_atual, true);
+      let qt = tamanho_legivel(qtd_total, true);
       let qtd_algs = qt.len() as usize;
       let molde:String = format!(
          "[{4}] {0:>espaco$}/{1} [{2}]{3:>5.1}%",
