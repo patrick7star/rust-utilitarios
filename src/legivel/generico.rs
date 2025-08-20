@@ -3,9 +3,10 @@
  * a quantidade de tipos de argumentos
  * para vários tipos. */
 
-use super::tempo;
-use super::fracao_seg::tempo_fracao;
+use super::tempo_legivel;
+use super::decimal::tempo_legivel_decimal;
 use std::str::FromStr;
+use std::time::{Duration};
 
 /** Retorna uma string contendo o valor legendado porém numa faixa mais 
  * legível. */
@@ -74,17 +75,32 @@ pub fn tempo_humano<V>(segundos: V, contracao:bool)
       if valor_menor() {
          // renomeação da variável a comparar e computar.
          let t  = u64::from_str(&forma_str).unwrap();
-         Some(tempo(t, contracao))
+         Some(tempo_legivel(t, contracao))
       } else 
          { None }
    } else if e_fracao(&forma_str) { 
       let double_str = f64::from_str(&forma_str).unwrap();
-      tempo_fracao(double_str, contracao)
+      tempo_legivel_decimal(double_str, contracao)
    } else if meio_termo(&forma_str) {
       let double_str = f64::from_str(&forma_str).unwrap();
-      tempo_fracao(double_str, contracao)
+      tempo_legivel_decimal(double_str, contracao)
    } else { None }
 } 
+
+/** Aplica diretamente um duration na conversão. Facilita bastante enquanto
+ * codifica, sem falar na legibilidade. Sim, a implementação é tão simples
+ * quanto se pensa. Apenas chama a função interna que retorna o `count` de
+ * segundos. */
+pub fn tempo_legivel_duration(tempo: Duration, contracao: bool) -> String
+{ 
+   if tempo > Duration::from_secs(1) 
+      { tempo_legivel(tempo.as_secs(), contracao)  } 
+   else { 
+      // O 'unwrap' é sempre seguro, pois Durations nunca são inválidos.
+      tempo_legivel_decimal
+         (tempo.as_secs_f64(), contracao).unwrap() 
+   }
+}
 
 
 #[cfg(test)]
@@ -182,5 +198,21 @@ mod tests {
       println!("inteiros:");
       for e in entradasII
          { println!("{:?}", tempo_humano(e, true)); }
+   }
+
+   #[test]
+   fn legibilidade_de_durations() {
+      let amostras = [
+         Duration::from_secs_f32(3701.1234),
+         Duration::from_secs(100_023),
+         Duration::from_millis(5_398_001),
+         Duration::from_secs(303),
+         Duration::from_millis(303),
+         Duration::from_micros(29),
+         Duration::from_nanos(702),
+      ];
+
+      for item in amostras
+         { println!("{}", tempo_legivel_duration(item, true)); }
    }
 }
