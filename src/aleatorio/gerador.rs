@@ -24,6 +24,8 @@
 use std::ops::RangeInclusive as Intervalo;
 use std::fs::OpenOptions;
 use std::io::Read;
+use std::time::{SystemTime};
+
 
 // Valor inicial do maior inteiro positivo.
 static mut SEMENTE: usize = 1;
@@ -31,6 +33,7 @@ static mut SEMENTE: usize = 1;
 static mut ACIONADO: bool = false;
 const N: usize = std::mem::size_of::<usize>();
 
+#[cfg(target_os="linux")]
 fn pega_n_bytes(n: usize) -> Vec<u8> 
 {
    // tal gera bytes aleatórios a todo instante.
@@ -63,21 +66,44 @@ fn copia_bytes(mut vetor: Vec<u8>, array: &mut [u8; N])
       { array[p] = x; }
 }
 
+#[cfg(target_os="windows")]
+fn bytes_pseudorandomicos(bytes: &mut [u8]) {
+/* O método usado prá encontrar bytes "randômicos" é, pega um 'timestamp',
+ * computa os nanosegundos decorridos desde Unix Epoch, então converte
+ * tal valor num 'double'; interpreta seus bytes de forma errada, e os 
+ * copia. */
+   const INICIO: SystemTime = SystemTime::UNIX_EPOCH;
+   let agora = SystemTime::now();
+
+   match agora.duration_since(INICIO) {
+      Ok(decorrido) => {
+         let tempo = decorrido.as_secs_f64();
+
+         bytes.copy_from_slice(tempo.to_be_bytes().as_slice());
+      } Err(_) => 
+         { bytes.fill(0xFF); }
+   };
+
+   for X in bytes
+      { *X = 1; }
+}
+
 fn computa_semente()
 {
 /* Tenta achar um valor randômico usando de vários meios, e também, bem
  * importante, a função computa apenas uma única vez em execução. */
    let nao_foi_acionado_ainda = unsafe { !ACIONADO };
+   let mut buffer: [u8; N] = [0x00; N];
    
    if nao_foi_acionado_ainda
    {
-      let bytes = pega_n_bytes(N);
-      let mut buffer: [u8; N] = [u8::MAX; N];
+      #[cfg(target_os="linux")]
+      copia_bytes(pega_n_bytes(N), &mut buffer);
+      #[cfg(target_os="windows")]
+      bytes_pseudorandomicos(&mut buffer); 
 
       unsafe {
-         copia_bytes(bytes, &mut buffer);
          SEMENTE = usize::from_le_bytes(buffer);
-
          ACIONADO = true;
       }
    }
