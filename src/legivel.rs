@@ -43,7 +43,7 @@ pub const DECADA:  f32 = 10.0 * ANO;
 /// Total de segundos num século.
 pub const SECULO:  f32 = 10.0 * DECADA;
 /// Total de segundos num milênio.
-pub const MILENIO: f32 = 10.0 * SECULO
+pub const MILENIO: f32 = 10.0 * SECULO;
 
 /// Total de bytes num ***KiB***.
 pub const KILOBYTE: usize = 2usize.pow(10);
