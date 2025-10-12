@@ -22,8 +22,8 @@
  */
 
 use std::ops::RangeInclusive as Intervalo;
-use std::fs::OpenOptions;
-use std::io::Read;
+#[cfg(target_os="linux")]
+use std::{fs::OpenOptions, io::Read};
 use std::time::{SystemTime};
 
 
@@ -60,6 +60,7 @@ fn pega_n_bytes(n: usize) -> Vec<u8>
    return bytes[0..n].to_vec();
 }
 
+#[cfg(target_os="linux")]
 fn copia_bytes(mut vetor: Vec<u8>, array: &mut [u8; N])
 {
    for (p, x) in vetor.drain(..).enumerate()
@@ -67,6 +68,7 @@ fn copia_bytes(mut vetor: Vec<u8>, array: &mut [u8; N])
 }
 
 #[cfg(target_os="windows")]
+#[allow(non_snake_case)]
 fn bytes_pseudorandomicos(bytes: &mut [u8]) {
 /* O método usado prá encontrar bytes "randômicos" é, pega um 'timestamp',
  * computa os nanosegundos decorridos desde Unix Epoch, então converte
