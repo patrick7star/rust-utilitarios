@@ -8,7 +8,7 @@ use std::fmt::{ Display, Formatter, Result as Result_fmt };
 use std::ops::AddAssign;
 use std::time::{Duration};
 // Outros módulos desta biblioteca:
-use crate::legivel::{tempo as tempo_legivel, tamanho};
+use crate::legivel::{tempo_legivel, tamanho_legivel as tamanho};
 use crate::terminal::{terminal_largura, Largura};
 // Features e ferramentas destes módulo:
 use super::{
@@ -249,7 +249,6 @@ pub fn temporizador_progresso
 #[allow(non_snake_case)]
 mod tests {
    use super::*;
-   use crate::legivel::tamanho;
    use std::thread;
    use std::time::{Instant, Duration};
 
