@@ -344,8 +344,11 @@ impl ProgressoTemporal {
  * retorno. No 'background' é atualização de valor. */
 impl AddAssign<usize> for ProgressoTemporal {
    fn add_assign(&mut self, valor: usize) {
-      // Não incrementa, apenas atualiza o atual valor.
-      self.atual = valor;
+      /* Não incrementa, apenas atualiza o atual valor. Também, apenas aceita
+       * valores maiores que o atual. Uma atualização prá menor, ou prá igual
+       * parece totaltamente irrelevante. */
+      if valor >= self.atual
+         { self.atual = valor; }
    }
 }
 
