@@ -5,12 +5,15 @@
 */
 
 // biblioteca do Rust:
-use std::fmt::{Formatter, Display, Result as Resultado};
+use std::fmt::{Formatter, Display, Result as Resultado, Debug};
 use std::dbg;
 use std::string::String;
 
 // biblioteca externa:
 use crate::terminal::*;
+
+// margem e símbolo de inscrita.
+const MARGEM:usize = 3;
 
 
 /* reescrevendo o método do len da string para 
@@ -124,7 +127,6 @@ pub struct Impressao<'a> {
 /// acrescimo para distânciar entradas.
 const X:u8 = 3;
 
-use std::fmt::{Debug};
 
 impl <'a>Impressao<'a> {
    // método construtor.
@@ -245,10 +247,6 @@ impl Display for Impressao<'_> {
    }
 }
 
-// margem e símbolo de inscrita.
-const SIMBOLO:&str = "#";
-const MARGEM:usize = 3;
-
 /* remove espaços em brancos no começo
  * da slice-string. */
 fn remove_espacos_brancos<'b>(texto:&'b str) -> &'b str {
@@ -275,71 +273,96 @@ fn remove_espacos_brancos<'b>(texto:&'b str) -> &'b str {
    else { texto }
 }
 
-/** Pega uma *slice-string* e circunscreve ela
- com caractéres.  */
-pub fn circunscrever(texto:&str) -> String {
-   // concatenador.
-   let mut nova_str:String = String::new();
-   // string após filtro.
-   // todas linhas existentes.
+#[allow(non_snake_case)]
+/** Pega uma *slice-string* e circunscreve ela com caractéres.  */
+fn circunscrever_personalizado(texto: &str, TEMA: usize) 
+  -> String 
+{
+   const HORIZONTAIS: [&str; 4] = ["\u{2501}", "\u{2500}", "\u{2550}", "-"];
+   const VERTICAIS: [char; 4] = ['\u{2503}', '\u{2502}', '\u{2551}', '|'];
+   const BRANCO: &str = " ";
+   /* A ordem é do canto-superior-esquerdo ao canto-inferior-esquerdo, ou
+    * seja, no sentido horário. */
+   const VERTICES: [(&str, char, char, &str); 4] = [
+      // Originalmente implementado.
+      ("\u{250f}", '\u{2513}', '\u{251b}', "\u{2517}"),
+      ("\u{256d}", '\u{256e}', '\u{256f}', "\u{2570}"),
+      ("\u{2554}", '\u{2557}', '\u{255d}', "\u{255a}"),
+      // Caractére ASCII.
+      ("+", '+', '+', "+")
+   ];
+   let mut esboco = String::new();
+   // String após filtro. Todas linhas existentes.
    let linhas = {
-      texto
-      .lines()
-      .map(|s| remove_espacos_brancos(s))
+      texto.lines().map(|s| remove_espacos_brancos(s))
       .map(|s| 
          if StringExtensao::len(s) > 0 { s } 
-         else { "---------" }
+         else { " " }
       )
    };
-   // comprimento da maior string.
+   // Comprimento da maior string.
    let maior_str:usize = {
-      linhas.clone()
-      .map(|s| StringExtensao::len(s))
-      .max()
-      .unwrap()
+      linhas.clone().map(|s| StringExtensao::len(s))
+      .max().unwrap()
    };
    // espaço superior.
-   let qtd:usize = maior_str + 2*MARGEM + 2;
-   // espaço em branco na vertical do texto.
-   let margem_superior:String = format!(
+   let qtd = maior_str + 2 * MARGEM + 2;
+   // Espaço em branco na vertical do texto.
+   let margem_vertical = format!(
       "{ch}{branco}{ch}\n",
-      branco = &" ".repeat(qtd-2),
-      ch = SIMBOLO
+      branco = BRANCO.repeat(qtd - 2),
+      ch = VERTICAIS[TEMA]
    );
-   // barras que fecham o retângulo que circunscreve.
-   let barra:&str = &SIMBOLO.repeat(qtd);
+   // Barras que fecham o retângulo que circunscreve.
+   let mut tampa_de_cima = HORIZONTAIS[TEMA].repeat(qtd);
+   let mut tampa_de_baixo: String;
 
-   // criando a barra.
-   nova_str += barra;
-   nova_str += "\n";
+   tampa_de_cima = tampa_de_cima.replacen
+      (HORIZONTAIS[TEMA], VERTICES[TEMA].0, 1);
+   tampa_de_cima.pop();
+   tampa_de_cima.push(VERTICES[TEMA].1);
+   tampa_de_baixo = tampa_de_cima.replacen
+      (VERTICES[TEMA].0, VERTICES[TEMA].3, 1);
+   tampa_de_baixo.pop();
+   tampa_de_baixo.push(VERTICES[TEMA].2);
+
+   esboco += &tampa_de_cima;
+   esboco += "\n";
    // margem superior.
-   nova_str += margem_superior.as_str(); 
+   esboco += &margem_vertical; 
 
    // transformando string e concatenando, linha-por-linha.
-   for s in linhas {
+   for linha in linhas {
       // compensador de váculo.
-      let diferenca = maior_str - StringExtensao::len(s);
+      let diferenca = maior_str - StringExtensao::len(linha);
       // formatando string para concatenação.
       let aux = format!(
          "{caractere}{espaco}{string}{espaco_corrigido}{caractere}\n",
-         string = s,
-         espaco = &" ".repeat(MARGEM),
-         caractere = SIMBOLO,
-         espaco_corrigido = &" ".repeat(MARGEM + diferenca)
+         string = linha,
+         espaco = BRANCO.repeat(MARGEM),
+         caractere = VERTICAIS[TEMA],
+         espaco_corrigido = BRANCO.repeat(MARGEM + diferenca)
       );
       // concatenando em sí...
-      nova_str += aux.as_str();
+      esboco += aux.as_str();
    }
 
    // margem superior.
-   nova_str += margem_superior.as_str(); 
-   // fechando tudo com barra inferior.
-   nova_str += barra;
-   nova_str += "\n";
-   // retornando nova string que mostra a 
-   // original circunscrita.
-   return nova_str;
+   esboco += margem_vertical.as_str(); 
+   esboco += &tampa_de_baixo;
+   esboco += "\n";
+
+   esboco
 }
+
+/// Pega uma *slice-string* e circunscreve ela com caractéres.  
+pub fn circunscrever(texto: &str) -> String
+   { circunscrever_personalizado(texto, 3) }
+
+/** Busca tal circunscrição com um caractére Unicode de barra. */
+pub fn circunscrever_unicode(texto: &str) -> String 
+   { circunscrever_personalizado(texto, 1) }
+
 
 
 #[cfg(test)]
@@ -418,9 +441,8 @@ mod tests {
       assert!(true);
    }
 
-   #[test]
-   fn testando_circunscricao_strings_formatadas() {
-      let str_teste = "
+   const AMOSTRAS: [&str; 3] = [
+      "
       \ri see trees of green
       \rred of roses too
       \ri see the blue
@@ -429,23 +451,30 @@ mod tests {
       \rwhat wonderful world
       \ri see sky of blue
       \rclouds of white
-      \rthe bright bless day";
-      let str_bordada = circunscrever(&str_teste);
-      println!("{}", str_bordada);
+      \rthe bright bless day",
 
-      let str_teste = " 
-      \rninety-six thousands three hundreds and twenty-five
+      "ninety-six thousands three hundreds and twenty-five
       \rtwelve thousands 8 hundreds
       \reighty-four
-      \rfour hundreds nine";
-      let str_bordada = circunscrever(&str_teste);
-      println!("{}", str_bordada);
-
-      let str_teste = {
+      \rfour hundreds nine",
+      
       "\rrosas são vermelhas
       \rvioletas são azuís
       \reu vejo um coelhinho
-      \rcomendo alcazúis." };
+      \rcomendo alcazúis."
+   ];
+
+   #[test]
+   fn testando_circunscricao_strings_formatadas() {
+      let str_teste = &AMOSTRAS[0];
+      let str_bordada = circunscrever(&str_teste);
+      println!("{}", str_bordada);
+
+      let str_teste = &AMOSTRAS[1];
+      let str_bordada = circunscrever(&str_teste);
+      println!("{}", str_bordada);
+
+      let str_teste = &AMOSTRAS[2];
       let str_bordada = circunscrever(&str_teste);
       println!("{}", str_bordada);
 
@@ -473,5 +502,15 @@ mod tests {
       }
 
       Impressao::impressao_direta(&exemplo);
+   }
+
+   #[test]
+   fn circunscricao_de_strings_com_caracteres_unicode() {
+      let output = circunscrever_unicode(&AMOSTRAS[0]);     
+
+      println!("{}", output);
+
+      let output = circunscrever_personalizado(&AMOSTRAS[1], 2);
+      println!("{}", output);
    }
 }
