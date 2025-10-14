@@ -359,8 +359,8 @@ fn circunscrever_personalizado(texto: &str, TEMA: usize)
 pub fn circunscrever(texto: &str) -> String
    { circunscrever_personalizado(texto, 3) }
 
-/** Busca tal circunscrição com um caractére Unicode de barra. */
-pub fn circunscrever_unicode(texto: &str) -> String 
+/** Busca tal circunscrição com um caractéres gráficos de barra. */
+pub fn circunscrever_i(texto: &str) -> String 
    { circunscrever_personalizado(texto, 1) }
 
 
@@ -505,8 +505,8 @@ mod tests {
    }
 
    #[test]
-   fn circunscricao_de_strings_com_caracteres_unicode() {
-      let output = circunscrever_unicode(&AMOSTRAS[0]);     
+   fn circunscricao_de_strings_com_caracteres_graficos() {
+      let output = circunscrever_i(&AMOSTRAS[0]);     
 
       println!("{}", output);
 
