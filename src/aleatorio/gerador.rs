@@ -76,18 +76,33 @@ fn bytes_pseudorandomicos(bytes: &mut [u8]) {
  * copia. */
    const INICIO: SystemTime = SystemTime::UNIX_EPOCH;
    let agora = SystemTime::now();
+   let mut cursor = 0;
+
+   /* Os últimos bytes são sempre os mais volateis, então, focarei em 
+    * copia-los apenas. Como há apenas dois, então o foco é roda tal 
+    * 'selo de tempo' muitas vezes, e apenas pegar os últimos bytes(os
+    * mais à direita). */
+   match agora.duration_since(INICIO) {
+      Ok(decorrido) => {
+         let tempo = decorrido.as_secs_f64();
+         let bytes_aleatorios = tempo.to_be_bytes();
+
+         for p in 0..4
+            { bytes[cursor] = bytes_aleatorios[8 - p - 1]; cursor += 1; }
+      } Err(_) => 
+         { bytes.fill(0xFE); }
+   };
 
    match agora.duration_since(INICIO) {
       Ok(decorrido) => {
          let tempo = decorrido.as_secs_f64();
+         let bytes_aleatorios = tempo.to_be_bytes();
 
-         bytes.copy_from_slice(tempo.to_be_bytes().as_slice());
+         for p in 0..4
+            { bytes[cursor] = bytes_aleatorios[8 - p - 1]; cursor += 1; }
       } Err(_) => 
-         { bytes.fill(0xFF); }
+         { bytes.fill(0xFE); }
    };
-
-   for X in bytes
-      { *X = 1; }
 }
 
 fn computa_semente()
@@ -296,6 +311,19 @@ pub mod sortear {
 #[cfg(test)]
 #[allow(non_snake_case)]
 mod tests {
+   #[cfg(target_os="windows")]
+   #[test]
+   fn pseudorandomizacao_no_windows() {
+      let mut output = [0xffu8; 8];
+
+      println!("Antes: {:?}", output);
+      super::bytes_pseudorandomicos(&mut output[..]);
+      println!("Depois: {:?}", output);
+      
+      println!("u8: ");
+      for _ in 1..=10
+         { print!("{}, ", super::sortear::u8(0..=10)); }
+   }
 
    #[test]
    fn simples_sorteamento_do_isize()
