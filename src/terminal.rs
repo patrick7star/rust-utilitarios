@@ -19,7 +19,7 @@
 // biblioteca padrão do Rust.
 use std::process::Command;
 use std::str::FromStr;
-use std::io::{Write, stdin, stdout};
+use std::io::{self, Write, stdin, stdout};
 #[cfg(target_os="windows")]
 use std::os::windows::raw::HANDLE;
 #[cfg(target_os="windows")]
@@ -37,148 +37,38 @@ type TerminalDimensao = Option<(Largura, Altura)>;
 type TermLargura      = Result<Largura, &'static str>;
 type TermAltura       = Result<Altura, &'static str>;
 type Bytes            = Vec<u8>;
-#[cfg(target_os="windows")]
-type Dimensao         = (u16, u16);
+// Apelidos tornados públicos:
+pub type Dimensao = (u16, u16);
 
 
-/** De forma direta, retorna o Enum contendo apenas a largura do 
- * terminal. */
-pub fn terminal_largura() -> TermLargura {
-   // executa comando para obter largura primeiramente ...
-   let mut resultado:Vec<u8> = {
-      if  cfg!(target_os="linux") {
-          match Command::new("tput").arg("cols").output() {
-             // retorna array de bytes que é o resultado.
-             Ok(r) => r.stdout,
-             Err(_) => 
-                { return Err("não foi possível obter 'Largura'"); }
-          }
-      } else if cfg!(windows) {
-          let mut comando = Command::new("powershell");
-          comando.arg("-Command");
-          comando.arg("Write-Host");
-          comando.arg("$Host.UI.RawUI.WindowSize.Width");
-          comando.arg("|");
-          comando.arg("Out-String");
-          match comando.output() {
-             // retorna array de bytes que é o resultado.
-             Ok(r) => r.stdout,
-             Err(_) => 
-                { return Err("não foi possível obter 'Largura'"); }
-          }
-      } else {
-         println!(
-            "o que está considerando:
-            \r\tlinux: {}
-            \r\twindows: {}
-            \r\tunix: {}",
-            cfg!(target_os="linux"), cfg!(windows), cfg!(unix)
-         );
-         panic!("ainda não implementado para tal sistema."); 
-      }
-   };
-
-   // removendo quebra de linha.
-   if cfg!(windows) {
-      // removendo espaço em branco e recuo '\n\r'.
-      resultado.pop();
-      resultado.pop();
-      resultado.pop();
-   } else if cfg!(unix) 
-       { resultado.pop(); }
-
-   // transformando em número.
-   let num_str = String::from_utf8_lossy(&resultado[..]);
-   /* converte para um inteiro positivo, e 
-    * e registra valor para retorno, posteriormente. */
-   let largura = u16::from_str(&num_str).unwrap();
-
-   // retornando encapsulado para possível erro.
-   Ok(Largura(largura))
-}
-
-/** Diretamente, retorna o Enum apenas com um inteiro de 16-bits 
- * *encapsulado* como dado dentro dele. */
-pub fn terminal_altura() -> TermAltura {
-   // executa comando para obter largura primeiramente ...
-   let mut resultado: Bytes = {
-      if cfg!(target_os="linux") {
-          match Command::new("tput").arg("lines").output() {
-             // retorna array de bytes que é o resultado.
-             Ok(r) => dbg!(r.stdout),
-             Err(_) => 
-                { return Err("não foi possível obter 'Largura'"); }
-          }
-      } else if cfg!(windows) {
-          let mut comando = Command::new("powershell");
-          comando.arg("-Command");
-          comando.arg("Write-Host");
-          comando.arg("$Host.UI.RawUI.WindowSize.Height");
-          comando.arg("|");
-          comando.arg("Out-String");
-          match comando.output() {
-             // retorna array de bytes que é o resultado.
-             Ok(r) => dbg!(r.stdout),
-             Err(_) => 
-                { return Err("não foi possível obter 'Altura'"); }
-          }
-      } else { 
-         println!(
-            "o que está considerando:
-            \r\tlinux: {}
-            \r\twindows: {}
-            \r\tunix: {}",
-            cfg!(target_os="linux"), cfg!(windows), cfg!(unix)
-         );
-         panic!("ainda não implementado para tal sistema."); }
-   };
-
-   // removendo quebra de linha.
-   if cfg!(windows) {
-      // removendo espaço em branco e recuo '\n\r'.
-      resultado.pop();
-      resultado.pop();
-      resultado.pop();
-   } else if cfg!(target_os="linux")
-       { resultado.pop(); }
-
-   // transformando em número.
-   let num_str = String::from_utf8_lossy(&resultado);
-   /* converte para um inteiro positivo, e 
-    * e registra valor para retorno, posteriormente. */
-   let altura = u16::from_str(&num_str).unwrap();
-
-   // retornando encapsulado para possível erro.
-   Ok(Altura(altura))
-}
-
-/** Tal Função, retorna tupla com dimensão, porém implementação
- distinta da anterior, encapsulando valores com "structs" ao invés de 
- Enum's. */
+/**   Tal Função, retorna tupla com dimensão, porém implementação
+ * distinta da anterior, encapsulando valores com "structs" ao invés de 
+ * Enum's. No fim, ela é apenas um wrap para a função 
+ * 'obtem_terminal_dimensão', esta que tem um sufixo dependendo da 
+ * plataforma. Com a nova refatoração, o código interno pra fazer isso,
+ * ficou fantástico de simples.
+ */
 pub fn dimensao() -> TerminalDimensao {
-   /* usando construto acima de auxilio, para 
-    * não ter que fazer a mesma coisa de novo.
-    */
-   let altura:u16 = match terminal_altura() {
-      Ok(Altura(h)) => h,
-      Err(_) => {return None; }
-   };
-   let largura:u16 = match terminal_largura() {
-      Ok(Largura(l)) => l,
-      Err(_) => { return None; },
-   };
+   let (altura, largura) = obtem_dimensao_do_terminal_no_linux();
 
-   // retorno, porém removendo valores dos enum's.
+   // Retorno, porém removendo valores dos enum's.
    Some((Largura(largura), Altura(altura)))
 }
 
-/** Retorno mais rápido da `Dimensão` pois usa o API do Windows. Também
+/** A mesma coisa que dimesão, porém sem tolerância a erros. */
+pub fn terminal_dimensao() -> Dimensao { 
+   #[cfg(target_os="linux")]
+   return obtem_dimensao_do_terminal_no_linux();
+   #[cfg(target_os="windows")]
+   return obtem_terminal_dimensao_no_windows();
+}
+
+/* Retorno mais rápido da `Dimensão` pois usa o API do Windows. Também
  * o tipo de retorno é mais simples, só uma tupla com dois inteiros 
  * positivos de 16-bits, em que, o primeiro é referente as linhas do 
  * terminal, e o segundo as colunas. */
-#[allow(non_snake_case)]
 #[cfg(target_os="windows")]
-pub fn terminal_dimensao() -> Dimensao {
+fn obtem_terminal_dimensao_no_windows() -> Dimensao {
 /* Diferente das demais, esta aqui, já usa a API padrão do Windows para
  * obter tal valor relativo. Também o retorno é bem simplificado, 
  * quando comparado aos demais, aqui a tupla significa, diretamente,
@@ -226,6 +116,25 @@ pub fn terminal_dimensao() -> Dimensao {
     (info.dwSize.Y as u16, info.dwSize.X as u16)
 }
 
+/** De forma direta, retorna o Enum contendo apenas a largura do 
+ * terminal. 
+ *
+ * *NOTA:* Apenas um 'wrapping' da função 'dimensão'. Isso faz uma redução
+ * de código brutal. O futuro é descontinuar tais funções o quão rápido 
+ * possível. O modo de ele retornar um erro, por chamar tal função do 
+ * sistema está sendo descontinuado. Mais por motivos de compatibilidade,
+ * ainda deixarei tais tipos de funções aqui. Que sem falar, são bastante
+ * indiretas no retorno também. Que palhaçada é essa de Largura/Altura 
+ * 'enum'. Nem lembro por que fiz assim. 
+ */
+pub fn terminal_largura() -> TermLargura 
+   { Ok(dimensao().unwrap().0) }
+
+/** Diretamente, retorna o Enum apenas com um inteiro de 16-bits 
+ * *encapsulado* como dado dentro dele. */
+pub fn terminal_altura() -> TermAltura 
+    { Ok(dimensao().unwrap().1) }
+
 /** Como sem um nome de módulo no momento, vamos colocar aqui a 
  * implementação de um prompt genérico. 
  */
@@ -249,11 +158,176 @@ pub fn lanca_prompt(dica:&str) -> String {
    return conteudo;
 }
 
+
+/* Faz, por enquanto, a função de obter e processar os dados, referentes as
+ * dimensões do terminal em questão, pro Linux especificamente. Futuramente,
+ * posso acoplar a função específica de outras plataformas, e tornar 
+ * tal função com um nome mais genérico. */
+#[cfg(target_os="linux")]
+fn obtem_dimensao_do_terminal_no_linux() -> Dimensao {
+   let nomes_das_funcoes = [
+      stringify! (roda_comando_que_informa_dimensao_do_terminal_no_linux),
+      stringify! (separa_bytes_referentes_a_cada_comprimento)
+   ];
+   let nome_a = nomes_das_funcoes[0];
+   let nome_b = nomes_das_funcoes[0];
+   // Melhores nomes prás funções utilizadas:
+   let particionamento = separa_bytes_referentes_a_cada_comprimento;
+   let conversao_em_str = converte_bytes_em_seus_respectivos_valores;
+
+   match roda_comando_que_informa_dimensao_do_terminal_no_linux()
+   {
+      Ok(array) => 
+      {
+         match particionamento(array)
+         {
+            Some(tupla_in) => {
+               let (altura, largura) = conversao_em_str(tupla_in);
+
+               (altura, largura)
+
+            } None =>
+               { panic!("Erro ao chamar função '{}'.", nome_b); }
+         }
+      } Err(_) => 
+         { panic!("Erro ao chamar a função '{}'", nome_a); }
+   }
+}
+
+/* Roda o programa que informa as dimensões do shell em que foi chamada, 
+ * e tenta extrair os bytes da string. Isso para que possa passar por uma
+ * 'pipeline' de processamento posterior. 
+ */
+fn roda_comando_que_informa_dimensao_do_terminal_no_linux() 
+ -> io::Result<Bytes> 
+{
+    match Command::new("tput").arg("lines").arg("cols").output() {
+       Ok(saida) => Ok(saida.stdout),
+       Err(erro) => 
+          { Err(erro) }
+   }
+}
+
+/* Pega os bytes que foram extraidos do comando rodado, então tenta 
+ * separa-lo de acordo, e fazer um miniprocessamento(que seria algo como,
+ * retirar byte de quebra-de-linha, provavelmente). Em casso de erro, uma
+ * entrada inválida, ele não retorna a tupla com os bytes particionados. Ou
+ * impossível alguma array dinâmica vázia, não sei ainda.
+ */
+fn separa_bytes_referentes_a_cada_comprimento
+  (input: Bytes) -> Option<(Bytes, Bytes)>
+{
+   /* Reparte a array de bytes em duas: bytes da linha e bytes das 
+    * coluna. */
+   let mut caracteres = input.split_inclusive(|x| *x == 10);
+   let (mut linhas, mut colunas): (Bytes, Bytes);
+
+   linhas = match caracteres.next() {
+      Some(bytes) => bytes.to_vec(),
+      None => { return None; }
+   };
+   colunas = match caracteres.next() {
+      Some(bytes) => bytes.to_vec(),
+      None => { return None; }
+   };
+
+   // Retirando o último byte de cada, que representa quebra-de-linha.
+   match linhas.pop() { None => {return None; } Some(_) => () }
+   match colunas.pop() { None => {return None; } Some(_) => () }
+
+   Some((linhas, colunas))
+}
+
+fn converte_bytes_em_seus_respectivos_valores
+  (input: (Bytes, Bytes)) -> Dimensao 
+{
+   let linhas = String::from_utf8_lossy(&input.0[..]);
+   let colunas = String::from_utf8_lossy(&input.1[..]);
+   // Valores padrões caso a conversão dê errado.
+   const LIN: u16 = 25;
+   const COL: u16 = 80;
+
+   (
+      u16::from_str(&linhas).unwrap_or(LIN), 
+      u16::from_str(&colunas).unwrap_or(COL)
+   )
+}
+
+
 #[cfg(target_os="linux")]
 #[cfg(test)]
 #[allow(non_snake_case)]
 mod tests {
    use super::*;
+
+   #[test]
+   fn conversao_em_numeros_inteiros_dos_bytes_extraidos() {
+      let nome_a = stringify!
+         (roda_comando_que_informa_dimensao_do_terminal_no_linux);
+      let nome_b = stringify!
+         (separa_bytes_referentes_a_cada_comprimento);
+
+      match roda_comando_que_informa_dimensao_do_terminal_no_linux()
+      {
+         Ok(In) => 
+         {
+            match separa_bytes_referentes_a_cada_comprimento(In)
+            {
+               Some((lin_bytes, col_bytes)) => {
+                  println!(
+                     "Parte(A): {:?}\nParte(B): {:?}", 
+                     lin_bytes, col_bytes
+                  );
+                  
+                  let tupla_in = (lin_bytes, col_bytes);
+                  let rotina = converte_bytes_em_seus_respectivos_valores;
+                  let tupla_out = rotina(tupla_in);
+
+                  println!(
+                     "Linhas: {}  Colunas: {}", 
+                     tupla_out.0, tupla_out.1
+                  );
+               } None =>
+                  { assert!(false, "Erro ao chamar função '{}'.", nome_b); }
+            }
+         } Err(_) => 
+            { assert!(false, "Erro ao chamar a função '{}'", nome_a); }
+      }
+   }
+
+   #[test]
+   fn dividindo_bytes_de_cada_comprimento_devidamente() {
+      let nome = stringify!
+         (roda_comando_que_informa_dimensao_do_terminal_no_linux);
+      match roda_comando_que_informa_dimensao_do_terminal_no_linux()
+      {
+         Ok(In) => 
+         {
+            match separa_bytes_referentes_a_cada_comprimento(In)
+            {
+               Some((lin_bytes, col_bytes)) => {
+                  println!(
+                     "Parte(A): {:?}\nParte(B): {:?}", 
+                     lin_bytes, col_bytes
+                  );
+               } None =>
+                  { assert!(false, "Erro ao chamar função 'separa'."); }
+            }
+         } Err(_) => 
+            { assert!(false, "Erro ao chamar a função '{}'", nome); }
+      }
+   }
+
+   #[test]
+   fn fonte_primaria_dos_dados_obtidos() {
+      let rotina = roda_comando_que_informa_dimensao_do_terminal_no_linux;
+      let output_a = rotina().unwrap();
+      let output_b = &output_a.as_slice();
+      let output_c = String::from_utf8_lossy(output_b);
+
+      println!("Bytes: {:?}", output_a);
+      println!("String formatada: \"{}\"", output_c);
+   }
 
    #[test]
    fn testa_dimensao() {
