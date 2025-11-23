@@ -1,4 +1,4 @@
-VERSAO 	= 1.6.2
+VERSAO 	= 1.6.3
 CAMINHO 	= ../versões/utilitarios
 
 compila-bibliotecas: compila-lib-to-c
