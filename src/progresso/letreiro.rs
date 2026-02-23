@@ -1,14 +1,11 @@
-
 use std::fmt::{Display, Formatter, Result as Result_fmt};
 use std::time::{Duration, Instant};
 use std::ops::Range;
 
-/** É um letreiro dinâmico que dado um string
- a cada determinado tempo, as letras se movem
- da direita para esquerda, ou vice-versa. É 
- um objeto muito útil se todo o nome do progresso
- não cabe totalmente na tela.
-*/
+/** É um letreiro dinâmico que dado um string a cada determinado tempo, as
+ * letras se movem da direita para esquerda, ou vice-versa. É um objeto 
+ * muito útil se todo o nome do progresso não cabe totalmente na tela.
+ */
 #[derive(Clone)]
 pub struct Logo<'a> {
    // para marcar o tempo.
@@ -25,8 +22,9 @@ pub struct Logo<'a> {
 }
 
 impl <'a> Logo<'a> {
-   // criando uma nova instância.
-   pub fn novo(label:&str) -> Result<Logo, &'static str> {
+   /// Cria uma nova instância.
+   pub fn novo(label:&'static str) -> Result<Logo<'static>, &'static str> 
+   {
       if label.len() == 0 {
          Err("não é permitido strings em branco")
       }
@@ -47,7 +45,7 @@ impl <'a> Logo<'a> {
       }
    }
 
-   // motor do logo. 
+   /// Movimenta o letreiro instanciado.
    pub fn movimenta_letreiro(&mut self) {
       // se chegou ao final, resetar posição do LED.
       if self.ponta_direita == self.rotulo.len() as u8 {
@@ -73,7 +71,7 @@ impl <'a> Logo<'a> {
       };
    }
 
-   // transforma numa slice-string.
+   /// Transforma numa slice-string.
    pub fn para_string(&self) -> &'a str {
       match self.intervalo.clone() {
          Some(i) => {
@@ -84,8 +82,8 @@ impl <'a> Logo<'a> {
       }
    }
 
-   // nova capacidade do logo.
-   pub fn nova_capacidade(&mut self, capacidade:u8) {
+   /// Nova capacidade do logo.
+   pub fn nova_capacidade(&mut self, capacidade: u8) {
       self.capacidade = capacidade;
    }
 }
