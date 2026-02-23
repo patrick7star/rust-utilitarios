@@ -24,6 +24,7 @@
 use std::ops::RangeInclusive as Intervalo;
 #[cfg(target_os="linux")]
 use std::{fs::OpenOptions, io::Read};
+#[cfg(target_os="windows")]
 use std::time::{SystemTime};
 
 
