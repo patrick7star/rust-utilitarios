@@ -93,7 +93,7 @@ pub fn tempo_detalhado<'a, S>(tempo_str:&'a S)
       { return None; }
 
    // converte fração.
-   let conversao = super::tempo(calc, false);
+   let conversao = super::tempo_legivel(calc, false);
    /* arredonda se está quebrada, pois a recursão 
     * do "tempo_detalhado" ainda não foi implementada.  */
    let conversao = arredondando_str(&conversao);
