@@ -10,8 +10,6 @@ mod letreiro;
 mod rotulo;
 mod barra;
 
-// Módulos do próprio projeto:
-use crate::legivel::{tamanho_legivel};
 // Submódulos deste módulo:
 pub use letreiro::*;
 use barra::{
@@ -63,86 +61,6 @@ pub trait Traducao: ProgressoComando {
 
    /// May return a `String` where represents a formatting of progress-bar.
    fn print(&mut self) -> Impressao;
-}
-
-
-
-/** Cálculos percentuais e, suas representação numérica. Mesmo que o acima, 
- * o consumo de `CPU` é dispedício, não use em **loops**. */
-#[deprecated(since="1.3.5",
-note="usado agora apenas internamente")]
-pub fn progresso_data(qtd_atual:u64, qtd_total:u64) -> String {
-   let percentagem:f32 = (qtd_atual as f32)/(qtd_total as f32);
-   let percent_100:f32 = percentagem*100.0;
-
-   // caso de erro.
-   if percentagem > 1.0_f32
-      { panic!("os valores de atual supera o total!"); }
-   else if percentagem == 1.00 {
-      let total_bytes = tamanho_legivel(qtd_total, true);
-      return format!(
-         "{}/{} [{}] {}%\n",
-         total_bytes,
-         total_bytes,
-         cria_barra_ascii_sem_cor(1.0, CAPACIDADE),
-         100.0
-      );
-   }
-   else {
-      // strings dos valores.
-      let qa = tamanho_legivel(qtd_atual, true);
-      let qt = tamanho_legivel(qtd_total, true);
-      let qtd_algs = qt.len() as usize;
-      let molde:String = format!(
-         "{0:>espaco$}/{1} [{2}]{3:>5.1}%",
-         qa, qt, cria_barra_ascii_sem_cor(percentagem, CAPACIDADE),
-         percent_100,espaco=qtd_algs
-      );
-      return molde;
-   }
-}
-
-/** Progresso com rótulo dinâmico, então quando o rótulo é muito maior do 
- * que cabe na tela, ele move o rótulo tipo aqueles slogans de neon em 
- * mercearias e shops. Ele também é de dados, o resto do seu núcleo. */
-#[deprecated(
-  since="1.3.5",
-  note="confuso, e raramente utilizado"
-)]
-pub fn progresso_data_rotulo<'a>(rotulo:&'a str, qtd_atual:u64, 
-  qtd_total:u64) -> String
-{
-   // cálculando a porcetagem.
-   let percentagem:f32 = (qtd_atual as f32)/(qtd_total as f32);
-   // caso de erro.
-   if percentagem > 1.0_f32 {
-      panic!("os valores de atual supera o total!");
-   }
-   else if percentagem == 1f32 {
-      let total_bytes = tamanho_legivel(qtd_total, true);
-      return format!(
-         "[{}] {}/{} [{}] {}%\n",
-         rotulo,
-         total_bytes,
-         total_bytes,
-         cria_barra_ascii_sem_cor(1.0, CAPACIDADE),
-         100.0
-      );
-   }
-   else {
-      // strings dos valores.
-      let qa = tamanho_legivel(qtd_atual, true);
-      let qt = tamanho_legivel(qtd_total, true);
-      let qtd_algs = qt.len() as usize;
-      let molde:String = format!(
-         "[{4}] {0:>espaco$}/{1} [{2}]{3:>5.1}%",
-         qa, qt, cria_barra_ascii_sem_cor(percentagem, CAPACIDADE),
-         percentagem*100.0,
-         rotulo,
-         espaco=qtd_algs,
-      );
-      return molde;
-   }
 }
 
 /* == == == == == == == == == == == == == == == == == == == == == == == == =
@@ -374,22 +292,6 @@ impl Display for ProgressoTemporal {
 mod tests {
    use super::*;
    use std::thread::{self};
-
-   #[test]
-   #[allow(deprecated)]
-   fn teste_progresso_com_rotulo() {
-      let rotulo:&str = "isso e um teste basico, sem panico";
-      let mut logo:Logo = Logo::novo(rotulo).unwrap();
-      for k in 1..=600_000 {
-         let bp = progresso_data_rotulo(
-            logo.para_string(),
-            k, 600_000
-         );
-         print!("\r{}",bp);
-         logo.movimenta_letreiro();
-      }
-      assert!(true);
-   }
 
    #[test]
    fn progresso_com_barra_unicode() {
