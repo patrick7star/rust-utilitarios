@@ -19,8 +19,8 @@ use std::{
    convert::{TryInto}
 };
 // reexportando certas funções.
-pub use aproxima::tempo_detalhado;
-pub use generico::{tempo_humano, tempo_legivel_duration};
+pub use aproxima::{detalha_tempo};
+pub use generico::{tempo_legivel_duration};
 pub use decimal::{
    tempo_legivel_decimal, PICOSEG, 
    NANOSEG, MICROSEG, MILISEG
@@ -55,31 +55,24 @@ pub const GIGABYTE: usize = 2usize.pow(30);
 pub const TERABYTE: usize = 2usize.pow(40);
 /// Total de bytes num ***PiB***.
 pub const PETABYTE: usize = 2usize.pow(50);
+const MSG_ERRO_CONVERSION: &str = "Não implementado para tal tipo.";
 
-
-/* Converte o valor númerico, independente qual seja, num inteiro positivo
- * de máquina. O método usado pode variar por plataforma.*/
-fn converte_pra_usize<T: TryInto<usize>>(valor: T) -> usize {
-   match valor.try_into() {
-      Ok(value) => value,
-      Err(_) => { 
-         panic!("Não implementado para o tipo."); }
-   }
-}
 
 /** Converte qualquer valor inteiros primitivos, numa versão de string 
- * legível, contendo uma grandeza. Funciona com valores não positivos?
- * Funciona! Porém, transforma em positivos valores negativos que podem 
- * vir em inteiros com sinal, tal grandeza no mundo real(tempo negativo)
- * se quer faz sentido físico. */
+  * legível, contendo uma grandeza. Funciona com valores não positivos?
+  * Funciona! Porém, transforma em positivos valores negativos que podem 
+  * vir em inteiros com sinal, tal grandeza no mundo real(tempo negativo)
+  * se quer faz sentido físico. */
 pub fn tempo_legivel<T>(segundos: T, contracao:bool) -> String 
-  where T: TryInto<usize> 
+  where T: TryInto<usize>
 {
-   // renomeação da variável a comparar e computar.
-   let segundos = converte_pra_usize(segundos);
+   // Renomeação da variável a comparar e computar.
+   let segundos: usize = {
+      match segundos.try_into()
+         { Ok(v) => v, Err(_) => { panic!("{}", MSG_ERRO_CONVERSION); } }
+   };
    let t: f32 = segundos as f32;
-   let calculo: f32;
-   let sigla: &str;
+   let (calculo, sigla): (f32, &str);
 
    if (MINUTO..HORA).contains(&t) {
       sigla = if contracao {"min"} else {"minutos" };
@@ -124,11 +117,15 @@ pub fn tempo_legivel<T>(segundos: T, contracao:bool) -> String
 } 
 
 /** Retorna uma string contendo o tamanho legendado com um múltiplo, porém 
- * de forma mais legível. */
+  * de forma mais legível. */
 pub fn tamanho_legivel<U>(qtd: U, contracao:bool) -> String
   where U: TryInto<usize> 
 { 
-   let qtd = converte_pra_usize(qtd);
+   // Renomeação da variável a comparar e computar.
+   let qtd: usize = {
+      match qtd.try_into()
+         { Ok(v) => v, Err(_) => { panic!("{}", MSG_ERRO_CONVERSION); } }
+   };
 
    if qtd >= KILOBYTE && qtd < MEGABYTE {
       let sigla = if contracao{"KiB"} else{"kilobytes"};
@@ -152,9 +149,9 @@ pub fn tamanho_legivel<U>(qtd: U, contracao:bool) -> String
    }
 }
 
-/** Pega valores muito grande, maiores que mil, e coloca eles de forma
- mais legivel, com três algarismos significativos no máximo, e o peso de
- em casas decimais. */
+/** Pega valores muito grande, maiores que mil, e coloca eles de forma mais 
+  * legivel, com três algarismos significativos no máximo, e o peso de em casas
+  * decimais. */
 pub fn valor_legivel(qtd: usize) -> String {
    let mantisa: f64;
    let peso: &str;
@@ -186,11 +183,15 @@ pub fn valor_legivel(qtd: usize) -> String {
 
 
 /** Está função processa string com representação de tempo, seja qual for 
- * o múltiplo represetando-a. A formatação básica do input pra funcionar é,
- * valor númerico(seja decimal ou apenas um inteiro), e o pesso representando
- * tal, se não houver um, a primeira parte, sendo esta a numerica, apenas é
- * considerada como segundos. */
-pub fn interpleta_string_de_tempo(input: &str) -> Option<Duration> {
+  * o múltiplo represetando-a. A formatação básica do input pra funcionar é,
+  * valor númerico(seja decimal ou apenas um inteiro), e o pesso representando
+  * tal, se não houver um, a primeira parte, sendo esta a numerica, apenas é
+  * considerada como segundos. */
+pub fn string_to_duration(input: &str) -> Option<Duration>
+   { interpreta_string_de_tempo(input) }
+
+fn interpreta_string_de_tempo(input: &str) -> Option<Duration> 
+{
    let mut valor = String::new();
    let mut peso = String::new();
    #[allow(non_snake_case)]
@@ -292,19 +293,19 @@ mod tests {
 
       println!("\nExemplos de amostras bem formais ...");
       for In in inputs { 
-         let Out = interpleta_string_de_tempo(In);
+         let Out = interpreta_string_de_tempo(In);
          println!("\t- {} ===> {:?}", In, Out); 
       }
 
       println!("\nExemplos de amostras contracionadas e espaçadas ...");
       for In in inputs_a { 
-         let Out = interpleta_string_de_tempo(In);
+         let Out = interpreta_string_de_tempo(In);
          println!("\t- {} ===> {:?}", In, Out); 
       }
 
       println!("\nExemplos de amostras com pesos completos no plural ...");
       for In in inputs_b { 
-         let Out = interpleta_string_de_tempo(In);
+         let Out = interpreta_string_de_tempo(In);
          println!("\t- {} ===> {:?}", In, Out); 
       }
    }
