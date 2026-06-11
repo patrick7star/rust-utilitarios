@@ -11,7 +11,7 @@
 
 // extensão do módulo:
 mod decimal;
-mod aproxima;
+mod arredonda;
 mod generico;
 // Biblioteca padrão do Rust(apenas o necessário).
 use std::{
@@ -19,7 +19,7 @@ use std::{
    convert::{TryInto}
 };
 // reexportando certas funções.
-pub use aproxima::{detalha_tempo};
+pub use arredonda::{detalha_tempo};
 pub use generico::{tempo_legivel_duration};
 pub use decimal::{
    tempo_legivel_decimal, PICOSEG, 
@@ -232,7 +232,6 @@ fn interpreta_string_de_tempo(input: &str) -> Option<Duration>
 #[cfg(test)]
 mod tests {
    use crate::legivel::*;
-
 
    #[test]   
    fn testa_tamanho_legibilidade() {
