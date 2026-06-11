@@ -112,11 +112,14 @@ pub fn tempo_legivel<T>(segundos: T, contracao:bool) -> String
    else if t >= MILENIO && t < 10_f32*MILENIO {
       sigla = "milênios";
       calculo = t / MILENIO;
-   }
-   else {
+   } else {
       sigla = if contracao{"seg"} else{"segundos"};
       calculo = t;
+
+      // Caso especial para segundos.
+      return format!("{:0.0} {}", calculo, sigla);
    }
+   // Caso geral para as demais.
    format!("{:0.1} {}", calculo, sigla)
 } 
 
@@ -228,6 +231,7 @@ pub fn interpleta_string_de_tempo(input: &str) -> Option<Duration> {
 #[cfg(test)]
 mod tests {
    use crate::legivel::*;
+
 
    #[test]   
    fn testa_tamanho_legibilidade() {
