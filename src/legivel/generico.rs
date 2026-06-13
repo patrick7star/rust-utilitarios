@@ -13,12 +13,19 @@ use std::time::{Duration};
  * segundos. */
 pub fn tempo_legivel_duration(tempo: Duration, contracao: bool) -> String
 { 
+   let decimal: f64 = tempo.as_secs_f64();
+   let inteiro: u64 = tempo.as_secs();
+
    if tempo > Duration::from_secs(1) 
-      { tempo_legivel(tempo.as_secs(), contracao)  } 
+      { tempo_legivel(inteiro, contracao) } 
    else { 
       // O 'unwrap' é sempre seguro, pois Durations nunca são inválidos.
-      tempo_legivel_decimal
-         (tempo.as_secs_f64(), contracao).unwrap() 
+      // Oops, parece que a afirmação acima não se comprovou.
+      match tempo_legivel_decimal(decimal, contracao)
+      {
+         Some(result) => result,
+         None => format!("[erro imprevisto] {:?}", tempo)
+      }
    }
 }
 
