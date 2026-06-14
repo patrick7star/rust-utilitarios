@@ -24,7 +24,7 @@ pub fn tempo_legivel_duration(tempo: Duration, contracao: bool) -> String
       match tempo_legivel_decimal(decimal, contracao)
       {
          Some(result) => result,
-         None => format!("[erro imprevisto] {:?}", tempo)
+         None => format!("Inválido{:?}", tempo)
       }
    }
 }
