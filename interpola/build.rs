@@ -1,5 +1,5 @@
 use std::process::{Command};
-use std::path::{PathBuf};
+use std::path::{PathBuf, Path};
 use std::env::{current_exe};
 use std::ffi::{OsStr};
 
@@ -16,6 +16,23 @@ fn diretorio_base_do_projeto() -> PathBuf {
    executavel
 }
 
+fn seleciona_compilador() -> String
+{
+   let mut pathname = "/usr/bin/clang";
+   let mut caminho = Path::new(pathname);
+
+   if caminho.exists() 
+      { return pathname.to_string(); }
+
+   pathname = "/usr/bin/gcc";
+   caminho = Path::new(pathname);
+
+   if caminho.exists()
+      { return pathname.to_string(); }
+
+   panic!("Não deveriar alcançar aqui, pois o compilador não foi escolhido!");
+}
+
 fn compilacao_do_arquivo_de_c_amostras() {
    let mut base = diretorio_base_do_projeto();
    base.push("interpola");
@@ -23,8 +40,9 @@ fn compilacao_do_arquivo_de_c_amostras() {
    let lib_exe = format!("{}/lib/libsample.a", base.display());
    let src = format!("{}/tests/amostras.c", base.display());
    let obj_build = format!("{}/lib/amostras.obj", base.display());
+   let compiler = seleciona_compilador();
 
-   Command::new("clang")
+   Command::new(&compiler)
       .args(["-c", "-o", &obj_build, &src])
       .spawn().unwrap().wait().unwrap();
    Command::new("ar")
