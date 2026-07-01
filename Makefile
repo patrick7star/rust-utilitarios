@@ -51,7 +51,6 @@ SEARCH_PATH_C_DBG = ./target/debug
 SEARCH_PATH_C_RLS = ./target/release
 LIB_UTILS			= ./interpola/lib
 SEARCH_PATH_C		= $(SEARCH_PATH_C_DBG)
-#-lteste -ltempo -llegivel -lterminal -lm
 
 
 UTILS = $(CCODES)/utilitarios-em-c
@@ -68,49 +67,15 @@ instala-bibliotecas-necessarias:
 		./interpola/lib/
 	@mv -v ./interpola/lib/*.h ./interpola/include
 
-compila-lib-to-c:
-	@echo $(LD_LIBRARY_PATH)
-	cargo rustc -q --release --package interpolacao \
-		--crate-type staticlib -crate-type cdylib 
-
-compila-lib-to-c-debug:
-	cargo rustc -p interpolacao --crate-type staticlib --crate-type cdylib \
-   -- -C debug-assertions -C debuginfo=full
-
-compila-table-test:
-	@gcc -I$(HEADER_C) -ggdb -O0 -D__unit_tests__								\
-      -o interpola/bin/ut_teste_tables interpola/tests/teste_tables.c	\
-		-L$(SEARCH_PATH_C) -linterpolacao
-	@echo "'teste_tables.c' compilado em 'interpola/bin'."
-
-compila-tree-test:
-	@gcc -I$(HEADER_C) -o interpola/bin/ut_teste_tree			\
-		interpola/tests/teste_tree.c									\
-		-L$(SEARCH_PATH_C) -linterpolacao
+test-tree:
+	@gcc -I$(HEADER_C) -o bin/ut-teste-tree			\
+		interpola/tests/tree.c									\
+		-L$(SEARCH_PATH_C) -linterpolacao -lm
 	@echo "'teste_tree.c' compilado em 'interpola/bin'."		
-	@gcc -I$(HEADER_C) -o interpola/bin/ut_teste_tree_config \
+	@gcc -I$(HEADER_C) -o bin/ut-tree-config \
 		interpola/tests/teste_tree_config.c							\
 		-L$(SEARCH_PATH_C) -linterpolacao							\
 		-L./interpola/lib/												\
 			-lteste -lterminal -ltempo -llegivel -lm
 	@echo "'teste_tree_config.c' compilado em 'interpola/bin'."
 
-compila-writting-numbers-test:
-	@gcc -I$(HEADER_C) -O0									\
-		-o interpola/bin/ut_teste_writting_numbers	\
-			interpola/tests/teste_writting_numbers.c	\
-		-L$(SEARCH_PATH_C) -linterpolacao
-	@echo "'teste_wn.c' compilado em 'interpola/bin'."
-
-atualiza-binarios-compilados:
-	@cp --update=older --verbose				\
-		target/release/libinterpolacao.so	\
-		target/release/libinterpolacao.a		\
-		./lib/
-	@echo "Nova compilação da 'interpolação' foram copiadas."
-
-compila-interpolacao-testes:		\
-	compila-writting-numbers-test \
-	compila-tree-test					\
-	compila-table-test
-		
