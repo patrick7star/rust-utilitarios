@@ -7,27 +7,25 @@ use std::fmt::{Formatter, Display, Result as Resultado};
 use super::string_complemento::{StringExtensao as StrExt};
 
 // Abreviação por motivo de legibilidade.
-type Str = &'static str;
-
-/**
- Uma estrutura que representa uma coluna
- numa tabela de dados. Necessário um **rótulo** 
- e uma array representando o **rol** de dados 
- da legenda.
-*/
+/** 
+ * Uma estrutura que representa uma coluna numa tabela de dados. Necessário 
+ * um **rótulo** e uma array representando o **rol** de dados da legenda.
+ */
 #[derive(Debug, Clone)]
 pub struct Coluna <U: ToString + Clone> {
-   // legenda do rol de dados.
-   rotulo:&'static str,
-   // rol de dados.
+   // Legenda do rol de dados.
+   rotulo: String,
+
+   // Rol de dados.
    rol:Vec<U>,
-   // largura máxima da coluna.
+
+   // Largura máxima da coluna.
    largura: usize,
 }
 
-impl <U>Coluna<U> 
-where U: ToString + Clone {
-   pub fn nova(rotulo: Str, rol: Vec<U>) -> Self {
+impl <U>Coluna<U> where U: ToString + Clone 
+{
+   pub fn nova(rotulo: &str, rol: Vec<U>) -> Self {
       let maior_do_rol: usize = {
          rol.iter()
          .map(
@@ -41,8 +39,9 @@ where U: ToString + Clone {
          .clone()
       };
 
-      Self { rotulo, rol, largura }
+      Self { rotulo: rotulo.to_string(), rol, largura }
    }
+
    pub fn linhas(&self) -> usize
       { self.rol.len() + 1 }
    pub fn largura(&self) -> usize
@@ -50,37 +49,60 @@ where U: ToString + Clone {
 }
 
 impl<U:Display + Clone> Display for Coluna <U> {
-   fn fmt(&self, molde:&mut Formatter<'_>) -> Resultado {
-      // string de concatenação.
-      let mut s = String::from("");
-      // maior comprimento de caractéres:
-      let mut c_max:u8 = self.rotulo.len() as u8;
+   fn fmt(&self, molde:&mut Formatter<'_>) -> Resultado 
+   {
+      // String com todas concatenações.
+      let mut output = String::from("");
+      // Maior comprimento de caractéres:
+      let mut max_length: u8;
+      let mut length: u8;
+      let mut ajuste: String;
+
+      // A referência de maior string é a do rótulo.
+      max_length = self.rotulo.len() as u8;
       
-      // busca maior comprimento...
-      for x in self.rol.clone() {
-         let c = x.to_string().len();
-         if c as u8 > c_max {
-            c_max = c as u8;
-         }
+      // Busca maior comprimento que a atual referência...
+      #[allow(non_snake_case)]
+      for X in self.rol.clone() 
+      {
+         length = X.to_string().len() as u8;
+
+         if length > max_length 
+            { max_length = length; }
       }
 
-      s.push_str(calibra_str(self.rotulo, c_max).as_str());
-      s.push('\n');
+      ajuste = calibra_str(&self.rotulo, max_length);
+      output.push_str(ajuste.as_str());
+      output.push('\n');
+
       for v in self.rol.clone() {
-         let  ss = calibra_str(
+         ajuste = calibra_str(
             v.clone().to_string()
-            .as_str(), c_max
+            .as_str(), max_length
          );
-         s.push_str(ss.as_str());
-         s.push('\n');
+         output.push_str(&ajuste);
+         output.push('\n');
       }
       // escrevendo no formatdor...
-      write!(molde, "{}", s)
+      write!(molde, "{}", output)
    }
 }
 
-/* centraliza uma string dado a largura onde
- * ela deve estar envolvida. */
+impl<U> PartialEq for Coluna<U> 
+  where U: PartialEq + Eq + Clone + ToString
+{
+   fn eq(&self, outro: &Self) -> bool {
+      if self.rotulo != outro.rotulo { false }
+      else {
+         self.rol.iter().zip(outro.rol.iter())
+         .all(|(s, r)| s == r)
+      }
+   }
+   fn ne(&self, outro: &Self) -> bool 
+      { !self.eq(outro) }
+}
+
+/** Centraliza uma string dado a largura onde ela deve estar envolvida. */
 fn calibra_str(s:&str, limite:u8) -> String {
    // diferença entre a slice-string e o máximo aceitável.
    //let d:u8 = limite - s.len_2_bytes();
@@ -111,20 +133,6 @@ fn calibra_str(s:&str, limite:u8) -> String {
    }
    // retorna string ajustada.
    return outra_str;
-}
-
-impl<U> PartialEq for Coluna<U> 
-  where U: PartialEq + Eq + Clone + ToString
-{
-   fn eq(&self, outro: &Self) -> bool {
-      if self.rotulo != outro.rotulo { false }
-      else {
-         self.rol.iter().zip(outro.rol.iter())
-         .all(|(s, r)| s == r)
-      }
-   }
-   fn ne(&self, outro: &Self) -> bool 
-      { !self.eq(outro) }
 }
 
 
