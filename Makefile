@@ -68,14 +68,19 @@ instala-bibliotecas-necessarias:
 	@mv -v ./interpola/lib/*.h ./interpola/include
 
 test-tree:
-	@gcc -I$(HEADER_C) -o bin/ut-teste-tree			\
+	@gcc -I$(HEADER_C) -o bin/test-tree			\
 		interpola/tests/tree.c									\
 		-L$(SEARCH_PATH_C) -linterpolacao -lm
 	@echo "'teste_tree.c' compilado em 'interpola/bin'."		
-	@gcc -I$(HEADER_C) -o bin/ut-tree-config \
-		interpola/tests/teste_tree_config.c							\
+	@gcc -I$(HEADER_C) -o bin/test-tree-config \
+		interpola/tests/tree-config.c							\
 		-L$(SEARCH_PATH_C) -linterpolacao							\
 		-L./interpola/lib/												\
 			-lteste -lterminal -ltempo -llegivel -lm
 	@echo "'teste_tree_config.c' compilado em 'interpola/bin'."
 
+test-writing-numerals:
+	@gcc -I$(HEADER_C) -o bin/test-writing-numerals			\
+		interpola/tests/writing-numbers.c									\
+		-L$(SEARCH_PATH_C) -linterpolacao -lm
+	@echo "'writing-numerals.c' compilado em 'interpola/bin'."		
